@@ -1,0 +1,71 @@
+{
+  "name": "lib-tacit",
+  "version": "0.1.0",
+  "description": "Pure TypeScript library for the tacit confidential token meta-protocol on Bitcoin — Pedersen commitments, Bulletproofs, kernel signatures, ECDH blinding, and opcode encode/decode. No DOM, no UI, reusable by any wallet, indexer, or dapp.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./crypto": {
+      "types": "./dist/crypto/index.d.ts",
+      "import": "./dist/crypto/index.js"
+    },
+    "./opcodes": {
+      "types": "./dist/opcodes/index.d.ts",
+      "import": "./dist/opcodes/index.js"
+    },
+    "./envelope": {
+      "types": "./dist/envelope/index.d.ts",
+      "import": "./dist/envelope/index.js"
+    },
+    "./transaction": {
+      "types": "./dist/transaction/index.d.ts",
+      "import": "./dist/transaction/index.js"
+    },
+    "./wallet": {
+      "types": "./dist/wallet/index.d.ts",
+      "import": "./dist/wallet/index.js"
+    },
+    "./constants": {
+      "types": "./dist/constants/index.d.ts",
+      "import": "./dist/constants/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "lint": "echo 'TODO: lint'"
+  },
+  "dependencies": {
+    "@noble/hashes": "1.4.0",
+    "@noble/secp256k1": "2.1.0",
+    "@scure/base": "1.1.6",
+    "poseidon-lite": "0.3.0"
+  },
+  "optionalDependencies": {
+    "snarkjs": "^0.7.6"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "keywords": [
+    "bitcoin",
+    "confidential-transactions",
+    "pedersen",
+    "bulletproofs",
+    "mimblewimble",
+    "taproot",
+    "tacit"
+  ],
+  "license": "MIT"
+}

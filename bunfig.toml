@@ -1,0 +1,4 @@
+[test]
+# Only discover test files in lib-tacit's tests/ directory
+# This prevents bun from picking up tacit-specs/ tests (reference only)
+root = "./tests"
