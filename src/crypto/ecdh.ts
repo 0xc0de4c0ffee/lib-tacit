@@ -8,7 +8,7 @@ import * as secp from '@noble/secp256k1';
 import { sha256 } from '@noble/hashes/sha256';
 import { hmac } from '@noble/hashes/hmac';
 import { concatBytes } from '@noble/hashes/utils';
-import { bytes32ToBigint } from './pedersen.js';
+import { bytes32ToBigint, bytesToPoint } from './pedersen.js';
 import { SECP_N } from '../constants/limits.js';
 import {
   BLIND_DOMAIN,
@@ -33,6 +33,7 @@ function voutLE(idx: number): Uint8Array {
 }
 
 function ecdhSeed(myPriv: Uint8Array, theirPubBytes: Uint8Array): Uint8Array {
+  bytesToPoint(theirPubBytes); // validate peer pubkey before ECDH
   const shared = secp.getSharedSecret(myPriv, theirPubBytes);
   return sha256(shared.slice(1));
 }

@@ -41,7 +41,7 @@ export interface CEtchOutput {
 export function encodeCEtch(input: CEtchInput): Uint8Array {
   const tk = new TextEncoder().encode(input.ticker);
   if (tk.length === 0 || tk.length > TICKER_MAX_LEN) throw new Error(`ticker 1–${TICKER_MAX_LEN} bytes`);
-  if (input.decimals < 0 || input.decimals > DECIMALS_MAX) throw new Error(`decimals 0–${DECIMALS_MAX}`);
+  if (input.decimals < 0 || input.decimals > DECIMALS_MAX || !Number.isInteger(input.decimals)) throw new Error(`decimals 0–${DECIMALS_MAX}`);
   if (input.commitment.length !== 33) throw new Error('commitment must be 33 bytes');
   if (!input.encryptedAmount || input.encryptedAmount.length !== 8) throw new Error('encrypted_amount must be 8 bytes');
   if (input.rangeproof.length > 0xffff) throw new Error('rangeproof too large');

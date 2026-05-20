@@ -1,7 +1,9 @@
 import { describe, test, expect } from 'bun:test';
 import { bytesToHex } from '@noble/hashes/utils';
 import * as secp from '@noble/secp256k1';
-import { assetIdFor, computeKernelMsg, signKernel, verifyKernel } from '../../src/crypto/kernel.js';
+import {
+  assetIdFor, computeKernelMsg, signKernel, verifyKernel, computeExcessPoint,
+} from '../../src/crypto/kernel.js';
 import { pedersenCommit, pointToBytes, modN, randomScalar } from '../../src/crypto/pedersen.js';
 import { deriveBlinding, deriveChangeBlinding } from '../../src/crypto/ecdh.js';
 import { buildAnchor } from '../../src/transaction/utils.js';
@@ -76,6 +78,47 @@ describe('Kernel signature', () => {
     const msg = computeKernelMsg(aid, inputOps, outCs);
     const sig = signKernel(msg, excess);
     expect(verifyKernel(sig, aid, inputOps, inputCs, outCs)).toBe(true);
+  });
+
+  test('rejects invalid commitment bytes without throwing', () => {
+    const aid = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const bad = new Uint8Array(33).fill(0xff);
+    const inputOps = [{ txid: 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899', vout: 0 }];
+    expect(verifyKernel(new Uint8Array(64), aid, inputOps, [bad], [bad])).toBe(false);
+    expect(computeExcessPoint([bad], [bad])).toBeNull();
+  });
+
+  test('rejects mismatched input outpoints vs commitments', () => {
+    const aid = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const c = pointToBytes(pedersenCommit(100n, 1n));
+    const inputOps = [{ txid: 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899', vout: 0 }];
+    expect(verifyKernel(new Uint8Array(64).fill(1), aid, inputOps, [c], [c, c])).toBe(false);
+  });
+
+  test('BURN path with burnedAmount verifies when balanced', () => {
+    const aid = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const inBlind = randomScalar();
+    const inC = pointToBytes(pedersenCommit(1000n, inBlind));
+    const rOut = randomScalar();
+    const burned = 400n;
+    const outAmt = 600n;
+    const outC = pointToBytes(pedersenCommit(outAmt, rOut));
+    const excess = modN(rOut - inBlind);
+    const inputOps = [{ txid: 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899', vout: 0 }];
+    const msg = computeKernelMsg(aid, inputOps, [outC], burned);
+    const sig = signKernel(msg, excess);
+    expect(verifyKernel(sig, aid, inputOps, [inC], [outC], burned)).toBe(true);
+  });
+
+  test('degenerate E\' (full burn, zero blinding) rejects', () => {
+    const aid = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const amt = 500n;
+    const inC = pointToBytes(pedersenCommit(amt, 0n));
+    const burned = amt;
+    const inputOps = [{ txid: 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899', vout: 0 }];
+    const ePrime = computeExcessPoint([], [inC], burned);
+    expect(ePrime?.equals(pedersenCommit(0n, 0n))).toBe(true);
+    expect(verifyKernel(new Uint8Array(64).fill(1), aid, inputOps, [inC], [], burned)).toBe(false);
   });
 
   test('unbalanced CXFER rejects', () => {

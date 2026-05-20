@@ -46,6 +46,7 @@ export const LISTING_RANGE_CLAIM_DOMAIN = 'tacit-listing-range-claim-v1';
 export const AIRDROP_LEAF_DOMAIN     = 'tacit-airdrop-leaf-v1';
 export const AIRDROP_NODE_DOMAIN     = 'tacit-airdrop-node-v1';
 export const AIRDROP_CLAIM_DOMAIN    = 'tacit-airdrop-claim-v1';
+export const AIRDROP_CLAIM_DELETE_DOMAIN = 'tacit-airdrop-claim-delete-v1';
 
 // --- Generator derivation domains (SPEC §3.1) ---
 export const GENERATOR_H_DOMAIN  = 'tacit-generator-H-v1';
@@ -98,6 +99,11 @@ export const INTENT_ATTEST_DOMAIN = 'tacit-intent-attest-v1';
 export const AXINTENT_ID_DOMAIN = 'tacit-axintent-id-v1';
 export const AXINTENT_ONCHAIN_MAKER_AMOUNT_DOMAIN = 'tacit-axintent-onchain-maker-amount-v1';
 export const AXINTENT_ONCHAIN_MAKER_BLINDING_DOMAIN = 'tacit-axintent-onchain-maker-blinding-v1';
+
+// --- Stealth address domains (SPEC-BLINDED-PUBKEY-AMENDMENT) ---
+export const CXFER_STEALTH_DOMAIN = 'tacit-cxfer-stealth-v1';
+export const AXFER_STEALTH_DOMAIN = 'tacit-axfer-stealth-v1';
+export const AXFER_VAR_STEALTH_DOMAIN = 'tacit-axfer-var-stealth-v1';
 
 // --- Envelope constants ---
 export const ENVELOPE_MAGIC = 'TACIT';

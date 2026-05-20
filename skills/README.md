@@ -29,6 +29,7 @@ AI agent skills for the tacit protocol. Each skill file contains domain knowledg
 | Bulletproof Range Proofs | [crypto/bulletproof-range-proofs.md](crypto/bulletproof-range-proofs.md) | Zero-knowledge range proofs |
 | Kernel Signatures | [crypto/kernel-signatures.md](crypto/kernel-signatures.md) | Supply conservation proofs |
 | Signing Flows | [crypto/signing-flow.md](crypto/signing-flow.md) | Complete signing flow reference |
+| Validation layers | [../docs/crypto/validation.md](../docs/crypto/validation.md) | Wire decode vs crypto verify |
 
 ## Using Skills
 

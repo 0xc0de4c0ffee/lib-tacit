@@ -67,8 +67,10 @@ export function decodeWithdraw(payload: Uint8Array): WithdrawOutput | null {
   const recipientCommitment = payload.slice(p, p + 33); p += 33;
   const rLeaf = payload.slice(p, p + 32); p += 32;
   const bindHash = payload.slice(p, p + 32); p += 32;
+  if (denomination <= 0n || denomination >= (1n << 64n)) return null;
   if (p + 2 > payload.length) return null;
   const proofLen = payload[p]! | (payload[p + 1]! << 8); p += 2;
+  if (proofLen === 0) return null;
   if (p + proofLen !== payload.length) return null;
   return {
     kind: 'withdraw', assetId, denomination, merkleRoot,

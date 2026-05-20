@@ -25,6 +25,8 @@ Verify sig under E'.xonly() with msg
 Reject if E'.xonly() == 0 (degenerate kernel)
 ```
 
+`verifyKernel` in lib-tacit returns `false` on invalid commitments (does not throw). See [validation.md](./validation.md).
+
 ### Kernel Message Construction
 
 ```
@@ -142,3 +144,12 @@ Every HMAC, BIP-340 message, and BP transcript uses a unique v1 domain tag. This
 - `tacit-kernel-v1` — kernel message hash
 - `tacit-mint-v1` — mint authorization message
 - `tacit-bp-v1` — bulletproof Fiat-Shamir transcript
+- `tacit-deposit-v1` — T_DEPOSIT kernel message
+- `tacit-pool-init-v1` — POOL_INIT signature message
+- `tacit-drop-v1` — T_DROP kernel message
+- `tacit-drop-reclaim-v1` — T_DROP reclaim message
+- `tacit-disclosure-v1` — range disclosure message
+- `tacit-wrapper-attest-v1` — wrapper attestation message
+- `tacit-withdraw-bind-v1` — T_WITHDRAW bind_hash (SHA256 domain)
+- `tacit-axintent-{v1,claim-v2,fulfilment-v1,cancel-v1}` — atomic intent messaging
+- `tacit-axintent-blinding-v1` — AXINTENT fulfilment encryption keystream

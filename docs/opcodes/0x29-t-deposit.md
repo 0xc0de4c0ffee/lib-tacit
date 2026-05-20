@@ -12,6 +12,6 @@ T_DEPOSIT(1) || asset_id(32) || denomination(8) ||
   — only if denom>0 (DEPOSIT)
 ```
 
-## Implementation Status
+## Library Implementation
 
-Not yet implemented in `@tacit/lib`.
+✅ `encodeDeposit`, `decodeDeposit`, `encodePoolInit`, `isPoolInit` — all exported from `lib-tacit`. Note: Groth16 proof verification (for `decodeDeposit`) is not yet included; requires optional `snarkjs` integration.

@@ -58,3 +58,17 @@ msg = SHA256("tacit-kernel-v1" || asset_id || input_count || inputs* || output_c
 sig = signSchnorr(msg, excess)
 // Verify sig under E'.xonly()
 ```
+
+## Shielded Recipient (Opt-in, §5.2.1)
+
+CXFER recipients can opt into **address-graph privacy** via the shielded address primitive (SPEC-BLINDED-PUBKEY amendment, class-2). The on-the-wire bytes are unchanged. The difference is at the recipient output's `scriptPubKey`:
+
+```
+classical: vout[i].script = P2WPKH(hash160(recipient_pubkey))
+shielded:  vout[i].script = P2WPKH(hash160(commit))
+  commit = recipient_pubkey + b·G
+  b      = HMAC(ECDH_seed, "tacit-cxfer-stealth-v1" || network_tag || tx_anchor || vout_LE)
+```
+
+Recipients publish a bech32m handle (`tcs1…` mainnet, `tcsts1…` signet). Amount-channel ECDH continues to use the underlying `recipient_pubkey` — the two channels remain orthogonal.
+

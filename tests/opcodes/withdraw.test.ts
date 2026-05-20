@@ -15,4 +15,23 @@ describe('T_WITHDRAW (0x2A)', () => {
   test('rejects truncated payload', () => {
     expect(decodeWithdraw(new Uint8Array(10))).toBeNull();
   });
+
+  test('decode rejects denomination 0', () => {
+    const p = encodeWithdraw({
+      assetId: zeroFill(32), denomination: 1000n,
+      merkleRoot: zeroFill(32), nullifierHash: zeroFill(32),
+      recipientCommitment: zeroFill(33), rLeaf: zeroFill(32),
+      bindHash: zeroFill(32), proof: zeroFill(4),
+    });
+    const bad = new Uint8Array(p);
+    bad[33] = 0;
+    bad[34] = 0;
+    bad[35] = 0;
+    bad[36] = 0;
+    bad[37] = 0;
+    bad[38] = 0;
+    bad[39] = 0;
+    bad[40] = 0;
+    expect(decodeWithdraw(bad)).toBeNull();
+  });
 });

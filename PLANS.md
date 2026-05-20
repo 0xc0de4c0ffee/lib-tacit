@@ -2,7 +2,7 @@
 
 ## Architecture
 
-`@tacit/lib` is a pure TypeScript library that implements the cryptographic and protocol layers of the [tacit confidential token meta-protocol on Bitcoin](https://github.com/z0r0z/tacit). It is designed to be platform-agnostic — zero DOM, zero `window`, zero `localStorage` — so any wallet, indexer, or dapp can reuse the same auditable logic regardless of runtime.
+`lib-tacit` is a pure TypeScript library that implements the cryptographic and protocol layers of the [tacit confidential token meta-protocol on Bitcoin](https://github.com/z0r0z/tacit). It is designed to be platform-agnostic — zero DOM, zero `window`, zero `localStorage` — so any wallet, indexer, or dapp can reuse the same auditable logic regardless of runtime.
 
 ### Design Principles
 
@@ -29,20 +29,21 @@ transaction/ ──> envelope/ ──> constants/
 |-------|---------|
 | **Crypto** | Pedersen commitments, Bulletproofs (BP), BIP-340 Schnorr, ECDH blinding, Kernel signatures, Pippenger MSM |
 | **Envelope** | Taproot script-path encode/decode, ByteWriter |
-| **Opcodes** | CETCH, CXFER, T_MINT, T_BURN, T_AXFER, T_AXFER_VAR, T_PETCH, T_PMINT, T_DROP, T_DCLAIM, T_DEPOSIT, T_WITHDRAW |
+| **Opcodes** | CETCH, T_CXFER_BPP, CXFER, T_MINT, T_BURN, T_AXFER, T_AXFER_VAR, T_PETCH, T_PMINT, T_DROP, T_DCLAIM, T_DEPOSIT, T_WITHDRAW, T_WRAPPER_ATTEST, T_SLOT_*, T_CBTC_TAC_* |
 | **Transaction** | BIP-143 sighash, TX serialization, P2WPKH address, anchor construction |
-| **Wallet** | Key generation, import, export (secp256k1) |
+| **Wallet** | Key generation, import, export, UTXO manager, PRF passkey, key encryption |
+| **Indexer** | Esplora REST client, ancestry walker |
 | **Interfaces** | `ChainClient`, `Broadcaster` (abstract) |
 
 ### What's Out of Scope
 
 - DOM rendering, HTML templates, CSS
 - External wallet connection (Xverse, UniSat, Leather)
-- In-browser key encryption (AES-GCM localStorage)
 - Passphrase modals, toast notifications
 - Network selector, Discover/Market/Holdings/Drops UI
 - Faucet, IPFS pin UX, marketplace listing creation
-- Chain-data fetching from specific APIs
+- Stealth address encode/decode (bech32m)
+- Chain-data fetching from specific endpoints
 - Tx broadcasting to specific endpoints
 
 ## Implementation Phases
@@ -71,35 +72,26 @@ transaction/ ──> envelope/ ──> constants/
 - `opcodes/drop.ts` — T_DROP encode/decode
 - `opcodes/dclaim.ts` — T_DCLAIM encode/decode
 
-### Phase 4: Remaining Opcodes (TODO)
+### Phase 4: Remaining Opcodes ✅
 - `opcodes/axfer-var.ts` — T_AXFER_VAR (0x37)
-- `opcodes/transfer-bpp.ts` — CXFER_BPP (0x22)
+- `opcodes/transfer-bpp.ts` — CXFER_BPP (0x22, wire only)
 - `opcodes/deposit.ts` — T_DEPOSIT (0x29)
 - `opcodes/withdraw.ts` — T_WITHDRAW (0x2A)
-- `crypto/bulletproofs-plus.ts` — BP+ variant
-- `crypto/poseidon.ts` — Poseidon hash
+
+### Phase 5: Crypto Gaps (TODO)
+- `crypto/bulletproofs-plus.ts` — BP+ variant (14% smaller proofs)
+- `crypto/poseidon.ts` — Poseidon hash for mixer
 - `crypto/groth16.ts` — Groth16 verifier (optional snarkjs)
 
-### Phase 5: Validation & Recovery (TODO)
+### Phase 6: Validation & Recovery (TODO)
 - `validation/validator.ts` — recursive ancestry validation
 - `validation/supply.ts` — supply conservation checks
 - `recovery/scanner.ts` — chain scan for UTXO recovery
 - `recovery/decrypt.ts` — ECDH trial-decrypt
 
-### Phase 6: Tests & Docs (TODO)
-- Port reference tests to TypeScript
-- Write per-opcode documentation
-- Write crypto documentation
-- Write architecture documentation
-- Write skills files for AI agents
+### Phase 7: Remaining Gaps (from REVIEW.md)
 
-## Known Gaps vs Reference
-
-1. **BP+ proofs (T_CXFER_BPP)** — 0x22 opcode not yet implemented; ~14% smaller witnesses
-2. **Mixer (T_DEPOSIT / T_WITHDRAW)** — Poseidon + Groth16 circuit not yet ported
-3. **AMM opcodes** — T_LP_ADD, T_LP_REMOVE, T_SWAP_BATCH, T_SWAP_VAR etc. (ceremony-gated, drafted status)
-4. **Self-custody slot** — T_SLOT_MINT/BURN/ROTATE/SPLIT/MERGE
-5. **cBTC.tac lien** — T_CBTC_TAC_DEPOSIT/WITHDRAW/FORCE_CLOSE
-6. **Validator** — recursive ancestry walk is currently in the dapp-only reference
-7. **Recovery scanner** — privkey-only chain scan + ECDH trial-decrypt
-8. **On-chain protocol tests** — ported offline tests exist but not yet in this repo
+1. **Bulletproofs+** — `tacit-specs/dapp/bulletproofs-plus.js` port. ~14% smaller proofs. Medium priority.
+2. **Groth16 verifier** — Optional snarkjs integration for T_DEPOSIT/T_WITHDRAW verify.
+3. **Poseidon hash** — Exists as optional dep (poseidon-lite), not wired into opcode verifiers.
+4. **Stealth addresses** — bech32m stealth address encode/decode (tacit.js lines 3925-4238). DApp-layer per SPEC-BLINDED-PUBKEY-AMENDMENT.

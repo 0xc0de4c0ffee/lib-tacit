@@ -15,4 +15,3 @@ T_WRAPPER_ATTEST(1) || asset_id(32) || issuer_sig(64) || attestation_payload(...
 - BIP-340 signed under `attestation.issuer_pubkey` from the wrapper metadata
 - Domain tag: `tacit-wrapper-attest-v1`
 - Freshness computed from `as_of_height` vs current tip
-- Not yet implemented in @tacit/lib

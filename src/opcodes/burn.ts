@@ -46,6 +46,9 @@ export function encodeCBurn(input: CBurnInput): Uint8Array {
   if (input.outputs.length > 0 && input.rangeproof.length > 0xffff) {
     throw new Error('rangeproof too large');
   }
+  if (input.outputs.length === 0 && input.rangeproof.length > 0) {
+    throw new Error('rangeproof must be empty when outputs.length === 0');
+  }
 
   const w = new ByteWriter();
   w.u8(Opcode.T_BURN);

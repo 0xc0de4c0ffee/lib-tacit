@@ -1,7 +1,7 @@
 // Barrel re-export test — verifies every public symbol is reachable from src/index.ts
 import { describe, test, expect } from 'bun:test';
 
-describe('@tacit/lib barrel exports (src/index.ts)', () => {
+describe('lib-tacit barrel exports (src/index.ts)', () => {
   test('all expected symbols are exported', async () => {
     const lib = await import('../src/index.js');
 
@@ -10,6 +10,7 @@ describe('@tacit/lib barrel exports (src/index.ts)', () => {
     expect(lib.SECP_N).toBeDefined();
     expect(lib.N_BITS).toBeDefined();
     expect(lib.ENVELOPE_MAGIC).toBeDefined();
+    expect(lib.ENVELOPE_VERSION).toBeDefined();
 
     // Crypto
     expect(lib.pedersenCommit).toBeFunction();
@@ -20,16 +21,23 @@ describe('@tacit/lib barrel exports (src/index.ts)', () => {
     expect(lib.encryptAmount).toBeFunction();
     expect(lib.decryptAmount).toBeFunction();
     expect(lib.computeKernelMsg).toBeFunction();
+    expect(lib.dropKernelMsg).toBeFunction();
+    expect(lib.dropReclaimMsg).toBeFunction();
+    expect(lib.openingMsg).toBeFunction();
+    expect(lib.disclosureMsg).toBeFunction();
     expect(lib.signKernel).toBeFunction();
     expect(lib.verifyKernel).toBeFunction();
     expect(lib.bpRangeAggProve).toBeFunction();
     expect(lib.bpRangeAggVerify).toBeFunction();
+    expect(lib.randomScalar).toBeFunction();
+    expect(lib.modN).toBeFunction();
+    expect(lib.msm).toBeFunction();
 
     // Envelope
     expect(lib.encodeEnvelopeScript).toBeFunction();
     expect(lib.decodeEnvelopeScript).toBeFunction();
 
-    // Opcodes (implemented)
+    // Opcodes (implemented full codec)
     expect(lib.encodeCEtch).toBeFunction();
     expect(lib.decodeCEtch).toBeFunction();
     expect(lib.encodeCXfer).toBeFunction();
@@ -46,11 +54,12 @@ describe('@tacit/lib barrel exports (src/index.ts)', () => {
     expect(lib.decodePMint).toBeFunction();
     expect(lib.encodeCDrop).toBeFunction();
     expect(lib.decodeCDrop).toBeFunction();
+    expect(lib.encodeCDropReclaim).toBeFunction();
+    expect(lib.dropIdFromRevealTxid).toBeFunction();
     expect(lib.encodeCDClaim).toBeFunction();
     expect(lib.decodeCDClaim).toBeFunction();
-
-    // Opcodes (stubs — shipped but not impl)
     expect(lib.encodeCXferBpp).toBeFunction();
+    expect(lib.decodeCXferBpp).toBeFunction();
     expect(lib.encodeDeposit).toBeFunction();
     expect(lib.decodeDeposit).toBeFunction();
     expect(lib.encodeWithdraw).toBeFunction();
@@ -60,17 +69,45 @@ describe('@tacit/lib barrel exports (src/index.ts)', () => {
     expect(lib.encodeWrapperAttest).toBeFunction();
     expect(lib.decodeWrapperAttest).toBeFunction();
 
+    // Opcode stubs (shipped but no wire codec)
+    expect(lib.encodeSlotMint).toBeFunction();
+    expect(lib.encodeSlotBurn).toBeFunction();
+    expect(lib.encodeCBtcTacDeposit).toBeFunction();
+
     // Transaction
     expect(lib.hash160).toBeFunction();
     expect(lib.hash256).toBeFunction();
     expect(lib.txid).toBeFunction();
     expect(lib.serializeTx).toBeFunction();
+    expect(lib.preauthSellerSpendSighash).toBeFunction();
     expect(lib.p2wpkhAddress).toBeFunction();
+    expect(lib.p2wpkhScript).toBeFunction();
     expect(lib.buildAnchor).toBeFunction();
+    expect(lib.buildCommitTx).toBeFunction();
+    expect(lib.buildRevealTx).toBeFunction();
+    expect(lib.computeAssetIdFromTx).toBeFunction();
 
     // Wallet
     expect(lib.generateKeypair).toBeFunction();
     expect(lib.importPrivkey).toBeFunction();
     expect(lib.exportPrivkey).toBeFunction();
+    expect(lib.derivePubkey).toBeFunction();
+    expect(lib.deriveXonlyPubkey).toBeFunction();
+    expect(lib.UTXOManager).toBeDefined();
+    // PRF passkey wallet
+    expect(lib.prfBytesToScalar).toBeFunction();
+    expect(lib.isPasskeyAvailable).toBeFunction();
+    expect(lib.loadPrfMap).toBeFunction();
+    expect(lib.savePrfMap).toBeFunction();
+    // Key encryption
+    expect(lib.encryptPrivkey).toBeFunction();
+    expect(lib.decryptPrivkey).toBeFunction();
+    expect(lib.readBlobPub).toBeFunction();
+    expect(lib.storageShape).toBeFunction();
+    expect(lib.PBKDF2_ITER).toBeDefined();
+
+    // Indexer
+    expect(lib.EsploraClient).toBeDefined();
+    expect(lib.AncestryWalker).toBeDefined();
   });
 });

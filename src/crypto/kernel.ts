@@ -9,11 +9,11 @@ import { concatBytes } from '@noble/hashes/utils';
 import * as secp from '@noble/secp256k1';
 import {
   G, H, ZERO, modN, safeMult,
-  pedersenCommit, pointToBytes, bytesToPoint,
+  pedersenCommit, pointToBytes, tryBytesToPoint,
   bigintToBytes32, bytes32ToBigint,
 } from './pedersen.js';
 import { signSchnorr, verifySchnorr } from './schnorr.js';
-import { KERNEL_MSG_DOMAIN, MINT_MSG_DOMAIN } from '../constants/domains.js';
+import { KERNEL_MSG_DOMAIN, MINT_MSG_DOMAIN, DROP_DOMAIN, DROP_RECLAIM_DOMAIN, OPENING_MSG_DOMAIN, DISCLOSURE_MSG_DOMAIN } from '../constants/domains.js';
 import { reverseBytesHex } from '../transaction/utils.js';
 import type { Outpoint } from '../interfaces/chain-client.js';
 
@@ -73,16 +73,20 @@ export function computeExcessPoint(
   outCommitments: Uint8Array[],
   inCommitments: Uint8Array[],
   burnedAmount: bigint = 0n,
-): secp.ProjectivePoint {
+): secp.ProjectivePoint | null {
   let EPrime = ZERO;
   for (const c of outCommitments) {
-    EPrime = EPrime.add(bytesToPoint(c));
+    const p = tryBytesToPoint(c);
+    if (!p) return null;
+    EPrime = EPrime.add(p);
   }
   if (burnedAmount > 0n) {
     EPrime = EPrime.add(safeMult(H, burnedAmount));
   }
   for (const c of inCommitments) {
-    EPrime = EPrime.add(bytesToPoint(c).negate());
+    const p = tryBytesToPoint(c);
+    if (!p) return null;
+    EPrime = EPrime.add(p.negate());
   }
   return EPrime;
 }
@@ -106,20 +110,11 @@ export function verifyKernel(
   outputCommitments: Uint8Array[],
   burnedAmount: bigint = 0n,
 ): boolean {
-  // Compute E'
-  let EPrime = ZERO;
-  for (const c of outputCommitments) {
-    EPrime = EPrime.add(bytesToPoint(c));
-  }
-  if (burnedAmount > 0n) {
-    EPrime = EPrime.add(safeMult(H, burnedAmount));
-  }
-  for (const c of inputCommitments) {
-    EPrime = EPrime.add(bytesToPoint(c).negate());
-  }
+  if (sig64.length !== 64) return false;
+  if (inputOutpoints.length !== inputCommitments.length) return false;
 
-  // E' = 0 is invalid (degenerate kernel)
-  if (EPrime.equals(ZERO)) return false;
+  const EPrime = computeExcessPoint(outputCommitments, inputCommitments, burnedAmount);
+  if (!EPrime || EPrime.equals(ZERO)) return false;
 
   const xonly = EPrime.toRawBytes(true).slice(1);
   const msg = computeKernelMsg(assetId, inputOutpoints, outputCommitments, burnedAmount);
@@ -144,6 +139,93 @@ export function computeMintMsg(
     te.encode(MINT_MSG_DOMAIN),
     assetId, commitAnchor, commitment, encryptedAmount,
   ));
+}
+
+// ---- DROP kernel message (SPEC §5.12) ----
+export function dropKernelMsg(params: {
+  assetId: Uint8Array;
+  capAmount: bigint;
+  perClaim: bigint;
+  merkleRoot: Uint8Array;
+  expiryHeight: number;
+  assetInputCount: number;
+  assetInputs: Outpoint[];
+}): Uint8Array {
+  const { assetId, capAmount, perClaim, merkleRoot, expiryHeight, assetInputCount, assetInputs } = params;
+  if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
+  if (merkleRoot.length !== 32) throw new Error('merkle_root must be 32 bytes');
+  if (assetInputs.length !== assetInputCount) throw new Error('assetInputs.length must equal assetInputCount');
+  const capLE = new Uint8Array(8);
+  new DataView(capLE.buffer).setBigUint64(0, capAmount, true);
+  const perLE = new Uint8Array(8);
+  new DataView(perLE.buffer).setBigUint64(0, perClaim, true);
+  const expLE = new Uint8Array(4);
+  new DataView(expLE.buffer).setUint32(0, expiryHeight >>> 0, true);
+  const aicByte = new Uint8Array([assetInputCount & 0xff]);
+  const inputsBytes: Uint8Array[] = [];
+  for (const inp of assetInputs) {
+    const txidBE = reverseBytesHex(inp.txid);
+    const voutLE = new Uint8Array(4);
+    new DataView(voutLE.buffer).setUint32(0, inp.vout >>> 0, true);
+    inputsBytes.push(txidBE, voutLE);
+  }
+  return sha256(concatBytes(
+    te.encode(DROP_DOMAIN), assetId, capLE, perLE, merkleRoot, expLE, aicByte, ...inputsBytes,
+  ));
+}
+
+// ---- DROP reclaim message (SPEC §5.12.1) ----
+export function dropReclaimMsg(params: {
+  reclaimDropId: Uint8Array;
+  assetId: Uint8Array;
+  capAmount: bigint;
+}): Uint8Array {
+  const { reclaimDropId, assetId, capAmount } = params;
+  if (reclaimDropId.length !== 32) throw new Error('reclaim_drop_id must be 32 bytes');
+  if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
+  const capLE = new Uint8Array(8);
+  new DataView(capLE.buffer).setBigUint64(0, capAmount, true);
+  return sha256(concatBytes(te.encode(DROP_RECLAIM_DOMAIN), reclaimDropId, assetId, capLE));
+}
+
+// ---- Opening message (CETCH supply attestation, off-chain) ----
+export function openingMsg(
+  assetIdBytes: Uint8Array,
+  txidHex: string,
+  vout: number,
+  amountBigint: bigint,
+  blindingBytes: Uint8Array,
+  ownerPubBytes: Uint8Array,
+): Uint8Array {
+  const txidBE = reverseBytesHex(txidHex);
+  const voutLE = new Uint8Array(4);
+  new DataView(voutLE.buffer).setUint32(0, vout >>> 0, true);
+  const amountLE = new Uint8Array(8);
+  new DataView(amountLE.buffer).setBigUint64(0, amountBigint, true);
+  return sha256(concatBytes(te.encode(OPENING_MSG_DOMAIN), assetIdBytes, txidBE, voutLE, amountLE, blindingBytes, ownerPubBytes));
+}
+
+// ---- Selective disclosure message (off-chain) ----
+export function disclosureMsg(
+  assetIdBytes: Uint8Array,
+  utxos: Outpoint[],
+  thresholdBig: bigint,
+  rangeproofBytes: Uint8Array,
+  ownerPubBytes: Uint8Array,
+): Uint8Array {
+  const N = utxos.length;
+  if (N > 0xffff) throw new Error('disclosure: too many utxos');
+  const refsBytes = new Uint8Array(N * 36);
+  for (let i = 0; i < N; i++) {
+    refsBytes.set(reverseBytesHex(utxos[i]!.txid), i * 36);
+    new DataView(refsBytes.buffer, refsBytes.byteOffset + i * 36 + 32, 4)
+      .setUint32(0, utxos[i]!.vout >>> 0, true);
+  }
+  const nLE = new Uint8Array(2);
+  new DataView(nLE.buffer).setUint16(0, N, true);
+  const thresholdLE = new Uint8Array(8);
+  new DataView(thresholdLE.buffer).setBigUint64(0, thresholdBig, true);
+  return sha256(concatBytes(te.encode(DISCLOSURE_MSG_DOMAIN), assetIdBytes, nLE, refsBytes, thresholdLE, rangeproofBytes, ownerPubBytes));
 }
 
 // ---- Asset ID derivation ----

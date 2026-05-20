@@ -109,6 +109,41 @@ export function sighashV0WithType(
   return hash256(w.out());
 }
 
+// Preauth seller spend sighash (SPEC preauth flow; composition.mjs).
+// Binds vin[1] to vout[1]: hashOutputs is vout[1] only while the signed input
+// field carries the tacit asset outpoint (non-standard layout vs generic BIP-143).
+export function preauthSellerSpendSighash(params: {
+  assetOutpointTxidHex: string;
+  assetOutpointVout: number;
+  assetUtxoValue: number;
+  sellerPubBytes: Uint8Array;
+  sellerPayoutScriptBytes: Uint8Array;
+  minPriceSats: number;
+}): Uint8Array {
+  const ZERO32 = new Uint8Array(32);
+  const w = new ByteWriter();
+  w.u32(2); // nVersion
+  w.push(ZERO32); // hashPrevouts (ANYONECANPAY)
+  w.push(ZERO32); // hashSequence
+  w.push(reverseBytesHex(params.assetOutpointTxidHex));
+  w.u32(params.assetOutpointVout);
+  const scriptCode = concatBytes(
+    new Uint8Array([0x76, 0xa9, 0x14]),
+    hash160(params.sellerPubBytes),
+    new Uint8Array([0x88, 0xac]),
+  );
+  w.varint(scriptCode.length).push(scriptCode);
+  w.u64(BigInt(params.assetUtxoValue));
+  w.u32(0xfffffffd); // nSequence
+  const vout1 = new ByteWriter();
+  vout1.u64(BigInt(params.minPriceSats));
+  vout1.varint(params.sellerPayoutScriptBytes.length).push(params.sellerPayoutScriptBytes);
+  w.push(hash256(vout1.out())); // hashOutputs (vout[1] only)
+  w.u32(0); // nLocktime
+  w.u32(0x83); // SIGHASH_SINGLE | ANYONECANPAY
+  return hash256(w.out());
+}
+
 // Serialize a tx for txid calculation (no witness).
 export function serializeTx(tx: TxTemplate, withWitness: boolean = true): Uint8Array {
   const hasWit = withWitness && tx.inputs.some(i => i.witness && i.witness.length > 0);

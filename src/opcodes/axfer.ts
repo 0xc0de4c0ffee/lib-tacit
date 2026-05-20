@@ -41,6 +41,8 @@ export function encodeAXfer(input: AXFERInput): Uint8Array {
   w.push(input.kernelSig);
   w.u8(input.outputs.length);
   for (const o of input.outputs) {
+    if (o.commitment.length !== 33) throw new Error('commitment must be 33 bytes');
+    if (!o.encryptedAmount || o.encryptedAmount.length !== 8) throw new Error('encrypted_amount must be 8 bytes');
     w.push(o.commitment);
     w.push(o.encryptedAmount);
   }

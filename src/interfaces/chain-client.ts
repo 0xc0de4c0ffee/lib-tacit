@@ -1,75 +1,79 @@
 // Abstract interfaces for chain data access and transaction broadcasting.
-// Consumers (wallet, indexer, dapp) implement these against their chosen
-// backend (Esplora REST API, mempool.space, blockstream.info, etc.).
-// The library itself contains zero network I/O.
+// Consumers implement these against Esplora, bitcoind RPC, or other backends.
 
 export interface Outpoint {
-  txid: string;  // 64-hex BE display form
+  txid: string;  // 64-hex, display form (BE)
   vout: number;
 }
 
 export interface ChainUTXO {
   txid: string;
   vout: number;
-  value: number;       // satoshis
-  scriptPubKey: Uint8Array;
+  value: number;
+  scriptPubKey: string; // hex-encoded — changed from Uint8Array in v0.1.0
   status: {
     confirmed: boolean;
     block_height?: number;
-    block_hash?: string;
-    block_time?: number;
   };
+}
+
+export interface ChainTxVin {
+  txid: string;
+  vout: number;
+  prevout: { scriptpubkey: string; value: number } | null;
+  witness: string[];  // hex-encoded
+  scriptsig: string;
+  sequence: number;
+  is_coinbase: boolean;
+}
+
+export interface ChainTxVout {
+  scriptpubkey: string;
+  value: number;
 }
 
 export interface ChainTx {
   txid: string;
   version: number;
   locktime: number;
-  size: number;
-  weight: number;
+  vin: ChainTxVin[];
+  vout: ChainTxVout[];
+  status: { confirmed: boolean; block_height?: number };
   fee: number;
-  vin: {
-    txid: string;
-    vout: number;
-    prevout: {
-      scriptpubkey: Uint8Array;
-      value: number;
-    } | null;
-    scriptsig: Uint8Array;
-    witness: Uint8Array[];
-    sequence: number;
-    is_coinbase: boolean;
-  }[];
-  vout: {
-    scriptpubkey: Uint8Array;
-    value: number;
-  }[];
-  status: {
-    confirmed: boolean;
-    block_height?: number;
-    block_hash?: string;
-    block_time?: number;
-  };
+  weight: number;
 }
 
-// ChainClient abstracts chain-data read operations.
-// Implementations fetch from a Bitcoin RPC or Esplora REST API.
+export interface ChainTip {
+  height: number;
+  hash: string;
+}
+
+export interface FeeEstimate {
+  fastestFee: number;
+  halfHourFee: number;
+  hourFee: number;
+  economyFee: number;
+  minimumFee: number;
+}
+
+export interface BroadcastResult {
+  txid: string;
+  success: boolean;
+  error?: string;
+}
+
+// ChainClient: abstract block of chain data fetch operations.
 export interface ChainClient {
-  // Fetch a transaction by txid.
   fetchTx(txid: string): Promise<ChainTx | null>;
-
-  // Fetch UTXOs for an address.
   fetchUTXOs(address: string): Promise<ChainUTXO[]>;
-
-  // Fetch current tip height.
   fetchTipHeight(): Promise<number>;
-
-  // Fetch the raw transaction hex (for broadcast or local parsing).
+  fetchTip(): Promise<ChainTip | null>;
   fetchRawTx(txid: string): Promise<string | null>;
+  fetchFeeEstimate(): Promise<FeeEstimate | null>;
+  broadcast(rawTxHex: string): Promise<BroadcastResult>;
+  fetchAddressTxs(address: string, lastSeenTxid?: string): Promise<ChainTx[]>;
+  fetchOutspend(txid: string, vout: number): Promise<{ spent: boolean; txid?: string; vin?: number } | null>;
 }
 
-// Broadcaster abstracts transaction submission.
-export interface Broadcaster {
-  // Broadcast a raw transaction hex and return the txid.
-  broadcast(rawTxHex: string): Promise<string>;
-}
+// Broadcaster is a subset of ChainClient — kept for backwards compatibility
+export type Broadcaster = Pick<ChainClient, 'broadcast'>;

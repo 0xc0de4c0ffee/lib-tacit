@@ -11,6 +11,6 @@ recipient_commitment(33) || r_leaf(32) || bind_hash(32) ||
 proof_len(2) || proof(Groth16, ~256B)
 ```
 
-## Implementation Status
+## Library Implementation
 
-Not yet implemented in `@tacit/lib`. Requires Poseidon hash and Groth16 verifier (optional snarkjs dep).
+✅ `encodeWithdraw`, `decodeWithdraw` — exported from `lib-tacit`. Groth16 proof verification (the `proof` field) is not yet included; requires optional `snarkjs` integration. Poseidon hash is available as `poseidon-lite` optional dependency.

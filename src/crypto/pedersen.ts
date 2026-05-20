@@ -37,7 +37,16 @@ export function pointToBytes(P: secp.ProjectivePoint): Uint8Array {
   return P.toRawBytes(true);
 }
 export function bytesToPoint(b: Uint8Array): secp.ProjectivePoint {
+  if (!b || b.length !== 33) throw new Error('point must be 33 bytes (compressed)');
+  if (b[0] !== 0x02 && b[0] !== 0x03) throw new Error('point prefix must be 0x02/0x03');
   return secp.ProjectivePoint.fromHex(bytesToHex(b));
+}
+
+// Parse a compressed commitment/point; returns null instead of throwing (untrusted wire bytes).
+export function tryBytesToPoint(b: Uint8Array): secp.ProjectivePoint | null {
+  if (!b || b.length !== 33) return null;
+  if (b[0] !== 0x02 && b[0] !== 0x03) return null;
+  try { return bytesToPoint(b); } catch { return null; }
 }
 export function xonlyFromPoint(P: secp.ProjectivePoint): Uint8Array {
   return P.toRawBytes(true).slice(1);

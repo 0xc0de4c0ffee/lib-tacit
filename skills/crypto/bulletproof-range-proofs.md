@@ -1,4 +1,6 @@
-# Skill: Bulletproofs Range Proofs
+# Skill: Bulletproofs Range Proofs (classic — opcode 0x23)
+
+> Opcode **0x22 (T_CXFER_BPP)** uses **Bulletproofs+**. Do not call `bpRangeAggVerify` on 0x22 witnesses. BP+ reference: `tacit-specs/dapp/bulletproofs-plus.js`.
 
 ## Domain Knowledge
 
@@ -14,7 +16,7 @@ Bulletproofs (Bünz et al. 2017) are zero-knowledge range proofs that prove a co
 ## Prover
 
 ```typescript
-import { bpRangeAggProve } from '@tacit/lib';
+import { bpRangeAggProve } from 'lib-tacit';
 
 const values = [1000n, 500n];      // amounts to prove in-range
 const blindings = [r1, r2];        // Pedersen blinding scalars
@@ -27,7 +29,7 @@ const { proof, commitments } = bpRangeAggProve(values, blindings);
 ## Verifier
 
 ```typescript
-import { bpRangeAggVerify, bpRangeAggBatchVerify } from '@tacit/lib';
+import { bpRangeAggVerify, bpRangeAggBatchVerify } from 'lib-tacit';
 
 // Single proof
 const valid = bpRangeAggVerify(commitments, proof);

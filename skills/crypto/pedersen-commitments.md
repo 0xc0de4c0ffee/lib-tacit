@@ -16,7 +16,7 @@ Pedersen commitments are the fundamental privacy primitive in the tacit protocol
 ## Implementation
 
 ```typescript
-import { pedersenCommit, pedersenVerify, G, H, pointToBytes, bytesToPoint } from '@tacit/lib';
+import { pedersenCommit, pedersenVerify, G, H, pointToBytes, bytesToPoint } from 'lib-tacit';
 
 // Commit to an amount
 const amount = 1000n;

@@ -7,7 +7,7 @@
 |--------|------|---------|--------|-------------|
 | `0x21` | [CETCH](./0x21-cetch.md) | §5.1 | ✅ Shipped | Issue a new asset with hidden initial supply. Optionally mintable. |
 | `0x22` | [T_CXFER_BPP](./0x22-cxfer-bpp.md) | §5.21 | ✅ Shipped | Confidential transfer with Bulletproofs+ aggregated rangeproof. ~14% smaller witness than CXFER. |
-| `0x23` | [CXFER](./0x23-cxfer.md) | §5.2 | ✅ Shipped | Transfer (split) confidential value between parties. |
+| `0x23` | [CXFER](./0x23-cxfer.md) | §5.2 | ✅ Shipped | Transfer (split) confidential value between parties. Optional opt-in shielded recipient (§5.2.1). |
 | `0x24` | [T_MINT](./0x24-t-mint.md) | §5.3 | ✅ Shipped | Issuer issues additional supply on a mintable asset. |
 | `0x25` | [T_BURN](./0x25-t-burn.md) | §5.4 | ✅ Shipped | Any holder destroys part or all of their balance. Burn amount is public. |
 | `0x26` | [T_AXFER](./0x26-t-axfer.md) | §5.7 | ✅ Shipped | CXFER variant that allows non-tacit auxiliary inputs (BTC payment) in the same tx. |
@@ -17,11 +17,11 @@
 | `0x2A` | [T_WITHDRAW](./0x2a-t-withdraw.md) | §5.11 | ✅ Shipped | Anonymous mint from a shielded pool with Groth16 proof. |
 | `0x2B` | [T_DROP](./0x2b-t-drop.md) | §5.12 | ✅ Shipped | Lock existing supply into a public-claim pool. |
 | `0x2C` | [T_DCLAIM](./0x2c-t-dclaim.md) | §5.13 | ✅ Shipped | Permissionless claim event against a T_DROP ancestor. |
-| `0x2D` | [T_LP_ADD](./0x2d-t-lp-add.md) | AMM.md §5.14 | 📝 Drafted | Add liquidity to AMM pool. variant=1 doubles as POOL_INIT. |
-| `0x2E` | [T_LP_REMOVE](./0x2e-t-lp-remove.md) | AMM.md §5.15 | 📝 Drafted | Burn LP-share UTXOs for proportional withdrawal. |
-| `0x2F` | [T_SWAP_BATCH](./0x2f-t-swap-batch.md) | AMM.md §5.16 | 📝 Drafted | Settle N confidential swap intents at uniform clearing price. Groth16 proof. |
-| `0x30` | [T_INTENT_ATTEST](./0x30-t-intent-attest.md) | AMM.md §5.17 | 📝 Drafted | Scope-generic preconfirmation channel attestation. |
-| `0x31` | [T_PROTOCOL_FEE_CLAIM](./0x31-t-protocol-fee-claim.md) | AMM.md §5.18 | 📝 Drafted | Mint accrued protocol fee shares. |
+| `0x2D` | [T_LP_ADD](./0x2d-t-lp-add.md) | §5.14 | 📝 Drafted | Add liquidity to AMM pool. variant=1 doubles as POOL_INIT. |
+| `0x2E` | [T_LP_REMOVE](./0x2e-t-lp-remove.md) | §5.15 | 📝 Drafted | Burn LP-share UTXOs for proportional withdrawal. |
+| `0x2F` | [T_SWAP_BATCH](./0x2f-t-swap-batch.md) | §5.16 | 📝 Drafted | Settle N confidential swap intents at uniform clearing price. Groth16 proof. |
+| `0x30` | [T_INTENT_ATTEST](./0x30-t-intent-attest.md) | §5.17 | 📝 Drafted | Scope-generic preconfirmation channel attestation. |
+| `0x31` | [T_PROTOCOL_FEE_CLAIM](./0x31-t-protocol-fee-claim.md) | §5.18 | 📝 Drafted | Mint accrued protocol fee shares. |
 | `0x32` | [T_SWAP_VAR](./0x32-t-swap-var.md) | §5.20 | 📝 Drafted | Per-trade variable-amount AMM swap. Sigma cross-curve proof. |
 | `0x33` | [T_SWAP_ROUTE](./0x33-t-swap-route.md) | §5.22 | 📝 Drafted | Atomic multi-hop AMM routing (2–4 hops in one Bitcoin tx). |
 | `0x34` | [T_FARM_INIT](./0x34-t-farm-init.md) | §5.40 | 📝 Drafted | Launcher-funded LP-staking reward farm creation. |
@@ -58,7 +58,9 @@
 | `0x56` | T_CUSD_TAC_FORCE_CLOSE | §6.5 | 📝 Drafted | Permissionless cUSD.tac liquidation. |
 | `0x57` | T_CBTC_TAC_DEPOSIT_ATOMIC | §5.48 | ✅ Shipped | Atomic LP_ADD + cBTC.tac DEPOSIT — single envelope. |
 | `0x58` | T_CBTC_TAC_WITHDRAW_ATOMIC | §5.49 | ✅ Shipped | Atomic cBTC.tac WITHDRAW + LP_REMOVE — single envelope. |
-| `0x59`–`0xFF` | — | — | ⬜ Free | Available for future opcodes. |
+| `0x59` | T_CBTC_TAC_TOP_UP | §5.47 | ✅ Shipped | Top-up cBTC.tac position with additional LP shares. |
+| `0x5A` | T_CBTC_TAC_BOND_RELEASE | §5.47 | ✅ Shipped | Release bond from cBTC.tac position. |
+| `0x5B`–`0xFF` | — | — | ⬜ Free | Available for future opcodes. |
 
 **Status reference** (per [SPEC.md §1.1](../../tacit-specs/SPEC.md)):
 - ✅ **Shipped** — in production worker + dapp, validators enforce wire format
@@ -71,7 +73,7 @@
 | Opcode | Library Module | Encoder | Decoder | Tests |
 |--------|---------------|---------|---------|-------|
 | CETCH (0x21) | `etch.ts` | ✅ `encodeCEtch` | ✅ `decodeCEtch` | ✅ |
-| T_CXFER_BPP (0x22) | `cxfer-bpp.ts` | ✅ `encodeCXferBpp` | ✅ `decodeCXferBpp` | ✅ |
+| T_CXFER_BPP (0x22) | `cxfer-bpp.ts` | ✅ wire | ✅ wire | ✅ (BP+ verify N/A) |
 | CXFER (0x23) | `transfer.ts` | ✅ `encodeCXfer` | ✅ `decodeCXfer` | ✅ |
 | T_MINT (0x24) | `mint.ts` | ✅ `encodeCMint` | ✅ `decodeCMint` | ✅ |
 | T_BURN (0x25) | `burn.ts` | ✅ `encodeCBurn` | ✅ `decodeCBurn` | ✅ |
@@ -84,8 +86,8 @@
 | T_DCLAIM (0x2C) | `dclaim.ts` | ✅ `encodeCDClaim` | ✅ `decodeCDClaim` | ✅ |
 | T_AXFER_VAR (0x37) | `axfer-var.ts` | ✅ `encodeAXferVar` | ✅ `decodeAXferVar` | ✅ |
 | T_WRAPPER_ATTEST (0x38) | `wrapper-attest.ts` | ✅ `encodeWrapperAttest` | ✅ `decodeWrapperAttest` | ✅ |
-| T_SLOT_* (0x43–0x47) | `slot.ts` | ❌ Stub | ❌ Stub | ❌ |
-| T_CBTC_TAC_* (0x49–0x4F, 0x57–0x58) | `cbtc-tac.ts` | ❌ Stub | ❌ Stub | ❌ |
+| T_SLOT_* (0x43–0x47) | `slot.ts` | ❌ types only | ❌ types only | ❌ |
+| T_CBTC_TAC_* (0x49–0x4F, 0x57–0x5A) | `cbtc-tac.ts` | ❌ types only | ❌ types only | ❌ |
 | Drafted AMM (0x2D–0x33) | `amm-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 | Drafted Farm (0x34–0x3E) | `farm-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 | Drafted Gov (0x50–0x56) | `gov-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |

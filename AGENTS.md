@@ -2,7 +2,9 @@
 
 ## Project Overview
 
-This is a pure TypeScript library implementing the **tacit confidential token meta-protocol on Bitcoin**. It provides cryptographic primitives (Pedersen, Bulletproofs, Schnorr, ECDH, Kernel signatures), opcode encode/decode for 14 shipped opcodes, and transaction utilities — all platform-agnostic with zero UI dependencies.
+This is a pure TypeScript library implementing the **tacit confidential token meta-protocol on Bitcoin**. It provides cryptographic primitives (Pedersen, classic Bulletproofs, Schnorr, ECDH, kernel signatures), opcode **wire** encode/decode for 28 shipped opcodes, and transaction utilities — all platform-agnostic with zero UI dependencies.
+
+**Do not edit `tacit-specs/`** — read-only reference submodule. Port behavior into `src/` and `tests/` only.
 
 The **reference implementation** lives at `tacit-specs/` (git submodule of [z0r0z/tacit](https://github.com/z0r0z/tacit)). The canonical spec is `tacit-specs/SPEC.md`. Ground truth for any behavioral question is the reference test suite in `tacit-specs/tests/` and the monolithic dapp at `tacit-specs/dapp/tacit.js`.
 
@@ -22,7 +24,7 @@ src/
 │   ├── ecdh.ts            # ECDH-derived blindings + amount-encryption keystreams
 │   ├── msm.ts             # Pippenger MSM (signed-digit windowed, c=3/4/5)
 │   ├── kernel.ts          # Kernel sigs, Mint msg, Asset ID, excess computation
-│   └── bulletproofs.ts    # BP range proofs (prove/verify/batch verify, IPA, Fiat-Shamir)
+│   └── bulletproofs.ts    # Classic BP range proofs (0x23); BP+ (0x22) not ported yet
 ├── envelope/
 │   ├── script.ts          # Taproot envelope script encode/decode (TACIT magic, pushdata chunking)
 │   └── payload.ts         # ByteWriter utility, u64LE, readU64LE helpers
@@ -41,18 +43,25 @@ src/
 │   ├── dclaim.ts          # T_DCLAIM (0x2C) — permissionless claim
 │   ├── axfer-var.ts       # T_AXFER_VAR (0x37) — variable-amount atomic settlement
 │   ├── wrapper-attest.ts  # T_WRAPPER_ATTEST (0x38) — wrapper attestation
-│   ├── slot.ts            # T_SLOT_* (0x43–0x47) — self-custody slot stubs
-│   ├── cbtc-tac.ts        # T_CBTC_TAC_* (0x49–0x4F, 0x57–0x58) — cBTC.tac lien stubs
+│   ├── slot.ts            # T_SLOT_* (0x43–0x47) — types only (wire TBD)
+│   ├── cbtc-tac.ts        # T_CBTC_TAC_* — types only (wire TBD)
 │   ├── amm-drafts.ts      # Drafted AMM opcodes (0x2D–0x33) — type definitions only
 │   ├── farm-drafts.ts     # Drafted farm opcodes (0x34–0x3E) — type definitions
 │   ├── gov-drafts.ts      # Drafted governance + cUSD.tac (0x50–0x56) — type definitions
 │   └── index.ts           # Barrel export for all opcode modules
 ├── transaction/
-│   ├── sighash.ts         # BIP-143 sighash (ALL, SINGLE|ACP), tx serialization, txid
+│   ├── sighash.ts         # BIP-143 sighash, preauthSellerSpendSighash, tx serialization, txid
 │   ├── address.ts         # P2WPKH script + bech32 address derivation
 │   └── utils.ts           # hex, reverseBytes, reverseBytesHex, buildAnchor, voutLE
 ├── wallet/
-│   └── keypair.ts         # secp256k1 key generation, import, export, derivePubkey
+│   ├── keypair.ts         # secp256k1 key generation, import, export, derivePubkey
+│   ├── utxo-manager.ts    # UTXO fetch, cache, select, mark-spent
+│   ├── prf.ts             # WebAuthn PRF passkey wallet (browser, optional)
+│   └── encryption.ts      # AES-GCM + PBKDF2 encrypted-at-rest privkey
+├── indexer/
+│   ├── esplora-client.ts  # Esplora REST client (base rotation, concurrency cap, cooldown)
+│   ├── ancestry.ts        # Memoized, depth-limited, kernel-sig validated ancestry walker
+│   └── index.ts           # Barrel export
 └── interfaces/
     └── chain-client.ts    # ChainClient, Broadcaster, ChainUTXO, ChainTx interfaces
 ```
@@ -88,12 +97,21 @@ src/
 4. Compare against `tacit-specs/dapp/tacit.js` for wire format encode/decode functions
 5. Typecheck: `bun run typecheck`
 6. Build: `bun run build`
-7. Test: `bun test` (runs 80+ tests across 21 files, no tacit-specs interference)
+7. Test: `bun test` (runs 100+ tests; pinned vectors in `tests/crypto/vectors.test.ts`, no tacit-specs test root)
+8. Read `docs/crypto/validation.md` before adding indexer-facing verify helpers
+
+## Validation layers
+
+1. **Wire** — `decodeEnvelopeScript`, `decodeCXfer`, … return `null` on malformed bytes (see `docs/crypto/validation.md`).
+2. **Points** — `tryBytesToPoint` before curve ops on untrusted commitments.
+3. **Crypto** — `verifyKernel`, `bpRangeAggVerify` (classic BP / opcode 0x23 only), Schnorr mint auth, Pedersen amount check.
+
+Decoders never substitute for layer 3.
 
 ## Key Cryptographic Invariants
 
 1. **Pedersen binding** — H is a NUMS generator with no known discrete log wrt G. If two implementations produce different H, they reject each other's proofs.
-2. **Kernel sig soundness** — E' = ΣC_out - ΣC_in. If E' = 0 (degenerate), reject. The sig proves the prover knows the scalar excess (Σr_out - Σr_in).
+2. **Kernel sig soundness** — E' = ΣC_out - ΣC_in (+ burned·H on BURN). If E' = 0 (degenerate), reject. `verifyKernel` returns `false` (no throw) on bad points or length mismatch.
 3. **Domain separation** — Every HMAC, BIP-340 message, and BP transcript uses a unique v1 domain tag. Cross-context replays are cryptographically impossible.
 4. **Anchor uniqueness** — Each UTXO's anchor is `(txid_BE || vout_LE)`. Bitcoin consensus prevents double-spends, so no two outputs can share an anchor.
 5. **Amount verification** — `amount_ct` is XOR with an HMAC-derived keystream. The Pedersen commitment provides the integrity check — tampering with ct yields a candidate amount that fails `pedersenCommit(candidate, r) == C`.
@@ -120,3 +138,6 @@ The `tacit-specs/` directory is a git submodule pointing at `https://github.com/
 | `tacit-specs/tests/composition.test.mjs` | End-to-end protocol tests (etch → mint → burn pipeline) |
 | `tacit-specs/dapp/tacit.js` | Monolithic dapp — source of truth for all shipped opcode encode/decode |
 | `tacit-specs/dapp/bulletproofs-plus.js` | BP+ prover/verifier reference (T_CXFER_BPP, 907 LOC) |
+| `tacit-specs/spec/CIRCUITS.md` | Circuit composition: mixer + AMM Groth16 families |
+| `tacit-specs/spec/GLOSSARY.md` | Protocol glossary |
+| `tacit-specs/spec/amendments/` | All amendment specs (stealth, preauth-bid, AMM, farm, etc.) |

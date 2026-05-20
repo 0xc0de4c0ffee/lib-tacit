@@ -66,6 +66,8 @@ export function encodeDeposit(input: DepositInput): Uint8Array {
 export function encodePoolInit(input: PoolInitInput): Uint8Array {
   if (input.assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
   if (input.poolDenom <= 0n || input.poolDenom >= (1n << 64n)) throw new Error('pool_denom out of u64 range');
+  if (!input.vkCid || input.vkCid.length < 1 || input.vkCid.length > 64) throw new Error('vk_cid must be 1–64 bytes');
+  if (!input.ceremonyCid || input.ceremonyCid.length < 1 || input.ceremonyCid.length > 64) throw new Error('ceremony_cid must be 1–64 bytes');
   if (!input.initSig || input.initSig.length !== 64) throw new Error('init_sig must be 64 bytes');
   const w = new ByteWriter();
   w.u8(Opcode.T_DEPOSIT);
@@ -96,12 +98,15 @@ export function decodeDeposit(payload: Uint8Array): DepositOutput | PoolInitOutp
     const vkCidLen = payload[p]!; p += 1;
     if (p + vkCidLen > payload.length) return null;
     const vkCid = payload.slice(p, p + vkCidLen); p += vkCidLen;
+    if (vkCidLen < 1 || vkCidLen > 64) return null;
     if (p + 1 > payload.length) return null;
     const ceremonyCidLen = payload[p]!; p += 1;
+    if (ceremonyCidLen < 1 || ceremonyCidLen > 64) return null;
     if (p + ceremonyCidLen > payload.length) return null;
     const ceremonyCid = payload.slice(p, p + ceremonyCidLen); p += ceremonyCidLen;
     const initSig = payload.slice(p, p + 64); p += 64;
     if (p !== payload.length) return null;
+    if (poolDenom <= 0n || poolDenom >= (1n << 64n)) return null;
     return { kind: 'pool-init', assetId, poolDenom, vkCid, ceremonyCid, initSig };
   }
 

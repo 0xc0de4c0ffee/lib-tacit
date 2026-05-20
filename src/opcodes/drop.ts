@@ -8,9 +8,12 @@
 //   reclaim_drop_id(32) || reclaim_sig(64) || cap_blinding(32)
 // SPEC §5.12
 
+import { sha256 } from '@noble/hashes/sha256';
+import { concatBytes } from '@noble/hashes/utils';
 import { Opcode } from '../constants/opcodes.js';
 import { TICKER_MAX_LEN, DECIMALS_MAX } from '../constants/limits.js';
 import { ByteWriter, u64LE, readU64LE } from '../envelope/payload.js';
+import { reverseBytesHex } from '../transaction/utils.js';
 
 // --- Standard drop shape ---
 
@@ -178,4 +181,10 @@ export function decodeCDrop(payload: Uint8Array): DecodedDrop | null {
   if (p !== payload.length) return null;
 
   return { kind: 'cdrop', assetId, capAmount, perClaim, merkleRoot, expiryHeight, ticker, decimals, assetInputCount, kernelSig };
+}
+
+export function dropIdFromRevealTxid(revealTxidHex: string): Uint8Array {
+  const txidBE = reverseBytesHex(revealTxidHex);
+  const voutLE = new Uint8Array(4);
+  return sha256(concatBytes(txidBE, voutLE));
 }

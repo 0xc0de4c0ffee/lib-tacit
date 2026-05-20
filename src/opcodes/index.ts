@@ -23,7 +23,7 @@ export type { PETCHInput, PETCHOutput } from './petch.js';
 export { encodePMint, decodePMint } from './pmint.js';
 export type { PMintInput, PMintOutput } from './pmint.js';
 
-export { encodeCDrop, decodeCDrop, encodeCDropReclaim } from './drop.js';
+export { encodeCDrop, decodeCDrop, encodeCDropReclaim, dropIdFromRevealTxid } from './drop.js';
 export type { CDropInput, CDropOutput, CDropReclaimInput, CDropReclaimOutput, DecodedDrop } from './drop.js';
 
 export { encodeCDClaim, decodeCDClaim, encodeCDClaimWitness } from './dclaim.js';

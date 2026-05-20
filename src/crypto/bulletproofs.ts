@@ -21,6 +21,7 @@ import {
   BP_MAX_NM,
   N_BITS,
   BP_AGG_CAPS,
+  SECP_N,
 } from '../constants/limits.js';
 import {
   GENERATOR_BP_G_DOMAIN,
@@ -31,8 +32,6 @@ import {
 
 const te = new TextEncoder();
 
-// Local SECP_N for modInvReal and randomScalar (independent of pedersen.ts import path)
-const SECP_N = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n;
 const SECP_N_MINUS_2 = SECP_N - 2n;
 
 // --- Field helpers ---

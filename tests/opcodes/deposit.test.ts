@@ -20,4 +20,18 @@ describe('T_DEPOSIT (0x29)', () => {
     const depositP = encodeDeposit({ assetId: zeroFill(32), denomination: 100n, leafCommitment: zeroFill(32), kernelSig: zeroFill(64) });
     expect(isPoolInit(depositP)).toBe(false);
   });
+
+  test('decode rejects pool_init with pool_denom 0', () => {
+    const p = encodePoolInit({
+      assetId: zeroFill(32),
+      poolDenom: 100n,
+      vkCid: zeroFill(10),
+      ceremonyCid: zeroFill(10),
+      initSig: zeroFill(64),
+    });
+    const bad = new Uint8Array(p);
+    // Zero out the pool_denom field (at offset 1+32+8=41, 8 bytes LE)
+    for (let i = 41; i < 49; i++) bad[i] = 0;
+    expect(decodeDeposit(bad)).toBeNull();
+  });
 });

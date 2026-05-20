@@ -17,7 +17,7 @@ Mimblewimble-style kernel signatures prove conservation of supply in confidentia
 import {
   computeKernelMsg, signKernel, verifyKernel,
   computeCxferExcess, computeMintMsg, assetIdFor,
-} from '@tacit/lib';
+} from 'lib-tacit';
 
 // Compute the kernel message (binds to asset, inputs, outputs, burn)
 const msg = computeKernelMsg(assetId, inputOutpoints, outputCommitments, burnedAmount);
@@ -26,9 +26,15 @@ const msg = computeKernelMsg(assetId, inputOutpoints, outputCommitments, burnedA
 const excess = computeCxferExcess(outBlindings, inBlindings);
 const sig = signKernel(msg, excess);  // 64-byte BIP-340 Schnorr sig
 
-// Verify
+// Verify (returns false on bad points — never throws)
 const valid = verifyKernel(sig, assetId, inputOutpoints, inputCommitments, outputCommitments, burnedAmount);
+
+// Parse untrusted commitment bytes before other curve ops
+import { tryBytesToPoint } from 'lib-tacit';
+const P = tryBytesToPoint(commitment33);
 ```
+
+`inputOutpoints.length` must equal `inputCommitments.length`.
 
 ## Soundness Proof
 
@@ -83,6 +89,7 @@ where `reveal_vout = 0` for CETCH and T_PETCH. This deterministically derives a 
 
 ## Common Pitfalls
 
+- `verifyKernel` must not throw on adversarial wire bytes — use it as a boolean verifier
 - E' = 0 (degenerate) must be rejected — it means the prover knows nothing
 - Kernel message MUST include all input outpoints — swapping inputs against the same sig is a replay attack
 - Output commitment order matters in the kernel hash — different order = different msg = sig won't verify

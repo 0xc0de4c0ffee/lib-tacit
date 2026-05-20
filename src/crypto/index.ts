@@ -9,6 +9,7 @@ export {
   pedersenVerify,
   pointToBytes,
   bytesToPoint,
+  tryBytesToPoint,
   xonlyFromPoint,
   bigintToBytes32,
   bytes32ToBigint,
@@ -44,8 +45,13 @@ export {
 export {
   computeKernelMsg,
   computeCxferExcess,
+  computeExcessPoint,
   signKernel,
   verifyKernel,
   computeMintMsg,
+  dropKernelMsg,
+  dropReclaimMsg,
+  openingMsg,
+  disclosureMsg,
   assetIdFor,
 } from './kernel.js';

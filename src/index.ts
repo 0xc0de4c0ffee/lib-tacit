@@ -16,8 +16,11 @@ export * from './transaction/index.js';
 // Wallet
 export * from './wallet/index.js';
 
+// Indexer / chain client
+export * from './indexer/index.js';
+
 // Interfaces
-export type { ChainClient, Broadcaster, ChainUTXO, ChainTx, Outpoint } from './interfaces/index.js';
+export type { ChainClient, Broadcaster, ChainUTXO, ChainTx, ChainTxVin, ChainTxVout, Outpoint, ChainTip, FeeEstimate, BroadcastResult } from './interfaces/index.js';
 
 // Opcodes
 export * from './opcodes/index.js';
