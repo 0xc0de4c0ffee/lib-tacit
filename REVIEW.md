@@ -2,7 +2,7 @@
 
 > Generated: 2026-05-21
 > Reference commit: `ce96228d7ca23305b470e144cdfe799201d57d90` (z0r0z/tacit)
-> lib-tacit HEAD: `14dafa3`
+> lib-tacit HEAD: `5121084`
 
 ## Full Comparison Table
 

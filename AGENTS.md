@@ -136,8 +136,12 @@ The `tacit-specs/` directory is a git submodule pointing at `https://github.com/
 | `tacit-specs/tests/vectors.test.mjs` | Pinned hex test vectors (generators, asset IDs, blindings, keystreams) |
 | `tacit-specs/tests/envelope.test.mjs` | Envelope script round-trip + rejection tests |
 | `tacit-specs/tests/composition.test.mjs` | End-to-end protocol tests (etch → mint → burn pipeline) |
+| `tacit-specs/tests/stealth-primitives.mjs` | Stealth address EC math + DH shared-secret derivation |
+| `tacit-specs/tests/cxfer-stealth.test.mjs` | CXFER-to-stealth-address integration tests |
+| `tacit-specs/tests/swap-residual.test.mjs` | AMM swap residual (inventory-aware) verification |
 | `tacit-specs/dapp/tacit.js` | Monolithic dapp — source of truth for all shipped opcode encode/decode |
 | `tacit-specs/dapp/bulletproofs-plus.js` | BP+ prover/verifier reference (T_CXFER_BPP, 907 LOC) |
 | `tacit-specs/spec/CIRCUITS.md` | Circuit composition: mixer + AMM Groth16 families |
 | `tacit-specs/spec/GLOSSARY.md` | Protocol glossary |
+| `tacit-specs/spec/amm/wire-formats.md` | AMM opcode wire format reference (T_SWAP_VAR, T_SWAP_ROUTE, etc.) |
 | `tacit-specs/spec/amendments/` | All amendment specs (stealth, preauth-bid, AMM, farm, etc.) |
