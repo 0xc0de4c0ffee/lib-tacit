@@ -1,6 +1,5 @@
 import { describe, test, expect } from 'bun:test';
 import { Groth16NotAvailableError, groth16Verify, fetchVkFromIpfs } from '../../src/crypto/groth16.js';
-
 describe('Groth16NotAvailableError', () => {
   test('Error class is instanceof Error', () => {
     const err = new Groth16NotAvailableError();
@@ -24,7 +23,9 @@ describe('Groth16NotAvailableError', () => {
 });
 
 describe('groth16Verify', () => {
-  test('rejects with error when snarkjs is available (bad vk/proof args)', async () => {
+  test('throws or rejects when snarkjs is unavailable or args are invalid', async () => {
+    // When snarkjs is not installed: throws Groth16NotAvailableError
+    // When snarkjs is installed: groth16 rejects invalid vk/proof args
     await expect(groth16Verify({}, [], {})).rejects.toThrow();
   });
 });

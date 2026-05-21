@@ -6,4 +6,20 @@ describe('T_AXFER (0x26)', () => {
     const p = encodeAXfer({ assetId: zeroFill(32), assetInputCount: 2, kernelSig: zeroFill(64), outputs: [{ commitment: zeroFill(33, 2), encryptedAmount: zeroFill(8) }, { commitment: zeroFill(33, 3), encryptedAmount: zeroFill(8) }], rangeproof: zeroFill(200) });
     expect(decodeAXfer(p)?.assetInputCount).toBe(2);
   });
+  test('round-trip with single output', () => {
+    const p = encodeAXfer({ assetId: zeroFill(32), assetInputCount: 1, kernelSig: zeroFill(64), outputs: [{ commitment: zeroFill(33, 2), encryptedAmount: zeroFill(8) }], rangeproof: zeroFill(200) });
+    expect(decodeAXfer(p)?.outputs.length).toBe(1);
+  });
+  test('rejects wrong opcode', () => {
+    expect(decodeAXfer(new Uint8Array([0x25, ...zeroFill(32)]))).toBeNull();
+  });
+  test('rejects truncated payload', () => {
+    expect(decodeAXfer(new Uint8Array([0x26, ...zeroFill(10)]))).toBeNull();
+  });
+  test('rejects commitment length mismatch', () => {
+    expect(() => encodeAXfer({ assetId: zeroFill(32), assetInputCount: 1, kernelSig: zeroFill(64), outputs: [{ commitment: zeroFill(10), encryptedAmount: zeroFill(8) }], rangeproof: zeroFill(200) })).toThrow();
+  });
+  test('rejects empty payload', () => {
+    expect(decodeAXfer(new Uint8Array())).toBeNull();
+  });
 });

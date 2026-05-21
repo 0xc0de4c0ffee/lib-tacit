@@ -90,15 +90,46 @@ describe('Envelope rejection cases', () => {
     const xonly = crypto.getRandomValues(new Uint8Array(32));
     const payload = new Uint8Array([0x21]);
     const script = encodeEnvelopeScript(xonly, payload);
-    // corrupt magic at its position (after OP_FALSE OP_IF + push before payload)
-    // First push is the xonly (32), then OP_CHECKSIG, then OP_FALSE OP_IF
-    // First chunk push: starts at offset 36 (32 + 1 + 2 + 1)
-    // Magic is the first data push inside OP_IF
-    // Actually it's easier to just create a wrong script
-    const fakeMagic = new TextEncoder().encode('FOO');
-    // Just check the decode rejects it
-    script[36] = 1; // corrupt the first push length byte
-    expect(decodeEnvelopeScript(script)).toBeNull();
+    // Build a script with 'FOO' instead of 'TACIT' magic
+    const magicPos = script.findIndex((_, i) => script[i] === 0x54 && script[i+1] === 0x41 && script[i+2] === 0x43 && script[i+3] === 0x49 && script[i+4] === 0x54);
+    if (magicPos >= 0) {
+      const corrupted = new Uint8Array(script);
+      corrupted.set(new TextEncoder().encode('FOO'), magicPos);
+      corrupted[magicPos + 3] = 0x00; // zero-pad shorter magic
+      expect(decodeEnvelopeScript(corrupted)).toBeNull();
+    }
+  });
+
+  test('wrong version', () => {
+    const xonly = crypto.getRandomValues(new Uint8Array(32));
+    const payload = new Uint8Array([0x21]);
+    const script = encodeEnvelopeScript(xonly, payload);
+    // Version is the byte immediately after 'TACIT' magic inside the payload
+    const magicEnd = script.findIndex((_, i) =>
+      script[i-4] === 0x54 && script[i-3] === 0x41 && script[i-2] === 0x43 && script[i-1] === 0x49 && script[i] === 0x54
+    );
+    if (magicEnd >= 0 && script[magicEnd + 1] === 0x01) {
+      const corrupted = new Uint8Array(script);
+      corrupted[magicEnd + 1] = 0x02;
+      expect(decodeEnvelopeScript(corrupted)).toBeNull();
+    }
+  });
+
+  test('empty payload rejection (magic+version only)', () => {
+    const xonly = crypto.getRandomValues(new Uint8Array(32));
+    // Script with no payload after version byte
+    const script = encodeEnvelopeScript(xonly, new Uint8Array([0x21, 0x02]));
+    const truncated = script.slice(0, -2); // remove last 2 payload bytes
+    expect(decodeEnvelopeScript(truncated)).toBeNull();
+  });
+
+  test('fuzzing: random buffers never throw', () => {
+    for (let len of [0, 1, 2, 10, 36, 50, 100, 500]) {
+      for (let iter = 0; iter < 20; iter++) {
+        const buf = crypto.getRandomValues(new Uint8Array(len));
+        expect(() => decodeEnvelopeScript(buf)).not.toThrow();
+      }
+    }
   });
 });
 

@@ -172,6 +172,15 @@ describe('Kernel signature', () => {
     const ops2 = [{ txid: 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899', vout: 1 }];
     expect(bytesToHex(computeKernelMsg(aid, ops1, [c]))).not.toBe(bytesToHex(computeKernelMsg(aid, ops2, [c])));
   });
+
+  test('CXFER msg ≠ BURN msg with same params (burned=0 vs 1)', () => {
+    const aid = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const c = pointToBytes(pedersenCommit(100n, 7n));
+    const ops = [{ txid: 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899', vout: 0 }];
+    const msgNoBurn = computeKernelMsg(aid, ops, [c]);
+    const msgWithBurn = computeKernelMsg(aid, ops, [c], 1n);
+    expect(bytesToHex(msgNoBurn)).not.toBe(bytesToHex(msgWithBurn));
+  });
 });
 
 describe('DROP kernel messages', () => {

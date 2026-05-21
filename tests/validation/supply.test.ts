@@ -9,7 +9,10 @@ describe('checkSupplyConservation', () => {
     expect(checkSupplyConservation([c], [c])).toBe(true);
   });
 
-  test('mismatched commitments returns true (excess computed, no check on value)', () => {
+  test('mismatched commitments produce non-degenerate excess (excess ≠ ZERO)', () => {
+    // checkSupplyConservation only checks that the excess point is valid and non-zero.
+    // It does NOT verify a kernel signature — that requires verifyKernel.
+    // This test confirms the helper doesn't crash on mismatched commitments.
     const r1 = randomScalar();
     const r2 = randomScalar();
     const c1 = pointToBytes(pedersenCommit(100n, r1));

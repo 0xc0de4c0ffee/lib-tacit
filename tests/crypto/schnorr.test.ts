@@ -34,9 +34,28 @@ describe('BIP-340 Schnorr', () => {
     const priv = secp.utils.randomPrivateKey();
     const pub = secp.getPublicKey(priv, true);
     const msg = sha256(new TextEncoder().encode('cross-check'));
-    // noble@2.1.0 has secp.schnorr.sign for cross-check
-    if (typeof secp.schnorr?.sign !== 'function') return; // skip if unavailable
+    if (typeof secp.schnorr?.sign !== 'function') return;
     const nobleSig = secp.schnorr.sign(msg, priv);
     expect(verifySchnorr(nobleSig, msg, pub.slice(1))).toBe(true);
+  });
+
+  test('rejects sig with flipped bit in R_x (tampered R)', () => {
+    const priv = secp.utils.randomPrivateKey();
+    const pub = secp.getPublicKey(priv, true);
+    const msg = sha256(new TextEncoder().encode('tamper'));
+    const sig = signSchnorr(msg, priv);
+    const tampered = new Uint8Array(sig);
+    tampered[0] ^= 0x01; // flip bit in R_x
+    expect(verifySchnorr(tampered, msg, pub.slice(1))).toBe(false);
+  });
+
+  test('cross-check: our sign round-trips noble verify', () => {
+    const priv = secp.utils.randomPrivateKey();
+    const pub = secp.getPublicKey(priv, true);
+    const msg = sha256(new TextEncoder().encode('cross-check-reverse'));
+    const sig = signSchnorr(msg, priv);
+    if (typeof secp.schnorr?.verify !== 'function') return;
+    const nobleOk = secp.schnorr.verify(sig, msg, pub.slice(1));
+    expect(nobleOk).toBe(true);
   });
 });
