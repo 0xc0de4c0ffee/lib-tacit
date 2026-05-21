@@ -24,3 +24,9 @@ export type { ChainClient, Broadcaster, ChainUTXO, ChainTx, ChainTxVin, ChainTxV
 
 // Opcodes
 export * from './opcodes/index.js';
+
+// Validation
+export * from './validation/index.js';
+
+// Recovery
+export * from './recovery/index.js';

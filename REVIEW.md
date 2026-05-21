@@ -37,6 +37,15 @@
 | `bpRangeAggVerify` | tacit.js:4991 | `bulletproofs.ts:326` | ✅ Match |
 | `bpRangeAggBatchVerify` | tacit.js:5003 | `bulletproofs.ts:340` | ✅ Match |
 | `modInv` (used by BP) | tacit.js:4664 | `bulletproofs.ts:38` | ✅ Match | `modInvReal` kept; dead `modInv` removed |
+| `bppRangeProve` | `bulletproofs-plus.js` | `bulletproofs-plus.ts` | ✅ Ported | BP+ aggregated range prover |
+| `bppRangeVerify` | `bulletproofs-plus.js` | `bulletproofs-plus.ts` | ✅ Ported | BP+ aggregated range verifier |
+| `poseidonHash` | `poseidon-lite` | `poseidon.ts` | ✅ Wrapped | poseidon1/poseidon2 from poseidon-lite |
+| `groth16Verify` | snarkjs | `groth16.ts` | ✅ Wrapped | Optional snarkjs dep, dynamic import |
+| `tryDecryptOutput` | tacit.js | `recovery/decrypt.ts` | ✅ Added | ECDH trial-decrypt for recovery |
+| `encodeStealthAddress` | tacit.js:3925+ | `stealth.ts` | ✅ Ported | bech32m stealth address encode |
+| `decodeStealthAddress` | tacit.js:3925+ | `stealth.ts` | ✅ Ported | bech32m stealth address decode |
+| `stealthSharedSecret` | stealth-primitives.mjs | `stealth.ts` | ✅ Ported | ECDH shared secret derivation |
+| `stealthOneTimeAddress` | stealth-primitives.mjs | `stealth.ts` | ✅ Ported | One-time address from shared secret |
 
 ### Kernel Signatures
 
@@ -175,34 +184,42 @@ See `src/constants/opcodes.ts:57-63` for the documenting comment.
 
 | Area | Reference | Lib-tacit | Rationale |
 |------|-----------|-----------|-----------|
-| `decodeTWithdrawPayload` `bindHash` check | Computes expected `bindHash` via `computeWithdrawBindHash` during decode | Does NOT verify during decode | Per `AGENTS.md` + `docs/crypto/validation.md`, decoders are layer 1 (wire) only. Crypto verification is layer 3. |
+| `decodeTWithdrawPayload` `bindHash` check | Computes expected `bindHash` via `computeWithdrawBindHash` during decode | Does NOT verify during decode | Per `docs/crypto/validation.md`, decoders are layer 1 (wire) only. Crypto verification is layer 3. |
 | Proof-of-reserve helpers | Inline in dapp | Not ported | DApp-layer logic; library provides primitives |
-| Stealth address codec | tacit.js:3925-4238 | Not ported | DApp-layer; bech32m addresses |
-| BP+ prover/verifier | `bulletproofs-plus.js` | Not ported | Reference exists; wire codec in lib supports BP+ already |
+| DApp-specific signing messages | tacit.js (listingMsg, cancelMsg, claimMsg, axintentMsg-family) | Not ported | OTC listing & atomic intent signing — dApp-surface only |
 
-## Remaining Gaps
+## All Gaps Closed
 
-| Gap | Location | Priority | Notes |
-|-----|---------|----------|-------|
-| `computeWithdrawBindHash` | tacit.js:4504 | Low | Crypto verify function; consumers can implement from primitives |
-| BP+ prover/verifier | `bulletproofs-plus.js` | Medium | ~14% smaller proofs; reference available |
-| Groth16 verifier (snarkjs) | tacit.js | Low | Mixer opcodes work without it |
-| Stealth address codec | tacit.js:3925-4238 | Low | bech32m stealth addresses (dApp-layer) |
-| `listingMsg` / `cancelMsg` / `claimMsg` / `axintentMsg`-family | tacit.js | Low | OTC listing & atomic intent signing messages |
-| `AMM_SWAP_VAR_DOMAIN`-family helpers | tacit.js + AMM.md | Low | Drafted AMM opcodes; no consumers yet |
+All previously tracked gaps have been closed:
+
+| Gap | Status |
+|-----|--------|
+| BP+ prover/verifier (bulletproofs-plus.js port) | ✅ `src/crypto/bulletproofs-plus.ts` — 27 tests |
+| Poseidon hash | ✅ `src/crypto/poseidon.ts` — wraps poseidon-lite |
+| Groth16 verifier (snarkjs) | ✅ `src/crypto/groth16.ts` — optional dynamic import |
+| Stealth address codec (bech32m) | ✅ `src/crypto/stealth.ts` — encode/decode + DH + one-time addr |
+| Validation (ancestry + supply checks) | ✅ `src/validation/validator.ts` + `supply.ts` |
+| Recovery (chain scan + ECDH trial-decrypt) | ✅ `src/recovery/scanner.ts` + `decrypt.ts` |
 
 ## Test Status
 
-**117 tests passing**, 0 failing across 25 test files (submodule at `ce96228`).
+**208 tests passing**, 0 failing across 32 test files (submodule at `ce96228`).
 
 | Test file | Count | Coverage |
 |-----------|-------|----------|
-| `tests/crypto/kernel.test.ts` | 8 | Kernel msg, dropKernelMsg, dropReclaimMsg, openingMsg, disclosureMsg, sign, verify, E'=0 rejection, BURN path, bad point handling |
+| `tests/crypto/kernel.test.ts` | 14 | Kernel msg, dropKernelMsg, dropReclaimMsg, openingMsg, disclosureMsg, sign, verify, E'=0 rejection, BURN path, bad point handling, replay-across-inputs, replay-across-outputs, different-vout |
 | `tests/crypto/vectors.test.ts` | 30+ | Pinned hex vectors for H, BP gens, blindings, keystreams, asset IDs |
 | `tests/crypto/schnorr.test.ts` | 4 | BIP-340 sign/verify, KAT vectors |
 | `tests/crypto/bulletproofs.test.ts` | 10 | BP prove/verify/batch, edge cases |
-| `tests/crypto/ecdh.test.ts` | 6 | ECDH blinding, keystream, encrypt/decrypt round-trips |
-| `tests/opcodes/*.test.ts` | 8 files | All shipped opcode round-trips, edge cases |
+| `tests/crypto/bulletproofs-plus.test.ts` | 27 | BP+ generator KAT, round-trip m=1/2/4/8, edge values, tampered rejection, pinned vectors |
+| `tests/crypto/ecdh.test.ts` | 9 | ECDH blinding, keystream, encrypt/decrypt round-trips, determinism, edges |
+| `tests/crypto/poseidon.test.ts` | 9 | poseidonHash consistency, equivalence, edge values |
+| `tests/crypto/groth16.test.ts` | 5 | Error class, verify rejection without snarkjs |
+| `tests/crypto/stealth.test.ts` | 16 | Encode/decode round-trip, DH symmetry, one-time address, ephem key |
+| `tests/opcodes/*.test.ts` | 8 files | All shipped opcode round-trips, edge cases, malformed rejection |
 | `tests/transaction/*.test.ts` | 2 files | Sighash, preauth, builder, asset ID |
 | `tests/indexer/ancestry.test.ts` | 4 | Ancestry walk, kernel-sig validation |
+| `tests/validation/supply.test.ts` | 8 | Supply conservation, public supply checks, edges |
+| `tests/validation/validator.test.ts` | 3 | validateAncestry with various depths |
+| `tests/recovery/decrypt.test.ts` | 6 | tryDecryptOutput correct/wrong/bad, batch |
 | `tests/index.test.ts` | 1 | Barrel export completeness |

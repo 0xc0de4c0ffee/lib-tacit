@@ -13,4 +13,11 @@ describe('T_BURN (0x25)', () => {
   test('rejects N=3', () => {
     expect(() => encodeCBurn({ assetId: zeroFill(32), burnedAmount: 1n, kernelSig: zeroFill(64), outputs: Array(3).fill({ commitment: zeroFill(33), encryptedAmount: zeroFill(8) }), rangeproof: zeroFill(0) })).toThrow();
   });
+  test('BURN with 0 outputs and non-empty rangeproof (rejection)', () => {
+    expect(() => encodeCBurn({ assetId: zeroFill(32), burnedAmount: 1n, kernelSig: zeroFill(64), outputs: [], rangeproof: zeroFill(10) })).toThrow();
+  });
+  test('BURN decode malformed (truncated bytes)', () => {
+    const p = encodeCBurn({ assetId: zeroFill(32), burnedAmount: 1n, kernelSig: zeroFill(64), outputs: [], rangeproof: zeroFill(0) });
+    expect(decodeCBurn(p.slice(0, -2))).toBeNull();
+  });
 });

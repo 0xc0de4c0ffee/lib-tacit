@@ -9,7 +9,7 @@ bun add lib-tacit @noble/secp256k1 @noble/hashes @scure/base poseidon-lite
 ## Features
 
 - **Pedersen commitments** — amount-hiding commitments over secp256k1 with NUMS generator H
-- **Bulletproofs (classic)** — aggregated range proofs (n=64 bits, m ∈ {1,2,4,8}) with Pippenger MSM; **Bulletproofs+ verify for 0x22 is not included yet** (wire codec only)
+- **Bulletproofs (classic + BP+)** — aggregated range proofs (n=64 bits, m ∈ {1,2,4,8}) with Pippenger MSM; BP+ variant (0x22) gives ~14% smaller proofs
 - **Kernel signatures** — Mimblewimble-style conservation-of-supply proofs
 - **ECDH blinding** — deterministic amount encryption/decryption from privkey + chain data
 - **BIP-340 Schnorr** — in-house sign/verify implementation (independent of noble's schnorr)
@@ -25,6 +25,11 @@ bun add lib-tacit @noble/secp256k1 @noble/hashes @scure/base poseidon-lite
 - **Key encryption** — AES-GCM + PBKDF2-SHA256 encrypted-at-rest private key storage
 - **UTXO manager** — caching, selection, sort, and spend-marking for signing flows
 - **Abstract interfaces** — `ChainClient` and `Broadcaster` for pluggable backends
+- **Poseidon hash** — BN254 hash for mixer Merkle trees (via poseidon-lite)
+- **Groth16 verifier** — optional snarkjs integration for zk-proof verification
+- **Stealth addresses** — bech32m encode/decode, ECDH shared-secret, one-time address derivation
+- **Validation** — ancestry validation + supply conservation checks
+- **Recovery** — chain scan + ECDH trial-decrypt for wallet recovery
 - **Zero dependencies on browser APIs** — runs in Node.js, Bun, Deno, and browsers
 
 ## Quick Start
@@ -82,13 +87,15 @@ lib-tacit
 ├── transaction/   — BIP-143 sighash, TX serialization, P2WPKH address
 ├── wallet/        — Keypair, UTXO manager, PRF passkey, key encryption
 ├── indexer/       — Esplora client, ancestry walker
+├── validation/    — Ancestry validation, supply conservation
+├── recovery/      — Chain scan, ECDH trial-decrypt
 └── interfaces/    — ChainClient, Broadcaster (abstract)
 ```
 
 ## Test
 
 ```bash
-bun test      # 100+ tests, isolated from tacit-specs/ (pinned vectors in tests/crypto/vectors.test.ts)
+bun test      # 208+ tests, isolated from tacit-specs/ (pinned vectors in tests/crypto/vectors.test.ts)
 bun run typecheck
 bun run build
 ```

@@ -32,6 +32,12 @@ describe('lib-tacit barrel exports (src/index.ts)', () => {
     expect(lib.randomScalar).toBeFunction();
     expect(lib.modN).toBeFunction();
     expect(lib.msm).toBeFunction();
+    expect(lib.poseidonHash).toBeFunction();
+    expect(lib.poseidonHash1).toBeFunction();
+    expect(lib.poseidonHash2).toBeFunction();
+    expect(lib.groth16Verify).toBeFunction();
+    expect(lib.bppRangeProve).toBeFunction();
+    expect(lib.bppRangeVerify).toBeFunction();
 
     // Envelope
     expect(lib.encodeEnvelopeScript).toBeFunction();
@@ -86,6 +92,20 @@ describe('lib-tacit barrel exports (src/index.ts)', () => {
     expect(lib.buildCommitTx).toBeFunction();
     expect(lib.buildRevealTx).toBeFunction();
     expect(lib.computeAssetIdFromTx).toBeFunction();
+
+    // Validation
+    expect(lib.validateAncestry).toBeFunction();
+    expect(lib.checkSupplyConservation).toBeFunction();
+    expect(lib.checkPublicSupply).toBeFunction();
+
+    // Recovery
+    expect(lib.scanForUTXOs).toBeFunction();
+    expect(lib.tryDecryptOutput).toBeFunction();
+    expect(lib.tryDecryptOutputs).toBeFunction();
+
+    // Stealth
+    expect(lib.encodeStealthAddress).toBeFunction();
+    expect(lib.decodeStealthAddress).toBeFunction();
 
     // Wallet
     expect(lib.generateKeypair).toBeFunction();

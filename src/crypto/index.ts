@@ -43,6 +43,23 @@ export {
   bpGens,
 } from './bulletproofs.js';
 export {
+  bppGens,
+  bppTranscript,
+  bppRangeProve,
+  bppRangeVerify,
+  vecAdd,
+  vecSub,
+  vecScalarMul,
+  vecScalarAdd,
+  vecScalarSub,
+  vecHadamard,
+  vecPow,
+  vecOnes,
+  weightedInnerProduct,
+  hadamardFold,
+  BPP_MAX_M,
+} from './bulletproofs-plus.js';
+export {
   computeKernelMsg,
   computeCxferExcess,
   computeExcessPoint,
@@ -55,3 +72,22 @@ export {
   disclosureMsg,
   assetIdFor,
 } from './kernel.js';
+export {
+  poseidonHash,
+  poseidonHash1,
+  poseidonHash2,
+} from './poseidon.js';
+export {
+   Groth16NotAvailableError,
+   groth16Verify,
+   fetchVkFromIpfs,
+ } from './groth16.js';
+ export {
+   encodeStealthAddress,
+   decodeStealthAddress,
+   stealthSharedSecret,
+   stealthSharedSecretRecipient,
+   stealthOneTimeAddress,
+   generateStealthEphemKey,
+ } from './stealth.js';
+ export type { StealthKey, StealthAddress } from './stealth.js';

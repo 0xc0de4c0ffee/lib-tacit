@@ -23,8 +23,12 @@ src/
 │   ├── schnorr.ts         # BIP-340 Schnorr sign/verify (in-house, independent of noble's schnorr)
 │   ├── ecdh.ts            # ECDH-derived blindings + amount-encryption keystreams
 │   ├── msm.ts             # Pippenger MSM (signed-digit windowed, c=3/4/5)
-│   ├── kernel.ts          # Kernel sigs, Mint msg, Asset ID, excess computation
-│   └── bulletproofs.ts    # Classic BP range proofs (0x23); BP+ (0x22) not ported yet
+│   ├── kernel.ts          # Kernel sigs, Mint msg, Asset ID, excess, DROP/reclaim msgs
+│   ├── bulletproofs.ts    # Classic BP range proofs (0x23)
+│   ├── bulletproofs-plus.ts # BP+ aggregated range proofs (0x22, 14% smaller proofs)
+│   ├── poseidon.ts         # Poseidon hash over BN254 (mixer Merkle trees)
+│   ├── groth16.ts          # Groth16 verifier (optional snarkjs dep)
+│   └── stealth.ts          # Stealth address bech32m encode/decode, DH shared secret
 ├── envelope/
 │   ├── script.ts          # Taproot envelope script encode/decode (TACIT magic, pushdata chunking)
 │   └── payload.ts         # ByteWriter utility, u64LE, readU64LE helpers
@@ -62,6 +66,14 @@ src/
 │   ├── esplora-client.ts  # Esplora REST client (base rotation, concurrency cap, cooldown)
 │   ├── ancestry.ts        # Memoized, depth-limited, kernel-sig validated ancestry walker
 │   └── index.ts           # Barrel export
+├── validation/
+│   ├── validator.ts       # Recursive ancestry validation
+│   ├── supply.ts          # Supply conservation checks
+│   └── index.ts           # Barrel export
+├── recovery/
+│   ├── scanner.ts         # Chain scan for UTXO recovery
+│   ├── decrypt.ts         # ECDH trial-decrypt for recovery
+│   └── index.ts           # Barrel export
 └── interfaces/
     └── chain-client.ts    # ChainClient, Broadcaster, ChainUTXO, ChainTx interfaces
 ```
@@ -95,10 +107,11 @@ src/
 2. Check pinned hex vectors in `tacit-specs/tests/vectors.test.mjs` for NUMS generators, asset IDs, blindings
 3. Compare against `tacit-specs/tests/envelope.test.mjs` for envelope script round-trips
 4. Compare against `tacit-specs/dapp/tacit.js` for wire format encode/decode functions
-5. Typecheck: `bun run typecheck`
-6. Build: `bun run build`
-7. Test: `bun test` (runs 100+ tests; pinned vectors in `tests/crypto/vectors.test.ts`, no tacit-specs test root)
-8. Read `docs/crypto/validation.md` before adding indexer-facing verify helpers
+5. Compare against `tacit-specs/dapp/bulletproofs-plus.js` for BP+ crypto (src/crypto/bulletproofs-plus.ts)
+6. Typecheck: `bun run typecheck`
+7. Build: `bun run build`
+8. Test: `bun test` (208+ tests; pinned vectors in `tests/crypto/vectors.test.ts`, no tacit-specs test root)
+9. Read `docs/crypto/validation.md` before adding indexer-facing verify helpers
 
 ## Validation layers
 

@@ -78,4 +78,29 @@ describe('Amount encryption', () => {
     const candidate = decryptAmount(ct, ks);
     expect(pedersenCommit(candidate, r).equals(C)).toBe(false);
   });
+
+  test('deriveBlinding determinism (same inputs = same output)', () => {
+    const a = keypair(), b = keypair();
+    const anchor = buildAnchor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    expect(deriveBlinding(a.priv, b.pub, anchor, 0)).toBe(deriveBlinding(a.priv, b.pub, anchor, 0));
+  });
+
+  test('deriveBlinding different anchors produce different blindings', () => {
+    const a = keypair(), b = keypair();
+    const anchor1 = buildAnchor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const anchor2 = buildAnchor('ffeeddccbbaa00998877665544332211ffeeddccbbaa00998877665544332211', 0);
+    expect(deriveBlinding(a.priv, b.pub, anchor1, 0)).not.toBe(deriveBlinding(a.priv, b.pub, anchor2, 0));
+  });
+
+  test('encryptAmount edge values (0, max u64)', () => {
+    const w = keypair();
+    const anchor = buildAnchor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const ks = deriveAmountKeystreamSelf(w.priv, anchor, 99);
+    const ct0 = encryptAmount(0n, ks);
+    expect(decryptAmount(ct0, ks)).toBe(0n);
+    const max64 = (1n << 64n) - 1n;
+    const ctMax = encryptAmount(max64, ks);
+    expect(decryptAmount(ctMax, ks)).toBe(max64);
+    expect(() => encryptAmount(1n << 64n, ks)).toThrow();
+  });
 });

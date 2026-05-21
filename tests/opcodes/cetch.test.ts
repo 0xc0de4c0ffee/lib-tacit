@@ -19,4 +19,15 @@ describe('CETCH (0x21)', () => {
     const p = encodeCEtch({ ticker: 'X', decimals: 0, commitment: zeroFill(33), rangeproof: zeroFill(1), encryptedAmount: zeroFill(8) });
     expect(decodeCEtch(new Uint8Array([...p, 0]))).toBeNull();
   });
+  test('CETCH with non-integer decimals (rejection)', () => {
+    expect(() => encodeCEtch({ ticker: 'BAD', decimals: 1.5, commitment: zeroFill(33), rangeproof: zeroFill(1), encryptedAmount: zeroFill(8) })).toThrow();
+  });
+  test('CETCH with max ticker length', () => {
+    const p = encodeCEtch({ ticker: 'ABCDEFGHIJKLMNOP', decimals: 0, commitment: zeroFill(33), rangeproof: zeroFill(1), encryptedAmount: zeroFill(8) });
+    expect(decodeCEtch(p)?.ticker).toBe('ABCDEFGHIJKLMNOP');
+  });
+  test('CETCH decode malformed (truncated bytes)', () => {
+    const p = encodeCEtch({ ticker: 'X', decimals: 0, commitment: zeroFill(33), rangeproof: zeroFill(1), encryptedAmount: zeroFill(8) });
+    expect(decodeCEtch(p.slice(0, -3))).toBeNull();
+  });
 });

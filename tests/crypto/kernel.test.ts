@@ -3,6 +3,7 @@ import { bytesToHex } from '@noble/hashes/utils';
 import * as secp from '@noble/secp256k1';
 import {
   assetIdFor, computeKernelMsg, signKernel, verifyKernel, computeExcessPoint,
+  dropKernelMsg, dropReclaimMsg,
 } from '../../src/crypto/kernel.js';
 import { pedersenCommit, pointToBytes, modN, randomScalar } from '../../src/crypto/pedersen.js';
 import { deriveBlinding, deriveChangeBlinding } from '../../src/crypto/ecdh.js';
@@ -132,5 +133,64 @@ describe('Kernel signature', () => {
     const msg = computeKernelMsg(aid, inputOps, outCs);
     const sig = signKernel(msg, excess);
     expect(verifyKernel(sig, aid, inputOps, inputCs, outCs)).toBe(false);
+  });
+
+  test('Kernel sig replay across different inputs rejects', () => {
+    const aid = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const rIn = randomScalar();
+    const rOut = randomScalar();
+    const cIn = pointToBytes(pedersenCommit(100n, rIn));
+    const cOut = pointToBytes(pedersenCommit(100n, rOut));
+    const inputOps1 = [{ txid: 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899', vout: 0 }];
+    const inputOps2 = [{ txid: 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899', vout: 1 }];
+    const excess = modN(rOut - rIn);
+    const msg1 = computeKernelMsg(aid, inputOps1, [cOut]);
+    const sig = signKernel(msg1, excess);
+    // signature for msg1 should not verify under msg2's context (different input vout)
+    expect(verifyKernel(sig, aid, inputOps2, [cIn], [cOut])).toBe(false);
+  });
+
+  test('Kernel sig replay across different output commitments rejects', () => {
+    const aid = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const inputOps = [{ txid: 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899', vout: 0 }];
+    const rIn = randomScalar();
+    const rOut = randomScalar();
+    const cIn = pointToBytes(pedersenCommit(100n, rIn));
+    const cOut1 = pointToBytes(pedersenCommit(100n, rOut));
+    const cOut2 = pointToBytes(pedersenCommit(200n, rOut));
+    const excess = modN(rOut - rIn);
+    const msg1 = computeKernelMsg(aid, inputOps, [cOut1]);
+    const sig = signKernel(msg1, excess);
+    // signature for msg1 should not verify with different output commitment
+    expect(verifyKernel(sig, aid, inputOps, [cIn], [cOut2])).toBe(false);
+  });
+
+  test('Different input vout produces different kernel msg', () => {
+    const aid = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const c = pointToBytes(pedersenCommit(100n, 42n));
+    const ops1 = [{ txid: 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899', vout: 0 }];
+    const ops2 = [{ txid: 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899', vout: 1 }];
+    expect(bytesToHex(computeKernelMsg(aid, ops1, [c]))).not.toBe(bytesToHex(computeKernelMsg(aid, ops2, [c])));
+  });
+});
+
+describe('DROP kernel messages', () => {
+  test('dropKernelMsg with valid params', () => {
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const merkleRoot = new Uint8Array(32).fill(0xab);
+    const inputs = [{ txid: 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899', vout: 0 }];
+    const msg = dropKernelMsg({
+      assetId, capAmount: 10000n, perClaim: 100n,
+      merkleRoot, expiryHeight: 850000,
+      assetInputCount: 1, assetInputs: inputs,
+    });
+    expect(msg.length).toBe(32);
+  });
+
+  test('dropReclaimMsg with valid params', () => {
+    const reclaimDropId = new Uint8Array(32).fill(0xaa);
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const msg = dropReclaimMsg({ reclaimDropId, assetId, capAmount: 5000n });
+    expect(msg.length).toBe(32);
   });
 });

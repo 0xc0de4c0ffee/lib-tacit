@@ -18,4 +18,15 @@ describe('CXFER (0x23)', () => {
     const p = encodeCXfer({ assetId: zeroFill(32), kernelSig: zeroFill(64), outputs: [{ commitment: zeroFill(33, 2), encryptedAmount: zeroFill(8) }], rangeproof: zeroFill(200) });
     expect(decodeCXfer(new Uint8Array([...p, 0]))).toBeNull();
   });
+  test('CXFER empty outputs rejection', () => {
+    expect(() => encodeCXfer({ assetId: zeroFill(32), kernelSig: zeroFill(64), outputs: [], rangeproof: zeroFill(0) })).toThrow();
+  });
+  test('CXFER with single output', () => {
+    const p = encodeCXfer({ assetId: zeroFill(32), kernelSig: zeroFill(64), outputs: [{ commitment: zeroFill(33, 2), encryptedAmount: zeroFill(8) }], rangeproof: zeroFill(100) });
+    expect(decodeCXfer(p)?.outputs.length).toBe(1);
+  });
+  test('CXFER decode malformed (truncated bytes)', () => {
+    const p = encodeCXfer({ assetId: zeroFill(32), kernelSig: zeroFill(64), outputs: [{ commitment: zeroFill(33, 2), encryptedAmount: zeroFill(8) }], rangeproof: zeroFill(10) });
+    expect(decodeCXfer(p.slice(0, -5))).toBeNull();
+  });
 });

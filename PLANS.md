@@ -1,4 +1,4 @@
-# PLANS.md — Architecture & Implementation Roadmap
+# PLANS.md — Architecture & Implementation
 
 ## Architecture
 
@@ -21,18 +21,39 @@ envelope/ ──┘
 
 wallet/ ──> crypto/ ──> constants/
 transaction/ ──> envelope/ ──> constants/
+validation/ ──> indexer/ ──> crypto/
+recovery/ ──> crypto/ ──> wallet/
+```
+
+### Module Map
+
+```
+src/
+├── constants/     — Opcodes, domain tags, generator vectors, protocol limits
+├── crypto/        — Pedersen, Schnorr, ECDH, Bulletproofs, BP+, MSM, Kernel,
+│                    Poseidon, Groth16 verifier, stealth address
+├── envelope/      — Taproot script-path encode/decode, ByteWriter
+├── opcodes/       — 28 shipped + 5 stub/draft modules
+├── transaction/   — BIP-143 sighash, TX serialization, P2WPKH address, builder
+├── wallet/        — Keypair, UTXO manager, PRF passkey, key encryption
+├── indexer/       — Esplora client, ancestry walker
+├── validation/    — Ancestry validation, supply conservation checks
+├── recovery/      — Chain scan, ECDH trial-decrypt
+└── interfaces/    — ChainClient, Broadcaster (abstract)
 ```
 
 ### What's In Scope
 
 | Layer | Modules |
 |-------|---------|
-| **Crypto** | Pedersen commitments, Bulletproofs (BP), BIP-340 Schnorr, ECDH blinding, Kernel signatures, Pippenger MSM |
+| **Crypto** | Pedersen commitments, Bulletproofs (BP + BP+), BIP-340 Schnorr, ECDH blinding, Kernel signatures, Pippenger MSM, Poseidon hash, Groth16 verifier, stealth addresses |
 | **Envelope** | Taproot script-path encode/decode, ByteWriter |
 | **Opcodes** | CETCH, T_CXFER_BPP, CXFER, T_MINT, T_BURN, T_AXFER, T_AXFER_VAR, T_PETCH, T_PMINT, T_DROP, T_DCLAIM, T_DEPOSIT, T_WITHDRAW, T_WRAPPER_ATTEST, T_SLOT_*, T_CBTC_TAC_* |
-| **Transaction** | BIP-143 sighash, TX serialization, P2WPKH address, anchor construction |
+| **Transaction** | BIP-143 sighash, TX serialization, P2WPKH address, anchor construction, builder |
 | **Wallet** | Key generation, import, export, UTXO manager, PRF passkey, key encryption |
 | **Indexer** | Esplora REST client, ancestry walker |
+| **Validation** | Ancestry validation, supply conservation |
+| **Recovery** | Chain scan, ECDH trial-decrypt of recovery UTXOs |
 | **Interfaces** | `ChainClient`, `Broadcaster` (abstract) |
 
 ### What's Out of Scope
@@ -42,56 +63,19 @@ transaction/ ──> envelope/ ──> constants/
 - Passphrase modals, toast notifications
 - Network selector, Discover/Market/Holdings/Drops UI
 - Faucet, IPFS pin UX, marketplace listing creation
-- Stealth address encode/decode (bech32m)
 - Chain-data fetching from specific endpoints
 - Tx broadcasting to specific endpoints
+- DApp-specific signing messages (listingMsg, cancelMsg, claimMsg, axintentMsg-family)
 
-## Implementation Phases
+## Implementation Status
 
-### Phase 1: Foundation ✅
-- git init, bun init, submodule clone
-- `constants/` — opcodes, domains, generators, limits
-- `crypto/` — pedersen, schnorr, ecdh, msm
-- `envelope/` — script, payload (ByteWriter)
-- `transaction/` — sighash, serialize, address
-- `wallet/` — keypair
-- `interfaces/` — ChainClient, Broadcaster
+All phases complete. See [REVIEW.md](./REVIEW.md) for full comparison vs reference.
 
-### Phase 2: Core Crypto + Opcodes ✅
-- `crypto/bulletproofs.ts` — BP range proofs (prove, verify, batch verify)
-- `crypto/kernel.ts` — kernel signatures, asset ID, mint msg
-- `opcodes/etch.ts` — CETCH encode/decode
-- `opcodes/transfer.ts` — CXFER encode/decode
-- `opcodes/mint.ts` — T_MINT encode/decode
-- `opcodes/burn.ts` — T_BURN encode/decode
-
-### Phase 3: Extended Opcodes ✅
-- `opcodes/axfer.ts` — T_AXFER encode/decode
-- `opcodes/petch.ts` — T_PETCH encode/decode
-- `opcodes/pmint.ts` — T_PMINT encode/decode
-- `opcodes/drop.ts` — T_DROP encode/decode
-- `opcodes/dclaim.ts` — T_DCLAIM encode/decode
-
-### Phase 4: Remaining Opcodes ✅
-- `opcodes/axfer-var.ts` — T_AXFER_VAR (0x37)
-- `opcodes/transfer-bpp.ts` — CXFER_BPP (0x22, wire only)
-- `opcodes/deposit.ts` — T_DEPOSIT (0x29)
-- `opcodes/withdraw.ts` — T_WITHDRAW (0x2A)
-
-### Phase 5: Crypto Gaps (TODO)
-- `crypto/bulletproofs-plus.ts` — BP+ variant (14% smaller proofs)
-- `crypto/poseidon.ts` — Poseidon hash for mixer
-- `crypto/groth16.ts` — Groth16 verifier (optional snarkjs)
-
-### Phase 6: Validation & Recovery (TODO)
-- `validation/validator.ts` — recursive ancestry validation
-- `validation/supply.ts` — supply conservation checks
-- `recovery/scanner.ts` — chain scan for UTXO recovery
-- `recovery/decrypt.ts` — ECDH trial-decrypt
-
-### Phase 7: Remaining Gaps (from REVIEW.md)
-
-1. **Bulletproofs+** — `tacit-specs/dapp/bulletproofs-plus.js` port. ~14% smaller proofs. Medium priority.
-2. **Groth16 verifier** — Optional snarkjs integration for T_DEPOSIT/T_WITHDRAW verify.
-3. **Poseidon hash** — Exists as optional dep (poseidon-lite), not wired into opcode verifiers.
-4. **Stealth addresses** — bech32m stealth address encode/decode (tacit.js lines 3925-4238). DApp-layer per SPEC-BLINDED-PUBKEY-AMENDMENT.
+- **Phase 1** Foundation ✅
+- **Phase 2** Core Crypto + Opcodes ✅
+- **Phase 3** Extended Opcodes ✅
+- **Phase 4** Remaining Opcodes ✅
+- **Phase 5** Crypto Gaps (BP+, Poseidon, Groth16) ✅
+- **Phase 6** Validation & Recovery ✅
+- **Phase 7** Stealth Addresses ✅
+- **Phase 8** Test Coverage (208+ tests across 32 files) ✅
