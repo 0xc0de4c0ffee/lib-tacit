@@ -1,7 +1,7 @@
 # lib-tacit Review: Comparison with tacit-specs Reference
 
 > Generated: 2026-05-21
-> Reference commit: `e1d2a01ebd1c1e5953778806b181bf78ca3e0f25` (z0r0z/tacit)
+> Reference commit: `ce96228d7ca23305b470e144cdfe799201d57d90` (z0r0z/tacit)
 > lib-tacit HEAD: `14dafa3`
 
 ## Full Comparison Table
@@ -193,7 +193,7 @@ See `src/constants/opcodes.ts:57-63` for the documenting comment.
 
 ## Test Status
 
-**117 tests passing**, 0 failing across 25 test files.
+**117 tests passing**, 0 failing across 25 test files (submodule at `ce96228`).
 
 | Test file | Count | Coverage |
 |-----------|-------|----------|
