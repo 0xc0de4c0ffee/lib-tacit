@@ -6,61 +6,81 @@ This document maps what needs to change in the tacit codebase at each phase of m
 
 ---
 
-## Phase 0 (Prerequisite): Internal Key Management
+## Phase 0 (Prerequisite): NUMS Standardization + Kernel Leaf
 
-**Current state:** The taproot internal key is a NUMS point (`H = lift_x(hex:0250929b...)`). No one can spend via the key path because no one knows the discrete log of the NUMS point.
+**Current state:** The taproot internal key is a NUMS point (`H = lift_x(hex:0250929b...)`). No one can spend via the key path because no one knows the discrete log of the NUMS point. The kernel sig is embedded inside the custom envelope script rather than being a first-class tapscript check.
 
-**Target:** The internal key is the tacit kernel verifying key (or a MuSig2 aggregate).
+### Phase 0a: Kernel-In-Script Leaf
+
+Add a dedicated `CHECKSIGVERIFY kernel_pubkey` leaf to the taproot tree. The kernel sig moves from inside the custom envelope payload to a proper Miniscript leaf that Bitcoin consensus verifies directly.
+
+```
+tr(NUMS_key, {
+    <kernel_pubkey> CHECKSIGVERIFY    // Leaf 0: standard spend
+})
+```
+
+**Witness for a valid spend:**
+```
+[kernel_sig_64B] [commitment_33B] [encrypted_amount_8B] [rangeproof_688B] [control_block_33B]
+```
+
+The script is 34 B. The kernel sig is checked by Bitcoin consensus. The remaining witness elements are protocol-level data (commitments, rangeproof) that the tacit indexer validates.
+
+### Phase 0b: NUMS Key Standardization
+
+Standardize the NUMS internal key across all tacit v2 outputs. The key must be:
+1. Deterministically generated (hash_to_curve with a protocol tag)
+2. No known discrete log
+3. Recognizable by indexers (they check if the output's internal key matches)
+
+**Proposal:** `NUMS_key = hash_to_curve("tacit/v2/nums-internal-key")` (see tacit-v2-rethink.md §11.5).
+
+### Key-path is NOT possible for confidential outputs
+
+A P2TR key-path spend carries exactly one witness element (the 64 B sig). There is no room for Pedersen commitments (33 B), encrypted amounts (8 B), or rangeproofs (688+ B). Key-path spends of confidential outputs would require OP_CAT (to embed data hashes in the output key), which is not yet available on Bitcoin.
+
+**Key-path and kernel sig serve different purposes:**
+- **Key-path sig**: Proves ownership of the output key (Bitcoin consensus layer)
+- **Kernel sig**: Proves supply conservation across the transaction (tacit protocol layer)
+
+They sign different messages (taproot sighash vs kernel message) and cannot be the same signature.
+
+**Future consideration:** If OP_CAT is soft-forked, the commitment data could be hashed into the output key, enabling key-path tacit spends. This is tracked in the Future Phase.
 
 ### Changes Required
 
 #### 1. `src/envelope/script.ts`
 
-Replace the NUMS internal key with the kernel verifying key:
+Add a new `buildKernelLeaf` function that creates the taproot tree with a CHECKSIGVERIFY leaf:
 
 ```typescript
-// Before:
-const INTERNAL_KEY = tryBytesToPoint(nusmH) // NUMS point
-
-// After:
 function buildTaprootOutput(kernelPubKey: Uint8Array): { address: string; outputScript: Uint8Array } {
-  const internalKey = kernelPubKey // 32 B x-only public key
-  // ...
+  const internalKey = NUMS_KEY // Protocol-wide NUMS constant, not wallet key
+  const leafScript = buildLeafScript(kernelPubKey) // <kernel_pubkey> CHECKSIGVERIFY
+  // Build tr(NUMS_key, { leaf_script })
 }
 ```
 
 #### 2. `src/crypto/kernel.ts`
 
-The kernel signature currently produces a signature that is verified against the kernel key within the script. After Phase 0, the kernel signature becomes a **BIP 340 Schnorr signature** over the taproot key-path message (`SIGHASH_DEFAULT`).
-
-```typescript
-// New: kernel sign produces a key-path signature
-function signKeyPath(kernelPrivKey: Uint8Array, tx: Transaction): Uint8Array {
-  // BIP 340 sighash over the transaction
-  const sighash = taprootSighash(tx, SIGHASH_DEFAULT)
-  // Standard Schnorr signature
-  return schnorrSign(kernelPrivKey, sighash)
-}
-```
+The kernel signature message stays the same (supply conservation proof). The verification path changes: the kernel sig is now checked by Bitcoin consensus via `CHECKSIGVERIFY` rather than by the custom decoder. The actual signing algorithm (BIP-340 Schnorr) is unchanged.
 
 #### 3. Transaction building
 
-The input witness changes from a script-path satisfaction to a key-path satisfaction:
+The input witness is a script-path satisfaction (not key-path). All spends go through the script path:
 
 ```
-// Before (script path):
-Input: <kernel_sig + sighash> <envelope_script> <control_block>
-
-// After (key path):
-Input: <kernel_sig>
+Input (script path): <kernel_sig> <commitment> <encrypted_amount> <rangeproof> <leaf_script> <control_block>
 ```
 
 ### Risks
-- Key-path spends are subject to **signature adaptor** malleability (anyone can compute a valid signature for a related key if they know the nonce). Standard BIP 340 implementations are not vulnerable.
-- If the kernel key is compromised, all assets are at risk. A MuSig2 aggregate with a hardware-backed key mitigates this.
+- No new key-path malleability concerns (key path is never used)
+- The NUMS key is well-known and cannot be compromised (no discrete log)
+- Script-path spends reveal the leaf script and control block, increasing witness size vs a hypothetical key-path model
 
 ### Revert Strategy
-The NUMS internal key can coexist: some UTXOs use the old envelope format, some use the new key-path format. The wallet tracks which format each UTXO uses.
+The old envelope format can coexist: existing v1 UTXOs use the envelope, new v2 UTXOs use the kernel leaf format. The wallet tracks which format each UTXO uses.
 
 ---
 
@@ -96,7 +116,7 @@ src/miniscript/
 #### 3. `src/transaction/sighash.ts`
 
 - Add tapscript sighash computation for leaf spends
-- The kernel key signs via the key path (no leaf sighash needed for normal spends)
+- The kernel key signs via the kernel leaf (CHECKSIGVERIFY in the tapscript, not the key path)
 
 #### 4. `src/wallet/keypair.ts`
 
@@ -119,7 +139,7 @@ src/miniscript/
 
 ### Testing
 
-- Test that key-path spend still works for normal transfers
+- Test that kernel leaf spend still works for normal transfers
 - Test that after timelock expiry, recovery key can spend the UTXO
 - Test that before timelock expiry, recovery key cannot spend the UTXO
 - Test that a bad recovery key cannot spend at any time
@@ -153,7 +173,7 @@ New CXFER variant payload (proposed):
 This is a new opcode variant (not a modification of the existing shipped CXFER wire format), ensuring backward compatibility with existing validators.
 
 - `policy_commitment`: hash of the miniscript policy tree (ensures the output's policy is fixed at creation)
-- `leaf_index`: which leaf the recipient should use when spending (0 = key path default, 1 = recovery, 2 = escrow, 3 = hashlock)
+- `leaf_index`: which leaf the recipient should use when spending (0 = kernel leaf, 1 = recovery, 2 = escrow, 3 = hashlock)
 
 #### 2. `src/envelope/script.ts`
 
@@ -164,19 +184,19 @@ This is a new opcode variant (not a modification of the existing shipped CXFER w
 #### 3. `src/crypto/kernel.ts`
 
 - Kernel signature verification must check that the leaf being spent matches the `leaf_index` committed to in the output
-- If spending via the key path, no leaf check is needed (key path = kernel is always correct)
+- If spending via the kernel leaf, no leaf index check is needed (kernel leaf = standard spend path)
 
 #### 4. Protocol change: leaf-locked kernel validation
 
 New rule: the kernel message includes the `leaf_index` and `policy_commitment`. A kernel signature over a particular leaf index is only valid for spends that satisfy that leaf. This prevents:
 
-- Creating an output with `policy_commitment = H(escrow policy)` but actually spending via the key path without consensus
+- Creating an output with `policy_commitment = H(escrow policy)` but actually spending via a different leaf without consensus
 - Switching leaves after the output is created
 
 ### Implementation Notes
 
 - The `policy_commitment` must be computed deterministically from the set of leaves and their ordering
-- A single-output transaction (e.g., MINT) may have no leaf selection (it uses the default key path)
+- A single-output transaction (e.g., MINT) may have no leaf selection (it uses the default kernel leaf)
 - The leaf index is relative to a specific tree topology that both sender and receiver agree on
 
 ---
@@ -246,7 +266,7 @@ tr(MuSig2Agg(kernel, recovery), {
 
 - Accept BIP 388 wallet policies as input
 - Parse into internal miniscript AST
-- Validate against tacit constraints (must include kernel key, must have a key-path fallback)
+- Validate against tacit constraints (must include kernel key, must have a kernel leaf fallback)
 
 #### 2. Policy commitment
 
@@ -260,7 +280,7 @@ Two approaches:
 
 - The spender selects a leaf from the tree
 - The wallet constructs the satisfaction for that leaf
-- If using the key path, only the kernel signature is required
+- If using the kernel leaf, only the kernel signature is required
 
 ### UX Implications
 
@@ -282,7 +302,7 @@ Two approaches:
 
 | Phase | Old UTXOs | New UTXOs |
 |---|---|---|
-| Phase 0 | Envelope (key path not usable) | Envelope (key path usable) |
+| Phase 0 | Envelope (key path not usable) | Kernel leaf (script path) |
 | Phase 1 | Envelope (key path not usable) | Taproot with miniscript leaf |
 | Phase 2 | Envelope or Phase 1 | Taproot with multi-leaf |
 | Phase 3 | Any previous | Taproot with governance |

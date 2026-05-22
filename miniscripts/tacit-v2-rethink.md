@@ -237,6 +237,33 @@ and_v(v:pk(buyer_recovery), older(1008))
 
 ---
 
+### 5.x Security model: kernel-in-script vs kernel-in-witness
+
+Throughout this document, the kernel sig appears in two roles:
+1. **Checked by Bitcoin consensus** (in the leaf script via `CHECKSIGVERIFY`)
+2. **Checked only by indexers** (in the witness as an opaque element)
+
+These have fundamentally different security guarantees:
+
+| Model | On-chain cost | Security guarantee |
+|---|---|---|
+| Kernel-in-script | ~34 B/leaf extra | Bitcoin consensus rejects invalid kernel sigs — miners CANNOT include a tx with a bad kernel |
+| Kernel-in-witness | ~34 B saved | Indexer-only validation — a miner COULD include a tx with a bad kernel, and only indexers (not full nodes) would detect it |
+
+**Recommendation: kernel-in-script for all confidential leaves.** The 34 B cost per leaf is
+negligible (rangeproofs are 688+ B). The consensus-layer guarantee is critical for supply
+conservation — without it, a miner could inflate tacit supply by including a tx with a fake
+kernel sig.
+
+**Exception:** Metadata-only leaves (PETCH, DROP config data) can use kernel-in-witness
+since there's no confidential value at stake. The kernel sig in those cases is a
+protocol-level optimization, not a supply conservation proof.
+
+Every leaf specification in this document assumes kernel-in-script unless explicitly noted.
+The `CHECKSIGVERIFY kernel_pubkey` wrapper is always implied.
+
+---
+
 ## 6. Leaf Index vs. Opcode Byte
 
 ### v1 dispatch
@@ -408,15 +435,15 @@ The hardware wallet displays: "This policy is a tacit confidential token wallet.
 ### Byte cost per operation
 
 | Operation | v1 on-chain (B) | v2 script-path (vB) | v2 key-path (vB) | Notes |
-|---|---|---|---|---|
+|---|---|---|---|---|---|
 | CXFER (N=1, classic BP) | 879 | ~258 | N/A | Rangeproof dominates both |
 | CXFER (N=1, BP+) | 782 | ~215 | N/A | BP+ saves ~43 vB in v2 too |
-| T_PETCH (metadata only) | 76 | ~50 | ~16 | Metadata in witness |
-| T_BURN (full, N=0) | 153 | ~60 | ~16 | No rangeproof → huge v2 savings |
-| T_DEPOSIT (pool join) | 184 | ~80 | ~16 | Simple witness carry |
-| T_WRAPPER_ATTEST (no payload) | 146 | ~55 | ~16 | Very compact in v2 |
+| T_PETCH (metadata only) | 76 | ~50 | ~16 | Metadata-only; key-path possible via OP_RETURN |
+| T_BURN (full, N=0) | 153 | ~60 | N/A | Carries commitment; key-path cannot fit it |
+| T_DEPOSIT (pool join) | 184 | ~80 | N/A | Carries routing data; key-path cannot fit it |
+| T_WRAPPER_ATTEST (no payload) | 146 | ~55 | ~16 | No confidential data; key-path possible |
 
-V2 key-path is listed as "N/A" because the commitment data can't fit in a standard key-path witness. The `~16 vB` entries for key-path represent an idealized "future with OP_CAT" model.
+V2 key-path is listed as "N/A" for any operation carrying confidential data (commitments, rangeproofs). The `~16 vB` entries for key-path represent metadata-only operations that could use OP_RETURN or tweaked output keys.
 
 ### Feature comparison
 
@@ -458,17 +485,35 @@ V2 key-path is listed as "N/A" because the commitment data can't fit in a standa
 
 ## 11. Edge Cases and Open Problems
 
-### 11.1 Multiple outputs in one transaction
+### 11.1 Multiple outputs in one transaction (batch inefficiency)
 
-v1 CXFER supports N outputs (1, 2, 4, 8) in a single transaction, sharing one rangeproof. In v2, each output is a separate P2TR UTXO with its own witness at spend time. The rangeproof aggregation is at the **transaction level**, not the UTXO level.
+v1 CXFER supports N outputs (1, 2, 4, 8) in a single transaction sharing ONE rangeproof.
+v2 creates N independent P2TR UTXOs, each carrying its own proof at spend time.
 
-This means:
-- **v1**: 8 outputs, 1 rangeproof (886 B), 1 payload, 1 kernel sig
-- **v2**: 8 outputs (each a P2TR UTXO), 8 individual spends, 8 rangeproofs (unless BP+ aggregation is extended to cross-UTXO)
+**The batch cost is asymmetric:**
+- v1: 8 outputs, 1 rangeproof (886 B classic, m=8), 1 kernel sig → ~886 B proof total
+- v2: 8 outputs, 8 rangeproofs at first spend → ~5504 B proof total (6.2× more)
 
-**Implication**: For batch transfers (N=8), v1 is more compact because it shares the rangeproof. v2 would need 8× the rangeproof data.
+**This is the single biggest v1 → v2 regression.**
 
-**Mitigation**: BP+ supports m=8 aggregation across 8 outputs. If the 8 v2 UTXOs are spent in the same transaction with a single kernel sig, the rangeproof can be aggregated at the transaction level via a **protocol-level witness structure** that is shared across all inputs.
+The mitigation mentioned in section 5 (BP+ cross-transaction aggregation) requires a
+protocol-level change: the BP+ verifier must accept a proof that covers commitments spread
+across multiple UTXOs. This changes the verification API from:
+
+```
+bppRangeVerify([C_out1, C_out2, ..., C_out8], proof)  // single tx, all outputs known
+```
+
+to:
+
+```
+bppRangeVerify([C_from_tx1_input, C_from_tx2_input, ...], proof, txid_set)
+```
+
+This is a research problem, not a specification detail. Until solved:
+- **Batch transfers (N≥2) should use v1 envelope format**, even in a v2 ecosystem
+- v2 is for single-output transfers (the common case: most CXFERs are 1:1)
+- A hybrid model: v2 for outputs, v1-style batch for the transaction envelope
 
 ### 11.2 Metadata (tickers, image URIs, descriptions)
 
@@ -476,19 +521,23 @@ v1 encodes metadata directly in the opcode payload (PETCH has ticker, decimals, 
 
 **Options for metadata in v2:**
 1. **OP_RETURN in the creation transaction**: Metadata goes in a separate OP_RETURN output, linked by txid
-2. **Encode in the witness at spend time**: Metadata is an extra witness element on the creation transaction (any number of elements are valid in a taproot script-path spend)
+2. **Encoding in the creation transaction's witness (recommended)**: Metadata goes in the
+   reveal transaction's witness as extra elements. Indexers read it when the output is first
+   created. The script doesn't touch the metadata elements — they are standardness-valid
+   extra witness items on a script-path spend.
 3. **Off-chain (indexer/API)**: Metadata is stored off-chain, pinned by the creation txid
 
-**Recommendation**: Option 2 (witness encoding). The creation transaction's witness carries the metadata alongside the commitment data. The script doesn't touch the metadata elements. Indexers extract them.
+**Recommendation**: Option 2 (creation-tx witness encoding). Metadata is visible at creation
+time because it lives in the reveal transaction's witness stack. An example CETCH witness:
 
 ```
-Witness for CETCH in v2:
+Witness for CETCH creation tx:
 [issuer_sig_64B] [commitment_33B] [encrypted_amount_8B] [rangeproof_688B] [metadata_push] [control_block_33B]
 
 Where metadata_push = [ticker_LE(2)] [ticker_data] [image_len_LE(2)] [image_data] [mint_authority_32B]
 ```
 
-Total metadata in witness: variable (same as v1's payload). But it's in witness (1 WU/B) instead of script (1 WU/B), so the on-chain cost is identical.
+Total metadata in witness: variable (same as v1's payload). But it's in witness (1 WU/B) instead of script (1 WU/B), so the on-chain cost is identical. Note: metadata is NOT delayed until first spend — it is published when the output is created.
 
 ### 11.3 Kernel message scope
 

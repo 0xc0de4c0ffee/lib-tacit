@@ -87,6 +87,33 @@ This is the **worst privacy profile** of all approaches: the output format is un
 
 ---
 
+### Witness payload fingerprinting
+
+Even without the "TACIT" magic string, v2's witness-as-payload model creates distinctive
+byte patterns detectable by chain analysis:
+
+| Element | Size | Distinguishing features |
+|---------|------|------------------------|
+| Kernel sig (BIP-340) | 64 B | Random-looking 64-byte scalar + x-only pair; indistinguishable from any Schnorr sig |
+| Pedersen commitment | 33 B | Compressed secp256k1 point: always starts with 0x02 or 0x03. Highly distinctive — normal P2TR witness items don't carry 33-byte points |
+| Encrypted amount | 8 B | Fixed-size little-endian u64. Not distinctive alone (many protocols use 8-byte values), but an 8-byte element BETWEEN a 33-byte point and a ~700-byte proof creates a recognizable triplet pattern |
+| Classic BP rangeproof | 688–886 B | Multi-scalar-multiplication proof structure. While the bytes look random, the consistent size distribution (688, 754, 820, 886 for m=1,2,4,8) is measurable. ~88% of ranges are m=1 (688 B), making this a strong fingerprint |
+| BP+ rangeproof | 591–789 B | Same size-clustering pattern at different values (591, 657, 723, 789). A ~600 B witness element immediately before the control block is suspicious |
+| Control block | 33–65 B | Starts with leaf version (0xC0–0xC7 for tapscript). First nibble `0xC` is universal |
+
+**The triplet pattern** `[33B point] [8B ct] [~700B proof]` is unique to protocols using
+Pedersen commitments + Bulletproofs. No known non-tacit protocol produces this exact witness
+structure. Chain analysis can fingerprint tacit v2 UTXOs with high confidence simply by
+checking for a 33-byte push followed by a Bulletproof-sized element.
+
+**Mitigations:**
+1. **Decoy witness elements**: Add dummy 33-byte pushes and 8-byte values to confuse the triplet pattern. Indexers skip dummy elements based on a protocol flag byte.
+2. **Proof padding**: Pad the rangeproof to a fixed size (e.g., 1024 B) to eliminate the size-clustering signal. Pad bytes are ignored by the verifier.
+3. **Batch proof hiding**: Use a single aggregated BP+ proof covering all outputs in a tx, placed anywhere in the witness stack rather than per-output.
+4. **Accept the fingerprint**: Rank-and-file privacy is improved (no "TACIT" magic), but sophisticated chain analysis can still identify tacit activity. This is a deliberate trade-off.
+
+---
+
 ## Mitigations for Tacit
 
 ### Default to Key Path

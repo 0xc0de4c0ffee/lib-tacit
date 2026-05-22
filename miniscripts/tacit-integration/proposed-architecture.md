@@ -7,37 +7,40 @@
 
 Tacit's current envelope (`src/envelope/script.ts`) uses a **NUMS internal key** for the P2TR output. Because nobody knows the discrete log of this key, every tacit UTXO must be spent via the script path. The script path contains the entire envelope (magic, version, payload), and the witness reveals a Schnorr signature under a different ephemeral key.
 
-Replace the NUMS internal key with a **meaningful key** that the tacit wallet controls:
+The v2 miniscript-native model keeps the NUMS internal key. Instead of replacing it with a meaningful key, we add semantically meaningful script leaves:
 
 ```
-tr(tacit_internal_key, { leaf_1, leaf_2, ..., leaf_N })
+tr(NUMS_key, { <kernel_pubkey> CHECKSIGVERIFY, leaf_2, ..., leaf_N })
 ```
 
-Now the wallet can spend via:
-- **Key path**: Fast, cheap, private — just a 64-byte Schnorr signature + 1-byte parity
-- **Script path leaves**: Auxiliary conditions — recovery, multisig, timelocks, hash locks
+Every spend goes through the script path:
+- **Kernel leaf** (`<kernel_pubkey> CHECKSIGVERIFY`): the kernel sig (64 B) proves supply conservation
+- **Auxiliary leaves**: recovery, multisig, timelocks, hash locks — composed with the kernel check
+- **Key path**: Not usable for confidential outputs — a key-path spend carries only one witness element (the 64 B sig), with no room for commitments or rangeproofs
 
 ## New Model: `tr()` with Tacit Internal Key
 
-### Internal Key Path
+### Kernel-in-Script Design
 
-The internal key is derived from the tacit wallet's key material — either:
-- A dedicated **kernel signing key** (the wallet's primary spend key)
-- A **MuSig2 aggregate** of N wallet keys (for threshold signing at the protocol level)
-
-Key-path spend consumes the tacit envelope payload from the **witness stack** rather than the **script**. The envelope overhead (45 B) vanishes — the payload is inferred from the witness structure alone:
+The kernel signature lives in a dedicated tapscript leaf as `<kernel_pubkey> CHECKSIGVERIFY`. This is the **kernel-in-script** model (see tacit-v2-rethink.md §5.x). Bitcoin consensus rejects any spend with an invalid kernel sig because the script explicitly checks it.
 
 ```
-Witness stack (key path):
-  [signature]          # 64 B BIP-340 Schnorr under internal key
-  [tacit payload]      # opcode + fields + kernel sig + rangeproof
+Leaf 0 (standard spend):
+  <kernel_pubkey> CHECKSIGVERIFY
 ```
 
-The indexer recognizes a key-path tacit spend by noticing the output has a `tr()` script with the known tacit internal key and a witness that contains the bip-340 signature + tacit payload bytes.
+The internal key remains the protocol NUMS key. Nobody can sign for it, so the key path is never used for confidential outputs. All spends reveal a script, but that script is minimal (34 B).
+
+**Why not key path?**
+A P2TR key-path spend can carry exactly one witness element (the 64 B signature). There is no room for the Pedersen commitment (33 B), encrypted amount (8 B), rangeproof (688+ B), or any other protocol data. The key-path and kernel sig serve fundamentally different purposes:
+- **Key-path sig**: Proves ownership of the output key (Bitcoin consensus layer)
+- **Kernel sig**: Proves supply conservation across the transaction (tacit protocol layer)
+
+They cannot be the same signature because they sign different messages (taproot sighash vs kernel message).
 
 ### Script Path Leaves
 
-When the key path is unavailable (e.g., wallet is lost, M-of-N threshold not met, timelock not yet satisfied), the spender uses a script path leaf. Each leaf is a Miniscript expression embedded in the taproot Merkle tree.
+Since the NUMS key path is never usable, all tacit spends use a script path leaf. Each leaf is a Miniscript expression embedded in the taproot Merkle tree. The kernel leaf (`<kernel_pubkey> CHECKSIGVERIFY`) is the default; auxiliary leaves are opt-in alternatives for recovery, escrow, etc.
 
 **Leaf 1: Timelocked Recovery**
 
@@ -74,8 +77,8 @@ tr(tacit_internal_key, {
 ```
 
 Settlement flow:
-1. Happy path: buyer + seller cooperate → key-path spend
-2. Dispute: either party invokes script path with their sig + arbiter's sig
+1. Happy path: buyer + seller cooperate → kernel leaf spend
+2. Dispute: either party invokes escrow leaf with their sig + arbiter's sig
 3. Arbiter detects who is entitled to the funds and co-signs
 
 **Leaf 3: Hashlock Preauth**
@@ -122,47 +125,61 @@ A DAO tacit UTXO requires 3-of-5 council signatures to spend. The kernel sig sti
 All leaves together:
 
 ```
-tr(tacit_internal_key, {
-  and_v(v:pk(recovery_key), older(52560)),
-  thresh(2, pk(buyer), pk(seller), pk(arbitrator)),
-  and_v(v:pk(seller), sha256(bid_secret_hash)),
-  thresh(3, pk(gov1), pk(gov2), pk(gov3), pk(gov4), pk(gov5))
+tr(NUMS_key, {
+  <kernel_pubkey> CHECKSIGVERIFY,                             // Leaf 0: standard spend
+  and_v(v:pk(recovery_key), older(52560)),                    // Leaf 1: recovery
+  thresh(2, pk(buyer), pk(seller), pk(arbitrator)),           // Leaf 2: escrow
+  and_v(v:pk(seller), sha256(bid_secret_hash)),               // Leaf 3: hashlock
+  thresh(3, pk(gov1), pk(gov2), pk(gov3), pk(gov4), pk(gov5)) // Leaf 4: DAO
 })
 ```
 
-The taproot Merkle tree root commits to all four leaves. The internal key path is the efficient default; script paths are opt-in fallbacks that reveal only the leaf being used (the others remain hidden under the Merkle root).
+The taproot Merkle tree root commits to all four leaves. The kernel leaf is the default spend path; auxiliary leaves are opt-in alternatives that reveal only the leaf being used (the others remain hidden under the Merkle root). The NUMS key path is never used for confidential outputs.
 
 ## Envelope Payload Repositioning
 
 Currently, the entire tacit envelope (magic + version + payload) lives in the **script** as a concatenation of pushed data chunks (see `encodeEnvelopeScript` in `src/envelope/script.ts`).
 
-In the proposed model:
+In the proposed (script-path-always) model:
 
 | Spend Path | Envelope Location | Access Pattern |
 |---|---|---|
-| Key path | Witness stack element | 0 overhead — pay 1 B for element count only |
-| Script path | Witness stack element (revealed with leaf) | Control block ~33 B + script + envelope in witness |
+| Kernel leaf | Extra witness elements | Control block ~33 B + leaf script ~34 B + protocol data in witness |
+| Auxiliary leaf | Extra witness elements | Same as above, with additional satisfaction data |
 
-The indexer identifies tacit spends by:
-1. **Key path**: Recognizing the internal key as a known tacit key, then parsing the witness payload
-2. **Script path**: Recognizing the `"TACIT"` magic bytes in the revealed script leaf's witness element
+The indexer identifies tacit spends by recognizing the NUMS internal key, then parsing the control block and extra witness elements to extract protocol data:
+
+1. Check if the output's internal key matches the tacit NUMS key
+2. Read the leaf script from the revealed control block
+3. Extract protocol data from extra witness elements (commitment, encrypted amount, rangeproof)
+4. Run the same cryptographic validations as v1
 
 The kernel sig, opcode, commitments, rangeproof — all of these remain structurally identical. They just move from the script to the witness stack.
 
+## Key-path vs script-path decision
+
+A key-path spend carries exactly one witness element (the 64 B key-path sig).
+There is NO room for kernel sig, commitments, or rangeproofs. Therefore:
+
+- **Confidential outputs** (CXFER, MINT, BURN with rangeproofs) MUST use script-path
+  with a NUMS internal key. The kernel sig goes in the leaf script as CHECKSIGVERIFY.
+- **Metadata-only outputs** (T_PETCH) COULD use key-path if protocol data is embedded
+  via a different mechanism (tweaked output key, OP_RETURN).
+
 ## Benefits
 
-### 45 B Saved on Key-Path Spends
+### 45 B Saved on Kernel Leaf Spends
 
-For every key-path tacit spend, the 45 B of envelope framing (xonly push, OP_CHECKSIG, OP_FALSE OP_IF, magic, version, OP_ENDIF) is eliminated. At protocol scale, this is meaningful:
+For every kernel-leaf spend, the 45 B of envelope framing (xonly push, OP_CHECKSIG, OP_FALSE OP_IF, magic, version, OP_ENDIF) is eliminated. At protocol scale, this is meaningful:
 
-| Metric | Current | Key-Path Model | Savings |
+| Metric | Current envelope | Kernel leaf | Savings |
 |---|---|---|---|
 | CXFER N=2 on-chain size | 879 B | 834 B | 5.1% |
 | CXFER N=8 on-chain size | 1563 B | 1518 B | 2.9% |
 | T_PETCH on-chain | 76 B | 31 B | 59.2% |
 | T_BURN N=0 on-chain | 153 B | 108 B | 29.4% |
 
-Small-opcode transactions (PETCH, BURN) benefit disproportionately because the fixed overhead dominates their on-chain footprint.
+Note: CXFER comparisons above use script-path spends (kernel leaf). Key-path is NOT viable for confidential outputs — it cannot carry commitments or rangeproofs. Small-opcode transactions (PETCH, BURN) benefit disproportionately because the fixed overhead dominates their on-chain footprint.
 
 ### UTXO Recovery Path
 
@@ -206,11 +223,11 @@ When spending via a script path leaf, the witness reveals:
 2. A control block containing the Merkle proof (~33 B per tree depth level)
 3. The witness elements (signatures, preimages, etc.)
 
-An observer learns which spending condition was used. Key-path spends reveal nothing — the indexer sees only "a key-path taproot spend with tacit payload in witness."
+An observer learns which spending condition was used. Key-path spends (not viable for confidential outputs — cannot carry protocol data) would reveal nothing, but confidential tacit outputs always use the script path.
 
 ### Cost 2: Larger Witness for Script-Path Spends
 
-| Item | Key Path | Script Path (1 leaf) | Script Path (4 leaves) |
+| Item | Key Path (hypothetical — not viable) | Script Path (1 leaf) | Script Path (4 leaves) |
 |---|---|---|---|
 | Sig | 64 B | 64 B | 64 B |
 | Control block | 0 B | ~33 B | ~65 B |
@@ -219,20 +236,17 @@ An observer learns which spending condition was used. Key-path spends reveal not
 | **Total overhead** | **64 B** | **~147 B** | **~179 B** |
 
 For a CXFER N=2 (834 B payload + overhead):
-- Key path: 898 B (paying only the sig + 1 B witness count)
-- Script path: ~981 B (additional 83 B for control block + script)
+- Key path: N/A — key-path cannot carry commitments or rangeproofs (shown for reference only)
+- Script path: ~981 B (includes 83 B for control block + leaf script)
+- **Bottom line**: Key-path is not a viable spend path for confidential tacit outputs. All confidential spends use the script path. The "key path" column in the table above is informational only.
 
-### Cost 3: Internal Key Complexity
+### Cost 3: NUMS Internal Key Detection
 
-The internal key must be:
-- Deterministically derivable from the wallet seed (so recovery works)
-- Verifiable by indexers as "this is a tacit key" (to distinguish tacit from arbitrary P2TR)
-- Possibly a MuSig2 aggregate (for multi-key path spends)
+Since the internal key is a protocol-wide NUMS key (not a wallet-derived key), indexers detect tacit outputs via the NUMS key directly:
 
-Indexers need to know which P2TR outputs are "tacit" and which are vanilla Bitcoin. Options:
-1. **Key derivation convention**: All tacit keys follow `m/tacit'/...` (a BIP 43 purpose)
-2. **On-chain marker**: A minimal magic marker in the witness (OP_RETURN-style, but less overhead)
-3. **Indexer configuration**: User tells the indexer "this xpub is my tacit wallet"
+1. **NUMS key registration**: The tacit protocol's NUMS key is a well-known constant (see tacit-v2-rethink.md §11.5). Indexers check if the output's internal key matches.
+2. **Key tag in witness**: An optional 1-byte protocol tag in the witness confirms the output is tacit (defense against false positives).
+3. **Indexer configuration**: User tells the indexer "scan for outputs matching the tacit NUMS key"
 
 ### Cost 4: No Free Lunch on Kernel Sig
 
@@ -256,11 +270,11 @@ Implementing this changes tacit at a deep level:
 
 ## Open Questions
 
-1. **Key-path-only tacit transaction format**: What exactly goes in the witness stack? Can we reuse the current payload encoding (opcode byte, fields, kernel sig, rangeproof) as-is, or does the absence of envelope framing require a new wire format?
+1. **Script-path witness layout**: What exactly goes in the witness stack for script-path spends? Can we reuse the current payload encoding (opcode byte, fields, kernel sig, rangeproof) as-is, or does the absence of envelope framing require a new wire format?
 
-2. **Indexer detection of key-path spends**: How does an indexer distinguish a "tacit key-path spend" from "someone randomly signing under a key that happens to be tacit-provisioned"? Options include a 1-byte magic prefix in the witness or a well-known key derivation path.
+2. ~~Indexer detection of key-path spends~~: **Resolved** — key-path is not viable for confidential outputs. Indexers detect script-path spends by checking the NUMS internal key. Moot point.
 
-3. **MuSig2 for the internal key**: If the internal key is a MuSig2 aggregate of N wallet participants, then key-path spends become N-of-N multisig. But MuSig2 requires a signing protocol (interactive or preprocessed nonces). Does the UX tradeoff of interactive signing outweigh the bytes saved vs. a script-path threshold leaf?
+3. ~~MuSig2 for the internal key~~: **Not applicable** — the internal key is a protocol-wide NUMS key with no discrete log. No one can sign for it. MuSig2 belongs on the script leaves as `thresh()` conditions, not on the internal key.
 
 4. **Backwards compatibility**: Existing tacit UTXOs on mainnet use the NUMS internal key. The new scheme produces outputs that look different at the script level. Can a single indexer validate both? Can old wallets spend new outputs (if the envelope payload format stays the same)?
 

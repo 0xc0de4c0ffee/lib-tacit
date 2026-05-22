@@ -16,10 +16,10 @@ Bitcoin transaction fees = (virtual bytes) × (fee rate in sat/vB). The fee rate
 ## Current Tacit Envelope Sizes
 
 | Opcode | Description | vB | Notes |
-|---|---|---|---|
+|---|---|---|---|---|
 | PETCH (0x27) | Permissionless etch | ~76 | Minimal payload: ticker, supply, keys |
 | CETCH (0x21) | Conf. etch | ~120 | Adds commitment to block |
-| **CXFER (0x23)** | **Conf. transfer** | **~305** | **2 outputs: asset + change; BP range proof (+1.4 KB?? but only ~879 B?) — 879 B = ~305 vB** |
+| **CXFER (0x23)** | **Conf. transfer** | **~368** | **2 outputs: asset + change; BP range proof. 879 B script = 879 WU. Non-witness: 139 B × 4 = 556 WU. Total: 556 + 879 + 34 (ctrl) = 1469 WU → 368 vB** |
 | MINT (0x24) | Mint | ~200 | Kernel sig + single output |
 | BURN (0x25) | Burn | ~150 | Kernel sig + burn proof |
 | DROP (0x2B) | Public claim | ~180 | Simple claim script |
@@ -34,8 +34,31 @@ All sizes are in **virtual bytes** (vB), where 1 vB = 4 WU (witness bytes) for s
 
 | Tx Type | vB |
 |---|---|
-| CXFER (current) | ~305 |
+| CXFER (current) | ~368 |
 | PETCH (current) | ~76 |
+
+---
+
+### Current v1 CXFER (N=2) baseline
+
+Non-witness: version(4) + marker(1) + flag(1) + input count(1) + outpoint(36) +
+scriptSigLen(1) + sequence(4) + output count(1) + P2TR output(43) + OP_RETURN(43) +
+locktime(4) = 139 B × 4 = 556 WU
+
+Witness: item count(1) + envelope_script(879 B) + control_block(33 B) = 913 WU
+
+Total: 556 + 913 = 1469 WU → 368 vB
+
+**v2 equivalent** (script-path, N=2 individual spends):
+556 (non-witness) + 1 (witness count) + 2×(64+33+8+688) + 2×33 (control blocks) + 2×34
+(two leaf scripts) = 556 + 1 + 1586 + 66 + 68 = 2277 WU → 570 vB
+
+Key path (if possible): 556 (non-witness) + 1 (witness count) + 64 (sig) = 621 WU → 156 vB
+(but key path can't carry protocol data — shown for reference)
+
+**Important note**: Simple fee comparisons are misleading because v2 outputs are
+individual P2TR UTXOs. A v2 "batch" of N outputs is N transactions (N×156 vB min),
+not 1 transaction. The comparison should be at the protocol level, not the transaction level.
 
 ---
 
@@ -51,14 +74,14 @@ Sizes for a taproot miniscript spend of a CXFER-like UTXO.
 | P2WSH miniscript | ~115 | No control block, larger script push |
 
 **Key path savings:**
-- Current CXFER: ~305 vB
-- Key path: ~105 vB
-- **Savings: ~200 vB (65%)**
+- Current CXFER: ~368 vB
+- Key path: N/A — key-path cannot carry commitments or rangeproofs for confidential ops
+- **Key path is not viable for confidential outputs**
 
 **Script path savings:**
-- Current CXFER: ~305 vB
-- Script path: ~123 vB
-- **Savings: ~182 vB (60%)**
+- Current CXFER: ~368 vB
+- Script path (kernel leaf): ~258 vB
+- **Savings: ~110 vB (30%)**
 
 ---
 

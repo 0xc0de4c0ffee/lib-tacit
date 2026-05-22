@@ -57,13 +57,15 @@ Every tacit opcode payload is embedded in a **taproot envelope** script:
 | Opcode | Total bytes | Rangeproof share | Envelope share | Payload share |
 |--------|-------------|------------------|----------------|---------------|
 | CETCH (0x21) | 821 | 690 (84.0%) | 47 (5.7%) | 84 (10.2%) |
-| CXFER (0x23) | 879 | 690 (78.5%) | 49 (5.6%) | 140 (15.9%) |
+| CXFER (0x23) | 879¹ | 690 (78.5%) | 49 (5.6%) | 140 (15.9%) |
 | T_CXFER_BPP (0x22) | 782 | 593 (75.8%) | 49 (6.3%) | 140 (17.9%) |
 | T_MINT (0x24) | 910 | 690 (75.8%) | 49 (5.4%) | 171 (18.8%) |
 | T_AXFER (0x26) | 880 | 690 (78.4%) | 49 (5.6%) | 141 (16.0%) |
 | T_AXFER_VAR (0x37) | 987 / 890 | 690/593 (69.9%/66.6%) | 52 (5.3%/5.8%) | 245 (24.8%/27.5%) |
 | T_PREAUTH_BID (0x5B) | 969 / 872 | 690/593 (71.2%/68.0%) | 52 (5.4%/6.0%) | 227 (23.4%/26.0%) |
 | T_PREAUTH_BID_VAR (0x5C) | 1006 / 909 | 690/593 (68.6%/65.2%) | 52 (5.2%/5.7%) | 264 (26.2%/29.0%) |
+
+¹ 879 B script in witness = 879 WU at N=2. Total tx weight ~1469 WU ≈ 368 vB depending on output structure.
 
 ### Non-confidential / metadata opcodes
 
@@ -125,7 +127,7 @@ Every tacit opcode payload is embedded in a **taproot envelope** script:
 | Feature | Tacit today (B) | Miniscript alt (B) | Savings (B) | Savings (%) | Notes |
 |---------|----------------|--------------------|-------------|-------------|-------|
 | Envelope overhead | 45 + chunk | 0 (pure script) | ~47 | 100% | Envelope removed; Miniscript IS the script |
-| Single pubkey check (fast path) | 33 (key) + 64 (sig) = 97 | 34 (pk leaf) + 64 (sig) + 33 (cb) = 131 | **−34** | **−35%** | Key path spend is cheaper (no control block). Taproot key-path wins here. |
+| Single pubkey check (fast path) | 33 (key) + 64 (sig) = 97 | 34 (pk leaf) + 64 (sig) + 33 (cb) = 131 | **−34** | **−35%** | Kernel leaf adds 34 B control block vs. hypothetical key-path. Key-path cannot carry protocol data — kernel leaf is the standard for confidential outputs. |
 | Timelocked recovery | Not possible | ~80 leaf + 65 sig + 33 cb = 178 | N/A | — | New capability |
 | 2-of-3 escrow | Not possible (T_AXFER needs both parties) | ~108 leaf + 130 sigs + 33 cb = 271 | N/A | — | New capability |
 | Hashlock atomic swap | Not possible (needs preauth-bid protocol) | ~73 leaf + 99 sig+preimage + 33 cb = 205 | N/A | — | New capability |
@@ -136,16 +138,16 @@ Every tacit opcode payload is embedded in a **taproot envelope** script:
 | Permissionless claim (T_DCLAIM) | 187 | ~160 (pk + claim data) | ~27 | 14% | Modest |
 | Multi-sig DAO vote | Not implemented | ~108 + keys × 33 B | N/A | — | New capability |
 
-### Key-path vs. script-path costs
+### Kernel leaf vs. script-path costs
 
-Using **key path spend** (the tacit kernel sig) avoids the control block entirely:
+Using **kernel leaf spend** (via the CHECKSIGVERIFY leaf) adds a control block vs a hypothetical key-path model:
 
 ```
-Key path:  33 (xonly) + 1 (CHECKSIG) + 64 (witness sig) = 98 vB
-Script path (1 leaf): 34 (script) + 65 (sig witness) + 33 (control block) = 132 vB
+Kernel leaf (script path): 34 (script) + 65 (sig witness) + 33 (control block) = 132 vB
+Hypothetical key path (not viable for confidential ops): 33 (xonly) + 1 (CHECKSIG) + 64 (witness sig) = 98 vB
 ```
 
-The key path is **34 vB cheaper** per spend. For high-volume opcodes like CXFER, this matters.
+Key-path is **34 vB cheaper** in theory, but cannot carry protocol data (commitments, rangeproofs). The kernel leaf is the standard spend path for all confidential tacit outputs. For high-volume opcodes like CXFER, the kernel leaf overhead vs the envelope format is the relevant comparison.
 
 ## 6. Detailed Breakdown — Selected Opcodes
 
@@ -166,11 +168,11 @@ Miniscript alternative (~60 B):
    + witness: 64 B signature
    + control block: 33 B
    + OP_RETURN with asset_id: 34 B
-   ---- Total: ~131 B  (if OP_RETURN needed)
-   Better: just burn via kernel at key path: 98 B
+    ---- Total: ~131 B  (if OP_RETURN needed)
+    Note: key-path cannot carry protocol data (asset ID, blinding). Burn via kernel leaf: ~132 B.
 ```
 
-Actually burn can be done with just the key path spend — no Miniscript leaf needed. The `OP_RETURN` is only if metadata must be preserved. A pure burn via kernel sig is **98 B** (key path).
+A burn via kernel leaf (CHECKSIGVERIFY) uses the standard spend path — no OP_RETURN needed if the kernel message carries the burn proof. Total: ~132 B (leaf script + sig + control block). Key-path is not viable because it cannot carry the commitment or kernel data.
 
 ### T_PETCH (76 B → ~50 B)
 
@@ -226,19 +228,20 @@ The real promise is not byte reduction but **new spending conditions**:
 
 These are **qualitative** improvements — they turn tacit from a bilateral protocol into a **multilateral programmable asset protocol**.
 
-### Insight 4: Hybrid model (key path + script path) is optimal
+### Insight 4: Kernel leaf + auxiliary leaves is the correct model
 
 ```
-Taproot output = internal_key (tacit kernel) + Merkle root of:
+Taproot output = NUMS_key + Merkle root of:
+  Leaf 0: <kernel_pubkey> CHECKSIGVERIFY  (standard spend)
   Leaf 1: timelocked_recovery
   Leaf 2: escrow_2_of_3
   Leaf 3: hashlock
 ```
 
-- **Key path spend**: tacit kernel sig (97 B, cheapest, default path)
-- **Script path spend**: only when auxiliary conditions are needed (recovery, dispute, hashlock)
+- **Kernel leaf spend**: kernel sig via CHECKSIGVERIFY (132 vB, default path)
+- **Auxiliary leaf spend**: only when additional conditions are needed (recovery, dispute, hashlock)
 
-This gives the best of both worlds: low cost for happy path, rich conditions for edge cases.
+Key-path is NOT viable for confidential outputs — it cannot carry commitments or rangeproofs. The "hybrid" model uses the kernel leaf as the default, not the key path.
 
 ### Insight 5: The sweet spot is metadata + auxiliary conditions
 
@@ -247,7 +250,7 @@ Target opcodes for Miniscript migration (in order of impact):
 1. **T_BURN** — largest relative savings (61%), simplest replacement
 2. **T_PETCH** — 34% savings, metadata can be committed to script
 3. **T_DCLAIM / T_DEPOSIT / T_PMINT** — 13–14% savings, modest but clean
-4. **T_AXFER / CXFER / CETCH** — not worth removing envelope; keep key path
+4. **T_AXFER / CXFER / CETCH** — not worth removing envelope; use kernel leaf
 5. **New capabilities** — recovery, escrow, hashlock, multisig — **primary motivation**
 
 ## 8. Summary
@@ -256,8 +259,8 @@ Target opcodes for Miniscript migration (in order of impact):
 |--------|-------|
 | Envelope removal savings (confidential) | ~0–34 B (0–6%) |
 | Envelope removal savings (metadata) | ~24–93 B (13–61%) |
-| Key path vs. script path difference | 34 B cheaper (key path) |
+| Kernel leaf overhead vs. hypothetical key path | 34 B (key path not viable for confidential ops) |
 | New capabilities unlocked | 5 (recovery, escrow, hashlock, multisig, decaying) |
 | Rangeproof bottleneck | 65–84% of confidential opcodes — unfixable |
 
-> **Bottom line:** Miniscript does not meaningfully reduce bytes for confidential tacit opcodes. Its primary value is enabling **new spending conditions** that today require complex multi-transaction protocols or are simply impossible. The optimal integration is a **hybrid taproot tree** with the tacit kernel as key-path default and Miniscript leaves for auxiliary conditions.
+> **Bottom line:** Miniscript does not meaningfully reduce bytes for confidential tacit opcodes. Its primary value is enabling **new spending conditions** that today require complex multi-transaction protocols or are simply impossible. The optimal integration is a **script-path-only taproot tree** with the kernel leaf as the default and Miniscript leaves for auxiliary conditions. Key-path is not viable for confidential outputs.
