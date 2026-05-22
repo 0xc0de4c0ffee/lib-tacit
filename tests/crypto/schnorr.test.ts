@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'bun:test';
 import { sha256 } from '@noble/hashes/sha256';
+import { hexToBytes } from '@noble/hashes/utils';
 import * as secp from '@noble/secp256k1';
 import { signSchnorr, verifySchnorr } from '../../src/crypto/schnorr.js';
 
@@ -57,5 +58,21 @@ describe('BIP-340 Schnorr', () => {
     if (typeof secp.schnorr?.verify !== 'function') return;
     const nobleOk = secp.schnorr.verify(sig, msg, pub.slice(1));
     expect(nobleOk).toBe(true);
+  });
+
+  test('rejects all-zero signature', () => {
+    const priv = secp.utils.randomPrivateKey();
+    const pub = secp.getPublicKey(priv, true);
+    const msg = sha256(new TextEncoder().encode('all-zero-sig'));
+    const zeroSig = new Uint8Array(64);
+    expect(() => verifySchnorr(zeroSig, msg, pub.slice(1))).toThrow();
+  });
+
+  test('deterministic fixed key round-trip', () => {
+    const fixedPriv = hexToBytes('0101010101010101010101010101010101010101010101010101010101010101');
+    const fixedPub = secp.getPublicKey(fixedPriv, true);
+    const msg = sha256(new TextEncoder().encode('kat-vector'));
+    const sig = signSchnorr(msg, fixedPriv);
+    expect(verifySchnorr(sig, msg, fixedPub.slice(1))).toBe(true);
   });
 });

@@ -133,6 +133,49 @@ describe('Envelope rejection cases', () => {
   });
 });
 
+test('5000-byte payload round-trip', () => {
+  const xonly = crypto.getRandomValues(new Uint8Array(32));
+  const payload = new Uint8Array(5000);
+  payload[0] = 0x21;
+  crypto.getRandomValues(payload.subarray(1));
+  const script = encodeEnvelopeScript(xonly, payload);
+  const dec = decodeEnvelopeScript(script);
+  expect(dec).not.toBeNull();
+  expect(eqBytes(dec!.signingPubXonly, xonly)).toBe(true);
+  expect(dec!.opcode).toBe(0x21);
+  expect(eqBytes(dec!.payload, payload)).toBe(true);
+});
+
+test('null-ish input rejection (empty Uint8Array)', () => {
+  expect(decodeEnvelopeScript(new Uint8Array(0))).toBeNull();
+});
+
+test('wrong xonly push length rejection', () => {
+  const xonly = crypto.getRandomValues(new Uint8Array(32));
+  const bad = new Uint8Array([33, ...xonly, 0xac, 0x00, 0x63, 0x68]);
+  expect(decodeEnvelopeScript(bad)).toBeNull();
+});
+
+test('OP_DUP where push expected rejection', () => {
+  const bad = new Uint8Array([0x76, 0xac, 0x00, 0x63, 0x68]);
+  expect(decodeEnvelopeScript(bad)).toBeNull();
+});
+
+test('OP_FALSE OP_IF absence rejection', () => {
+  const xonly = crypto.getRandomValues(new Uint8Array(32));
+  const bad = new Uint8Array([32, ...xonly, 0xac, 0x68]);
+  expect(decodeEnvelopeScript(bad)).toBeNull();
+});
+
+test('deeper fuzzing: random buffers never throw', () => {
+  const lengths = [0, 1, 10, 50, 100, 500, 1000];
+  for (let iter = 0; iter < 200; iter++) {
+    const len = lengths[iter % lengths.length]!;
+    const buf = crypto.getRandomValues(new Uint8Array(len));
+    expect(() => decodeEnvelopeScript(buf)).not.toThrow();
+  }
+});
+
 describe('Magic / version pinning', () => {
   test('magic bytes = "TACIT"', () => {
     expect(new TextEncoder().encode(ENVELOPE_MAGIC)).toEqual(new Uint8Array([0x54, 0x41, 0x43, 0x49, 0x54]));

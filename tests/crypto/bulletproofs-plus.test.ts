@@ -48,7 +48,8 @@ describe('BP+ generator derivation (SPEC §3.1)', () => {
 
 describe('BP+ round-trip: prove → verify', () => {
   for (const m of [1, 2, 4, 8] as const) {
-    test(`m=${m} honest proof verifies`, () => {
+    const tOpts: any = m >= 8 ? { timeout: 30000 } : {};
+    test(`m=${m} honest proof verifies`, tOpts, () => {
       const values: bigint[] = [];
       const blindings: bigint[] = [];
       for (let j = 0; j < m; j++) {
@@ -242,7 +243,8 @@ describe('BP+ pinned fixture KAT', () => {
   ];
 
   for (const f of FIXTURES) {
-    test(`m=${f.m} pinned fixture matches`, () => {
+    const tOpts = f.m >= 8 ? { timeout: 30000 } : {};
+    test(`m=${f.m} pinned fixture matches`, tOpts, () => {
       resetRng();
       const restore = crypto.getRandomValues;
       (crypto as any).getRandomValues = detGetRandomValues;

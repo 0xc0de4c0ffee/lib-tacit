@@ -29,6 +29,10 @@ export const Opcode = {
   T_CTAC_LIEN_SPLIT:    0x4F,
   T_CBTC_TAC_DEPOSIT_ATOMIC:  0x57,
   T_CBTC_TAC_WITHDRAW_ATOMIC: 0x58,
+  T_CBTC_TAC_TOP_UP:          0x59,
+  T_CBTC_TAC_BOND_RELEASE:    0x5A,
+  T_PREAUTH_BID:              0x5B,
+  T_PREAUTH_BID_VAR:          0x5C,
 
   // === Drafted (spec written, implementation in progress) ===
   T_LP_ADD:             0x2D,
@@ -54,13 +58,6 @@ export const Opcode = {
   T_CUSD_TAC_DEPOSIT:   0x54,
   T_CUSD_TAC_WITHDRAW:  0x55,
   T_CUSD_TAC_FORCE_CLOSE: 0x56,
-  // 0x57–0x58 are shipped atomic cBTC.tac opcodes (above)
-  // NOTE: SPEC.md lists 0x59 as T_PREAUTH_BID (drafted), but the dapp (ground truth)
-  // ships T_CBTC_TAC_TOP_UP at 0x59 and T_CBTC_TAC_BOND_RELEASE at 0x5A.
-  // Lib-tacit follows the dapp for shipped opcode assignments. When the SPEC catches
-  // up, T_PREAUTH_BID may need reassignment to a different free slot.
-  T_CBTC_TAC_TOP_UP:     0x59,
-  T_CBTC_TAC_BOND_RELEASE: 0x5A,
 
   // === Reserved ===
   T_LP_ADD_RANGE:       0x3F,
@@ -70,6 +67,8 @@ export const Opcode = {
   T_SLOT_NOTE:          0x48,
   T_SLOT_FRACTIONALIZE: 0x4D,
   T_SLOT_RECONSOLIDATE: 0x4E,
+  T_PREAUTH_BID_BATCH:  0x5D,
+  T_PREAUTH_MATCH:      0x5E,
 } as const;
 
 export type OpcodeValue = (typeof Opcode)[keyof typeof Opcode];
@@ -90,4 +89,5 @@ export const ShippedOpcodes: ReadonlySet<number> = new Set([
   Opcode.T_CTAC_LIEN_SPLIT,
   Opcode.T_CBTC_TAC_DEPOSIT_ATOMIC, Opcode.T_CBTC_TAC_WITHDRAW_ATOMIC,
   Opcode.T_CBTC_TAC_TOP_UP, Opcode.T_CBTC_TAC_BOND_RELEASE,
+  Opcode.T_PREAUTH_BID, Opcode.T_PREAUTH_BID_VAR,
 ]);

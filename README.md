@@ -8,29 +8,32 @@ bun add lib-tacit @noble/secp256k1 @noble/hashes @scure/base poseidon-lite
 
 ## Features
 
-- **Pedersen commitments** — amount-hiding commitments over secp256k1 with NUMS generator H
-- **Bulletproofs (classic + BP+)** — aggregated range proofs (n=64 bits, m ∈ {1,2,4,8}) with Pippenger MSM; BP+ variant (0x22) gives ~14% smaller proofs
-- **Kernel signatures** — Mimblewimble-style conservation-of-supply proofs
-- **ECDH blinding** — deterministic amount encryption/decryption from privkey + chain data
-- **BIP-340 Schnorr** — in-house sign/verify implementation (independent of noble's schnorr)
-- **Opcode encode/decode** — 28 shipped opcodes:
-  CETCH (0x21), T_CXFER_BPP (0x22), CXFER (0x23), T_MINT (0x24), T_BURN (0x25),
-  T_AXFER (0x26), T_PETCH (0x27), T_PMINT (0x28), T_DEPOSIT (0x29),
-  T_WITHDRAW (0x2A), T_DROP (0x2B), T_DCLAIM (0x2C), T_AXFER_VAR (0x37),
-  T_WRAPPER_ATTEST (0x38), T_SLOT_* (0x43–0x47), T_CBTC_TAC_* (0x49–0x4F, 0x57–0x5A)
-- **Taproot envelopes** — script-path envelope construction (TACIT magic, version, chunked pushdata)
-- **Transaction tools** — BIP-143 sighash (ALL, SINGLE|ACP), tx serialization, P2WPKH address derivation
-- **Wallet keypair** — secp256k1 key generation, import, export
-- **PRF passkey wallet** — WebAuthn PRF extension for biometric key derivation (browser)
-- **Key encryption** — AES-GCM + PBKDF2-SHA256 encrypted-at-rest private key storage
-- **UTXO manager** — caching, selection, sort, and spend-marking for signing flows
-- **Abstract interfaces** — `ChainClient` and `Broadcaster` for pluggable backends
-- **Poseidon hash** — BN254 hash for mixer Merkle trees (via poseidon-lite)
-- **Groth16 verifier** — optional snarkjs integration for zk-proof verification
-- **Stealth addresses** — bech32m encode/decode, ECDH shared-secret, one-time address derivation
-- **Validation** — ancestry validation + supply conservation checks
-- **Recovery** — chain scan + ECDH trial-decrypt for wallet recovery
-- **Zero dependencies on browser APIs** — runs in Node.js, Bun, Deno, and browsers
+| Category | Feature | Description |
+|----------|---------|-------------|
+| **Crypto** | Pedersen commitments | Amount-hiding `C = a·H + r·G` over secp256k1 with NUMS generator H |
+| | Bulletproofs (classic) | Aggregated range proofs (n=64 bits, m∈{1,2,4,8}) with Pippenger MSM |
+| | Bulletproofs+ (0x22) | ~14% smaller aggregated range proofs (m∈{1,2,4,8}) |
+| | BIP-340 Schnorr | In-house sign/verify, independent of noble's schnorr |
+| | ECDH blinding | Deterministic amount encryption/decryption from privkey + chain data |
+| | Kernel signatures | Mimblewimble-style conservation-of-supply proofs |
+| | Poseidon hash | BN254 hash for mixer Merkle trees (via poseidon-lite) |
+| | Groth16 verifier | Optional snarkjs integration for zk-proof verification |
+| **Opcodes** | 28 shipped encode/decode | CETCH (0x21) · T_CXFER_BPP (0x22) · CXFER (0x23) · T_MINT (0x24) · T_BURN (0x25) · T_AXFER (0x26) · T_PETCH (0x27) · T_PMINT (0x28) · T_DEPOSIT (0x29) · T_WITHDRAW (0x2A) · T_DROP (0x2B) · T_DCLAIM (0x2C) · T_AXFER_VAR (0x37) · T_WRAPPER_ATTEST (0x38) · T_SLOT_* (0x43–0x47) · T_CBTC_TAC_* (0x49–0x4F, 0x57–0x5A) |
+| **Envelope** | Taproot script-path | TACIT magic, version, chunked pushdata encode/decode |
+| **Transaction** | Tools | BIP-143 sighash (ALL, SINGLE\|ACP), tx serialization, P2WPKH address, preauth, builder |
+| **Wallet** | Keypair | secp256k1 generation, import, export |
+| | PRF passkey | WebAuthn PRF extension for biometric key derivation (browser) |
+| | Key encryption | AES-GCM + PBKDF2-SHA256 encrypted-at-rest storage |
+| | UTXO manager | Caching, selection, sort, spend-marking |
+| **Indexer** | Esplora client | REST client with base rotation, concurrency cap, cooldown |
+| | Ancestry walker | Memoized, depth-limited, kernel-sig validated |
+| **Validation** | Ancestry | Recursive ancestry validation |
+| | Supply | Pedersen + public supply conservation checks |
+| **Recovery** | Scanner | Chain scan for UTXO recovery |
+| | Decrypt | ECDH trial-decrypt of encrypted amounts |
+| **Interfaces** | ChainClient | Abstract chain data access (fetchTx, fetchUTXOs, etc.) |
+| | Broadcaster | Abstract transaction submission |
+| **Runtime** | Cross-platform | Zero DOM, zero window, runs in Node.js, Bun, Deno, and browsers |
 
 ## Quick Start
 
@@ -95,7 +98,7 @@ lib-tacit
 ## Test
 
 ```bash
-bun test      # 208+ tests, isolated from tacit-specs/ (pinned vectors in tests/crypto/vectors.test.ts)
+bun test      # 285+ tests, isolated from tacit-specs/ (pinned vectors in tests/crypto/vectors.test.ts)
 bun run typecheck
 bun run build
 ```

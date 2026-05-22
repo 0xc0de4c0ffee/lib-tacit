@@ -98,4 +98,4 @@ Canonical vectors are pinned in `src/constants/generators.ts`.
 - Aggregation size must be power of 2 in {1,2,4,8}
 - Transcript divergence between implementations silently breaks interop
 - Pippenger MSM window size auto-selected: c=3 for ≤32 points, c=4 for 33-128, c=5 for >128
-- BP+ variant (not yet ported) gives ~14% smaller proof sizes
+- BP+ variant (opcode 0x22) uses `bppRangeVerify` from `bulletproofs-plus.ts` — ~14% smaller proof sizes

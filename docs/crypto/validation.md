@@ -20,7 +20,7 @@ Use `tryBytesToPoint(commitment33)` before curve math on untrusted bytes.
 |--------|-----|
 | Kernel conservation | `verifyKernel(sig, assetId, inputOutpoints, inputCommitments, outputCommitments, burnedAmount?)` — returns `false` on bad points (never throws) |
 | Range proof (classic BP, opcode 0x23) | `bpRangeAggVerify(commitments, rangeproof)` |
-| Range proof (BP+, opcode 0x22) | **Not in this library yet** — see `tacit-specs/dapp/bulletproofs-plus.js` |
+| Range proof (BP+, opcode 0x22) | `bppRangeVerify(commitments, proofBytes)` from `./bulletproofs-plus.js` |
 | Amount ↔ commitment | `decryptAmount(ct, keystream)` then `pedersenVerify(C, amount, blinding)` |
 | Mint authority | `verifySchnorr(issuerSig, computeMintMsg(...), mintAuthorityXonly)` |
 | Shielded withdraw | Groth16 + nullifier rules (future `snarkjs` integration) |

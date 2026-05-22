@@ -110,7 +110,7 @@ src/
 5. Compare against `tacit-specs/dapp/bulletproofs-plus.js` for BP+ crypto (src/crypto/bulletproofs-plus.ts)
 6. Typecheck: `bun run typecheck`
 7. Build: `bun run build`
-8. Test: `bun test` (208+ tests; pinned vectors in `tests/crypto/vectors.test.ts`, no tacit-specs test root)
+8. Test: `bun test` (285+ tests; pinned vectors in `tests/crypto/vectors.test.ts`, no tacit-specs test root)
 9. Read `docs/crypto/validation.md` before adding indexer-facing verify helpers
 
 ## Validation layers

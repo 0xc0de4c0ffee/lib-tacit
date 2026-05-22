@@ -75,6 +75,13 @@ describe('lib-tacit barrel exports (src/index.ts)', () => {
     expect(lib.encodeWrapperAttest).toBeFunction();
     expect(lib.decodeWrapperAttest).toBeFunction();
 
+    // Drafted opcode stubs (0x5B+)
+    expect(lib.encodePreauthBid).toBeFunction();
+    expect(lib.decodePreauthBid).toBeFunction();
+    expect(lib.encodePreauthBidVar).toBeFunction();
+    expect(lib.decodePreauthBidVar).toBeFunction();
+    expect(lib.PREAUTH_BID_DOMAIN).toBe('tacit-preauth-bid-v1');
+
     // Opcode stubs (shipped but no wire codec)
     expect(lib.encodeSlotMint).toBeFunction();
     expect(lib.encodeSlotBurn).toBeFunction();

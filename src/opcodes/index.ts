@@ -84,3 +84,9 @@ export type {
   GovProposalInput, GovVoteInput, GovVetoInput, GovExecuteInput,
   CusdTacDepositInput, CusdTacWithdrawInput, CusdTacForceCloseInput,
 } from './gov-drafts.js';
+
+// Drafted — Preauth-bid family (0x5B-0x5E)
+export { encodePreauthBid, decodePreauthBid } from './preauth-bid.js';
+export type { PreauthBidInput, PreauthBidDecoded, PreauthBidOutput } from './preauth-bid.js';
+export { encodePreauthBidVar, decodePreauthBidVar } from './preauth-bid-var.js';
+export type { PreauthBidVarInput, PreauthBidVarDecoded } from './preauth-bid-var.js';

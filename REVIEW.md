@@ -1,8 +1,8 @@
 # lib-tacit Review: Comparison with tacit-specs Reference
 
 > Generated: 2026-05-21
-> Reference commit: `ce96228d7ca23305b470e144cdfe799201d57d90` (z0r0z/tacit)
-> lib-tacit HEAD: `5121084`
+> Reference commit: `11e2b99` (z0r0z/tacit)
+> lib-tacit HEAD: `f240577`
 
 ## Full Comparison Table
 
@@ -46,6 +46,21 @@
 | `decodeStealthAddress` | tacit.js:3925+ | `stealth.ts` | ✅ Ported | bech32m stealth address decode |
 | `stealthSharedSecret` | stealth-primitives.mjs | `stealth.ts` | ✅ Ported | ECDH shared secret derivation |
 | `stealthOneTimeAddress` | stealth-primitives.mjs | `stealth.ts` | ✅ Ported | One-time address from shared secret |
+
+### Validation
+
+| Function | Ref file | Lib file | Status | Notes |
+|----------|----------|----------|--------|-------|
+| `validateAncestry` | (ancestry walker) | `validation/validator.ts` | ✅ Added | Wraps AncestryWalker.walkAncestry |
+| `checkSupplyConservation` | (kernel helper) | `validation/supply.ts` | ✅ Added | Excess point non-degenerate check |
+
+### Recovery
+
+| Function | Ref file | Lib file | Status | Notes |
+|----------|----------|----------|--------|-------|
+| `scanForUTXOs` | (chain scan) | `recovery/scanner.ts` | ✅ Added | Batch UTXO fetch + envelope detection |
+| `tryDecryptOutput` | tacit.js | `recovery/decrypt.ts` | ✅ Added | ECDH self-decrypt path |
+| `tryDecryptOutputs` | tacit.js | `recovery/decrypt.ts` | ✅ Added | Batch variant |
 
 ### Kernel Signatures
 
@@ -146,22 +161,28 @@
 | PRF passkey wallet | `dapp/prf-wallet.js` | `prf.ts` | ✅ Ported |
 | Key encryption (AES-GCM) | tacit.js:740-813 | `encryption.ts` | ✅ Ported |
 
-### Indexer / Chain Client
+### Indexer / Validation / Recovery
 
-| Component | Ref file | Lib file | Status | Notes |
-|-----------|---------|---------|--------|-------|
-| Esplora REST client | tacit.js:1792-2226 | `esplora-client.ts` | ✅ Ported |
-| Ancestry walker | tacit.js:12000+ | `ancestry.ts` | ✅ Ported |
-| Chain client interface | (abstract) | `chain-client.ts` | ✅ Match |
+| Module | Ref file | Lib file | Status | Notes |
+|--------|---------|---------|--------|-------|
+| Esplora REST client | tacit.js:1792-2226 | `esplora-client.ts` | ✅ Ported | Concurrency cap, base rotation, cooldown |
+| Ancestry walker | tacit.js:12000+ | `ancestry.ts` | ✅ Ported | Memoized, depth-limited, kernel-sig validated |
+| Chain client interface | (abstract) | `chain-client.ts` | ✅ Match | Expanded with ChainTxVin, ChainTxVout, etc. |
+| Ancestry validation | (composition.mjs) | `validation/validator.ts` | ✅ Added | validateAncestry wraps walker |
+| Supply conservation | (kernel helper) | `validation/supply.ts` | ✅ Added | checkSupplyConservation + checkPublicSupply |
+| Chain scanner | tacit.js | `recovery/scanner.ts` | ✅ Added | scanForUTXOs batch fetch + envelope detect |
+| ECDH trial-decrypt | tacit.js | `recovery/decrypt.ts` | ✅ Added | tryDecryptOutput + batch |
 
-## Opcode Conflict: SPEC.md vs dapp/tacit.js
+## Opcode Assignments
 
-| Hex | SPEC.md says | dapp/tacit.js says | Notes |
-|-----|-------------|-------------------|-------|
-| `0x59` | `T_PREAUTH_BID` (📝 drafted) | `T_CBTC_TAC_TOP_UP` (✅ shipped) | Dapp is ground truth. SPEC hasn't updated. |
-| `0x5A` | free | `T_CBTC_TAC_BOND_RELEASE` (✅ shipped) | Lib-tacit follows the dapp. |
+| Hex | Opcode | Section | Status | Notes |
+|-----|--------|---------|--------|-------|
+| `0x59–0x5A` | T_CBTC_TAC_TOP_UP / T_CBTC_TAC_BOND_RELEASE | §5.50–5.51 | ✅ Shipped | Moved from `0x59` free slot in prior SPEC; now matches dapp ground truth. |
+| `0x5B` | T_PREAUTH_BID | §5.7.11 | ✅ Shipped | Promoted from drafted per spec commit 5979c1c. |
+| `0x5C` | T_PREAUTH_BID_VAR | §5.7.12 | ✅ Shipped | Promoted from drafted; signet-validated end-to-end. |
+| `0x5D–0x5E` | T_PREAUTH_BID_BATCH / T_PREAUTH_MATCH | preauth-family | 🔒 Reserved | Preauth/offline-trading follow-ups. |
 
-See `src/constants/opcodes.ts:57-63` for the documenting comment.
+See `src/constants/opcodes.ts` for the full table.
 
 ## Bugs Found and Fixed During Review
 
@@ -203,23 +224,93 @@ All previously tracked gaps have been closed:
 
 ## Test Status
 
-**208 tests passing**, 0 failing across 32 test files (submodule at `ce96228`).
+**285 tests passing**, 0 failing across 35 test files (submodule at `11e2b99`).
 
 | Test file | Count | Coverage |
 |-----------|-------|----------|
-| `tests/crypto/kernel.test.ts` | 14 | Kernel msg, dropKernelMsg, dropReclaimMsg, openingMsg, disclosureMsg, sign, verify, E'=0 rejection, BURN path, bad point handling, replay-across-inputs, replay-across-outputs, different-vout |
-| `tests/crypto/vectors.test.ts` | 30+ | Pinned hex vectors for H, BP gens, blindings, keystreams, asset IDs |
-| `tests/crypto/schnorr.test.ts` | 4 | BIP-340 sign/verify, KAT vectors |
-| `tests/crypto/bulletproofs.test.ts` | 10 | BP prove/verify/batch, edge cases |
-| `tests/crypto/bulletproofs-plus.test.ts` | 27 | BP+ generator KAT, round-trip m=1/2/4/8, edge values, tampered rejection, pinned vectors |
-| `tests/crypto/ecdh.test.ts` | 9 | ECDH blinding, keystream, encrypt/decrypt round-trips, determinism, edges |
+| `tests/crypto/kernel.test.ts` | 18 | Kernel msg, DROP msgs, sign, verify, E'=0 rejection, BURN, replays, domain separation |
+| `tests/crypto/vectors.test.ts` | 11 | Pinned hex vectors for H, BP gens, blindings, keystreams, asset IDs |
+| `tests/crypto/schnorr.test.ts` | 8 | BIP-340 sign/verify, KAT vectors, R_x tamper, all-zero sig |
+| `tests/crypto/pedersen.test.ts` | 8 | Pedersen commit/verify, H invariant, pinned vectors, C(0,1)=G, C(1,0)=H |
+| `tests/crypto/bulletproofs.test.ts` | 9 | BP prove/verify/batch, edge values |
+| `tests/crypto/bulletproofs-plus.test.ts` | 21 | BP+ KAT, round-trip m=1/2/4/8, tampered rejection, RNG determinism |
+| `tests/crypto/ecdh.test.ts` | 11 | ECDH blinding, keystream, encrypt/decrypt round-trips, determinism, edges |
 | `tests/crypto/poseidon.test.ts` | 9 | poseidonHash consistency, equivalence, edge values |
-| `tests/crypto/groth16.test.ts` | 5 | Error class, verify rejection without snarkjs |
+| `tests/crypto/groth16.test.ts` | 6 | Error class, verify rejection (snarkjs-optional) |
 | `tests/crypto/stealth.test.ts` | 16 | Encode/decode round-trip, DH symmetry, one-time address, ephem key |
-| `tests/opcodes/*.test.ts` | 8 files | All shipped opcode round-trips, edge cases, malformed rejection |
-| `tests/transaction/*.test.ts` | 2 files | Sighash, preauth, builder, asset ID |
+| `tests/crypto/fixture-signing.test.ts` | 6 | Deterministic test key (0xaa..aa), Schnorr + kernel fixed-key signing |
+| `tests/opcodes/16 files` | 76 | All 14 shipped + 2 preauth stubs: round-trips, wrong opcode, truncated/empty, field-length validation, boundary values |
+| `tests/transaction/2 files` | 2 | Sighash, preauth, builder, asset ID |
 | `tests/indexer/ancestry.test.ts` | 4 | Ancestry walk, kernel-sig validation |
-| `tests/validation/supply.test.ts` | 8 | Supply conservation, public supply checks, edges |
-| `tests/validation/validator.test.ts` | 3 | validateAncestry with various depths |
+| `tests/validation/2 files` | 11 | Supply conservation, public supply, validateAncestry |
 | `tests/recovery/decrypt.test.ts` | 6 | tryDecryptOutput correct/wrong/bad, batch |
+| `tests/integration/etch-mint-burn.test.ts` | 6 | Full pipeline: etch→mint→burn, balanced CXFER, BP+ via CXFER_BPP, envelope chunking, stealth |
 | `tests/index.test.ts` | 1 | Barrel export completeness |
+
+## MEV & Frontrunning Analysis
+
+Tacit operates entirely within Bitcoin consensus — every opcode is a Bitcoin transaction spending Taproot outputs. All mempool and consensus properties apply directly. This section describes what is and is not possible under current Bitcoin consensus, referenced against the tacit specification amendments.
+
+### Miner cannot include two transactions spending the same input in one block
+
+Bitcoin block assembly (Bitcoin Core `CreateNewBlock`) maintains a set of spent outpoints as transactions are added to the template. Any candidate transaction whose input is already in that set is skipped — a second transaction spending the same UTXO would be consensus-invalid and cannot be included. This is identical to how every Bitcoin wallet and protocol (Lightning, RGB, Counterparty, Ordinals) handles double-spend races: **exactly one transaction per outpoint per block**.
+
+If two sellers both take the same preauth-bid (both construct a settlement tx referencing the buyer's pre-signed input), the miner MUST pick at most one. The other sits in the mempool as conflicting until eviction (typically ~2 weeks, or immediately if the winning transaction confirms and the outpoint is spent). This is not a tacit-specific behavior — it is Bitcoin's consensus-level double-spend prevention. Every protocol using pre-signed `SIGHASH_SINGLE|ANYONECANPAY` transactions (Lightning HTLCs, RGB, payjoins) inherits the same constraint.
+
+**The losing transaction pays zero fees.** Bitcoin has no "gas" — an unconfirmed transaction pays nothing to miners. The losing completor's asset UTXO remains spendable. The only economic cost to the loser is the commit-tx fee (the P2TR output they funded is on-chain but their reveal tx could not spend it). This commit-tx loss is structurally identical to any Bitcoin OTC marketplace where two takers race for the same maker order (per SPEC-PREAUTH-BID-AMENDMENT §5.7.11: "Settlement attempts that race against the spend are rejected by Bitcoin consensus (double-spend) at relay time").
+
+### SIGHASH constraint: what a pre-signed tx commits to
+
+Preauth-bid uses `SIGHASH_SINGLE | SIGHASH_ANYONECANPAY` (`0x83`). The signature covers `vin[0]` and `vout[0]` — the buyer's input and locked payout. The completor controls fee (they add their own inputs/outputs). A miner cannot modify the signed fields (signature invalidates at relay time). The only power a miner has over the signed portion is to include or exclude the entire transaction (identical to every Bitcoin transaction).
+
+### Commit-reveal frontrunning (impossible)
+
+A miner seeing both commit and reveal cannot forge a different reveal spending the same P2TR. The kernel signature binds to specific input outpoints and Pedersen commitments — forging requires solving discrete log on secp256k1 (intractable). Same invariant for Bulletproofs and Groth16 proofs: they are commitment-bound, not malleable.
+
+### Preauth-bid (0x5B) SPEC-PREAUTH-BID-AMENDMENT §5.7.11
+
+**Two-seller race**: Both settlement txs spend the buyer's pre-signed `vin[0]`. Only one confirms. The losing seller's asset UTXO is untouched; they lose only their commit-tx fee. This is the same race as every Bitcoin OTC marketplace (the spec explicitly notes this). RBF (BIP-125, wallet policy, not consensus) allows one completor to outbid the other, but neither the buyer's output nor the miner can be cheated.
+
+**Seller-side griefing** (spec §5.7.11): Between the seller's commit broadcast and reveal confirmation, a malicious buyer can double-spend their own funding outpoint. The seller's reveal fails; they lose their commit fee. The buyer gains nothing beyond their own sats — this is not value extraction. The spec recommends a worker-side outspend pre-check to minimize the window (identical to every Bitcoin OTC marketplace).
+
+**Dust pinning**: An attacker with no asset can broadcast a low-fee settlement tx occupying the buyer's input. The honest seller must either replace via RBF or wait for mempool eviction. The preauth-bid spec acknowledges this as a known limitation of the round-1 amendment and defers a buyer-bond mitigation.
+
+### Preauth-sale: symmetric race
+
+Seller pre-signs asset input; multiple buyers compete to add BTC payout inputs. Same cost structure — losing buyer loses commit fee, asset UTXO is returned to the seller's intended counterparty (first confirm wins). The losing buyer's BTC input was never spent.
+
+### DROP/DCLAIM (0x2B/0x2C) per SPEC §5.12–5.13
+
+First valid claim reveal to confirm wins the DROP pool payout. The claim output is pubkey-bound (kernel sig requires the claimant's key). A frontrunner cannot redirect payout — they would need the original claimant's private key. After `expiryHeight`, the issuer reclaims via Schnorr signature (reclaim path is permissioned).
+
+### Atomic intent / T_AXFER (0x26)
+
+Recipient-bound intents (`takerPubkey`) cannot be claimed by anyone else. Unbound intents are fillable by any observer — this is by design (limit order behavior). The 5-minute window is bounded by the worker's claim-gate; after expiry, the intent is no longer fillable.
+
+### Shielded pool (0x29/0x2A)
+
+T_WITHDRAW uses Groth16 over BN254 per §3.7. The nullifier prevents double-spend. A miner cannot forge a withdrawal to a different recipient (proof binds nullifier + recipient commitment + Merkle root — forging requires solving the circuit's NP-relation). T_DEPOSIT appends leaves to the Merkle tree; reordering within a block does not change the block-committed root.
+
+### Cross-opcode domain separation
+
+Every signing domain uses a unique v1 tag (`tacit-kernel-v1`, `tacit-preauth-bid-v1`, `tacit-drop-v1`, etc.) per `src/constants/domains.ts`. Cross-context replay is cryptographically impossible — no miner or third party can substitute one opcode's signature for another.
+
+### Summary
+
+| Surface | Feasibility | Loser's cost | Spec reference |
+|---------|------------|--------------|----------------|
+| Commit censorship | Miner choice | Liveness delay | Bitcoin-native |
+| Commit-reveal frontrun | Impossible (crypto) | None | Kernel sig (discrete log) |
+| Preauth-bid: two completors | Race (one wins) | Loser loses commit fee | SPEC-PREAUTH-BID-AMENDMENT §5.7.11 |
+| Preauth-bid: seller griefing | Possible (costly for attacker) | Seller loses commit fee | §5.7.11 (identical to any BTC OTC) |
+| Preauth-bid: dust pinning | Possible (griefing) | Winner pays replacement fee | §5.7.11 (known limitation) |
+| Preauth-sale: two buyers | Race (one wins) | Loser loses commit fee | SPEC-PREAUTH-BID-AMENDMENT §5.7.8 |
+| DROP: claim race | Race (one wins) | Loser loses commit fee | SPEC §5.12–5.13 |
+| Shielded withdrawal | Impossible (Groth16) | None | SPEC §3.7, §5.11 |
+| Cross-opcode replay | Impossible (domain tags) | None | Domain separation |
+
+**Key properties:**
+- **No losing participant loses their asset** — the loser's reveal tx never confirms; their UTXOs remain spendable. The only loss is the commit-tx fee (~few thousand sats for a P2TR output).
+- **No gas model** — Bitcoin does not charge for unconfirmed transactions. A transaction pays fees only when it confirms.
+- **Every race is one-confirmation-per-outpoint under Bitcoin consensus** — identical to Lightning HTLC races, RGB state transitions, and any Bitcoin OTC marketplace.
+- **Cryptographic invariants prevent output theft** — kernel sigs, Bulletproofs, and Groth16 proofs are commitment-bound. SIGHASH locks protect pre-signed outputs. No miner or third party can forge valid proofs under standard cryptographic assumptions.

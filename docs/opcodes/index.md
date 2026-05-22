@@ -58,9 +58,12 @@
 | `0x56` | T_CUSD_TAC_FORCE_CLOSE | §6.5 | 📝 Drafted | Permissionless cUSD.tac liquidation. |
 | `0x57` | T_CBTC_TAC_DEPOSIT_ATOMIC | §5.48 | ✅ Shipped | Atomic LP_ADD + cBTC.tac DEPOSIT — single envelope. |
 | `0x58` | T_CBTC_TAC_WITHDRAW_ATOMIC | §5.49 | ✅ Shipped | Atomic cBTC.tac WITHDRAW + LP_REMOVE — single envelope. |
-| `0x59` | T_CBTC_TAC_TOP_UP | §5.47 | ✅ Shipped | Top-up cBTC.tac position with additional LP shares. |
-| `0x5A` | T_CBTC_TAC_BOND_RELEASE | §5.47 | ✅ Shipped | Release bond from cBTC.tac position. |
-| `0x5B`–`0xFF` | — | — | ⬜ Free | Available for future opcodes. |
+| `0x59` | T_CBTC_TAC_TOP_UP | §5.50 | ✅ Shipped | Top-up cBTC.tac position with additional LP shares. |
+| `0x5A` | T_CBTC_TAC_BOND_RELEASE | §5.51 | ✅ Shipped | Release bond from cBTC.tac position. |
+| `0x5B` | [T_PREAUTH_BID](./0x5b-t-preauth-bid.md) | §5.7.11 | ✅ Shipped | Buyer-offline preauth bid. |
+| `0x5C` | T_PREAUTH_BID_VAR | §5.7.12 | ✅ Shipped | Variable-amount preauth-bid (partial-fill). |
+| `0x5D`–`0x5E` | T_PREAUTH_BID_BATCH / T_PREAUTH_MATCH | preauth-family | 🔒 Reserved | Preauth/offline-trading family follow-ups. |
+| `0x5F`–`0xFF` | — | — | ⬜ Free | Available for future opcodes. |
 
 **Status reference** (per [SPEC.md §1.1](../../tacit-specs/SPEC.md)):
 - ✅ **Shipped** — in production worker + dapp, validators enforce wire format
@@ -73,7 +76,7 @@
 | Opcode | Library Module | Encoder | Decoder | Tests |
 |--------|---------------|---------|---------|-------|
 | CETCH (0x21) | `etch.ts` | ✅ `encodeCEtch` | ✅ `decodeCEtch` | ✅ |
-| T_CXFER_BPP (0x22) | `cxfer-bpp.ts` | ✅ wire | ✅ wire | ✅ (BP+ verify N/A) |
+| T_CXFER_BPP (0x22) | `cxfer-bpp.ts` | ✅ wire | ✅ wire | ✅ (BP+ verify: `bppRangeVerify`) |
 | CXFER (0x23) | `transfer.ts` | ✅ `encodeCXfer` | ✅ `decodeCXfer` | ✅ |
 | T_MINT (0x24) | `mint.ts` | ✅ `encodeCMint` | ✅ `decodeCMint` | ✅ |
 | T_BURN (0x25) | `burn.ts` | ✅ `encodeCBurn` | ✅ `decodeCBurn` | ✅ |
@@ -88,9 +91,11 @@
 | T_WRAPPER_ATTEST (0x38) | `wrapper-attest.ts` | ✅ `encodeWrapperAttest` | ✅ `decodeWrapperAttest` | ✅ |
 | T_SLOT_* (0x43–0x47) | `slot.ts` | ❌ types only | ❌ types only | ❌ |
 | T_CBTC_TAC_* (0x49–0x4F, 0x57–0x5A) | `cbtc-tac.ts` | ❌ types only | ❌ types only | ❌ |
+| T_PREAUTH_BID / T_PREAUTH_BID_VAR (0x5B–0x5C) | `preauth-bid.ts` / `preauth-bid-var.ts` | ❌ stub | ❌ stub | ⏳ |
 | Drafted AMM (0x2D–0x33) | `amm-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 | Drafted Farm (0x34–0x3E) | `farm-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 | Drafted Gov (0x50–0x56) | `gov-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
+| Drafted Preauth (0x5B) | `preauth-bid.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 
 ## Per-Opcode Documentation
 
@@ -110,5 +115,6 @@ Each shipped opcode has a dedicated document covering wire format, constraints, 
 - [`0x2c-t-dclaim.md`](./0x2c-t-dclaim.md) — Claim event
 - [`0x37-t-axfer-var.md`](./0x37-t-axfer-var.md) — Variable-amount atomic settlement
 - [`0x38-t-wrapper-attest.md`](./0x38-t-wrapper-attest.md) — Wrapper attestation
+- [`0x5b-t-preauth-bid.md`](./0x5b-t-preauth-bid.md) — Preauth bid (drafted)
 
 Drafted and reserved opcodes link to their respective amendment specs in `tacit-specs/spec/amendments/`.

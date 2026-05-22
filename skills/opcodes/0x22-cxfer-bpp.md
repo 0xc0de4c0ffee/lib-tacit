@@ -12,5 +12,5 @@ T_CXFER_BPP is byte-identical to [CXFER (0x23)](./0x23-cxfer.md) except the rang
 - Mixed-ancestry walks dispatch to correct verifier per opcode byte
 - BP+ generators reuse `tacit-generator-H-v1` / `tacit-bp-{G,H,Q}-v1` from §3.1
 - **Wire codec** in `lib-tacit`: `encodeCXferBpp` / `decodeCXferBpp`
-- **BP+ crypto** not ported — reference: `tacit-specs/dapp/bulletproofs-plus.js`
+- **BP+ crypto** in `lib-tacit`: `bppRangeProve` / `bppRangeVerify` from `src/crypto/bulletproofs-plus.ts`
 - Never verify 0x22 rangeproofs with `bpRangeAggVerify` (classic BP / 0x23)

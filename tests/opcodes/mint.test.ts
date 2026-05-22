@@ -12,4 +12,22 @@ describe('T_MINT (0x24)', () => {
     p[0] = Opcode.T_CETCH;
     expect(decodeCMint(p)).toBeNull();
   });
+  test('rejects truncated payload', () => {
+    expect(decodeCMint(new Uint8Array(100))).toBeNull();
+  });
+  test('rejects empty payload', () => {
+    expect(decodeCMint(new Uint8Array())).toBeNull();
+  });
+  test('rejects wrong-length assetId', () => {
+    expect(() => encodeCMint({ assetId: zeroFill(31), etchTxid: zeroFill(32), commitment: zeroFill(33), encryptedAmount: zeroFill(8), rangeproof: zeroFill(0), issuerSig: zeroFill(64) })).toThrow();
+  });
+  test('rejects wrong-length etching commitment', () => {
+    expect(() => encodeCMint({ assetId: zeroFill(32), etchTxid: zeroFill(32), commitment: zeroFill(32), encryptedAmount: zeroFill(8), rangeproof: zeroFill(0), issuerSig: zeroFill(64) })).toThrow();
+  });
+  test('rejects wrong-length encryptedAmount', () => {
+    expect(() => encodeCMint({ assetId: zeroFill(32), etchTxid: zeroFill(32), commitment: zeroFill(33), encryptedAmount: zeroFill(7), rangeproof: zeroFill(0), issuerSig: zeroFill(64) })).toThrow();
+  });
+  test('rejects wrong-length issuerSig', () => {
+    expect(() => encodeCMint({ assetId: zeroFill(32), etchTxid: zeroFill(32), commitment: zeroFill(33), encryptedAmount: zeroFill(8), rangeproof: zeroFill(0), issuerSig: zeroFill(63) })).toThrow();
+  });
 });

@@ -8,6 +8,7 @@ import { encodeEnvelopeScript, decodeEnvelopeScript } from '../../src/envelope/s
 import { encodeCEtch, decodeCEtch } from '../../src/opcodes/etch.js';
 import { encodeCMint, decodeCMint } from '../../src/opcodes/mint.js';
 import { encodeCBurn, decodeCBurn } from '../../src/opcodes/burn.js';
+import { encodeCXferBpp, decodeCXferBpp } from '../../src/opcodes/cxfer-bpp.js';
 import {
   G, ZERO, H, pedersenCommit, pedersenVerify, pointToBytes, bytesToPoint,
   modN, randomScalar, safeMult,
@@ -16,6 +17,8 @@ import { deriveEtchBlinding, deriveMintBlinding, deriveBlinding, deriveChangeBli
 import { signSchnorr, verifySchnorr } from '../../src/crypto/schnorr.js';
 import { computeKernelMsg, signKernel, verifyKernel, computeCxferExcess, assetIdFor } from '../../src/crypto/kernel.js';
 import { bpRangeAggProve, bpRangeAggVerify } from '../../src/crypto/bulletproofs.js';
+import { bppRangeProve, bppRangeVerify } from '../../src/crypto/bulletproofs-plus.js';
+import { encodeStealthAddress, decodeStealthAddress, generateStealthEphemKey } from '../../src/crypto/stealth.js';
 import { buildAnchor, voutLE } from '../../src/transaction/utils.js';
 
 function keypair(): { priv: Uint8Array; pub: Uint8Array } {
@@ -150,5 +153,79 @@ describe('etch -> mint -> burn integration', () => {
     const msg = computeKernelMsg(assetId, inputOps, [pointToBytes(cOut1), pointToBytes(cOut2)]);
     const sig = signKernel(msg, excess);
     expect(verifyKernel(sig, assetId, inputOps, [pointToBytes(cIn)], [pointToBytes(cOut1), pointToBytes(cOut2)])).toBe(true);
+  });
+
+  test('BP+ range proof integrated with CXFER_BPP wire format', () => {
+    const issuer = keypair();
+    const recip = keypair();
+    const anchor = buildAnchor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+
+    const sendAmt = 100n;
+    const changeAmt = 50n;
+    const rIn = randomScalar();
+    const rRecip = deriveBlinding(issuer.priv, recip.pub, anchor, 0);
+    const rChange = deriveChangeBlinding(issuer.priv, anchor, 1);
+
+    const cSend = pedersenCommit(sendAmt, rRecip);
+    const cChange = pedersenCommit(changeAmt, rChange);
+
+    const { proof } = bppRangeProve([sendAmt, changeAmt], [rRecip, rChange]);
+
+    const outputs = [
+      { commitment: pointToBytes(cSend), encryptedAmount: encryptAmount(sendAmt, new Uint8Array(8).fill(0)) },
+      { commitment: pointToBytes(cChange), encryptedAmount: encryptAmount(changeAmt, new Uint8Array(8).fill(0)) },
+    ];
+
+    const payload = encodeCXferBpp({
+      assetId,
+      kernelSig: zeroFill(64),
+      outputs,
+      rangeproof: proof,
+    });
+
+    const decoded = decodeCXferBpp(payload);
+    expect(decoded).not.toBeNull();
+    expect(decoded!.kind).toBe('cxfer-bpp');
+    expect(decoded!.outputs.length).toBe(2);
+
+    expect(bppRangeVerify([cSend, cChange], proof)).toBe(true);
+
+    function zeroFill(n: number, v = 0x02): Uint8Array { return new Uint8Array(n).fill(v); }
+  });
+
+  test('envelope encode/decode round-trip with large payload', () => {
+    const xonly = new Uint8Array(32); xonly[0] = 0x02;
+    // Build a payload larger than 520 bytes to exercise chunking
+    const bigPayload = new Uint8Array(1500);
+    bigPayload[0] = 0x21; // opcode
+    for (let i = 1; i < bigPayload.length; i++) bigPayload[i] = i & 0xff;
+
+    const script = encodeEnvelopeScript(xonly, bigPayload);
+    const decoded = decodeEnvelopeScript(script);
+    expect(decoded).not.toBeNull();
+    expect(decoded!.opcode).toBe(0x21);
+    expect(decoded!.payload.length).toBe(1500);
+    for (let i = 0; i < bigPayload.length; i++) {
+      expect(decoded!.payload[i]).toBe(bigPayload[i]!);
+    }
+  });
+
+  test('stealth address encode + decode round-trip', () => {
+    const alice = keypair();
+    const bob = keypair();
+
+    const encoded = encodeStealthAddress(bob.pub, alice.pub, 'st');
+    expect(typeof encoded).toBe('string');
+    expect(encoded.startsWith('st1')).toBe(true);
+
+    const decoded = decodeStealthAddress(encoded);
+    expect(decoded).not.toBeNull();
+    expect(decoded!.spendPub).toEqual(bob.pub);
+    expect(decoded!.viewPub).toEqual(alice.pub);
+
+    const ephem = generateStealthEphemKey();
+    expect(ephem.priv.length).toBe(32);
+    expect(ephem.pub.length).toBe(33);
   });
 });

@@ -15,8 +15,8 @@
 ### Dependency Graph
 
 ```
-opcodes/ ──┐
-crypto/ ───┼──> constants/
+opcodes/ ───┐
+crypto/ ────┼──> constants/
 envelope/ ──┘
 
 wallet/ ──> crypto/ ──> constants/
@@ -78,4 +78,4 @@ All phases complete. See [REVIEW.md](./REVIEW.md) for full comparison vs referen
 - **Phase 5** Crypto Gaps (BP+, Poseidon, Groth16) ✅
 - **Phase 6** Validation & Recovery ✅
 - **Phase 7** Stealth Addresses ✅
-- **Phase 8** Test Coverage (208+ tests across 32 files) ✅
+- **Phase 8** Test Coverage (280+ tests across 34 files) ✅
