@@ -1,4 +1,4 @@
-# lib-tacit
+# lib-tacit — Research Branches
 
 Pure TypeScript library for the **tacit confidential token meta-protocol on Bitcoin**. Provides Pedersen commitments, Bulletproofs range proofs, Mimblewimble-style kernel signatures, ECDH blinding, stealth addresses, BIP-352 silent payments, and full opcode encode/decode for 32 shipped opcodes — zero DOM, zero UI, reusable by any wallet, indexer, or dapp.
 
@@ -8,74 +8,20 @@ bun add lib-tacit @noble/secp256k1 @noble/hashes @scure/base poseidon-lite @heli
 
 ---
 
-## Features
+> **This is the `research` branch.** It contains R&D artifacts beyond the production library at `src/`:
+> - `miniscripts/` — Miniscript-based redesign (tacit-v2 rethink)
+> - `tacit-nostr/` — Decentralized market coordination via Nostr
+> - `review/` — Security and design review findings against tacit-specs
+> - `trailmarks/` — Trail of Bits trailmark graph analysis
+>
+> For the production library, see the `main` branch.
 
-| Category | Feature | Description |
-|----------|---------|-------------|
-| **Crypto** | Pedersen commitments | Amount-hiding `C = a·H + r·G` over secp256k1 with NUMS generator H |
-| | Bulletproofs (classic) | Aggregated range proofs (n=64 bits, m∈{1,2,4,8}) with Pippenger MSM |
-| | Bulletproofs+ (0x22) | ~14% smaller aggregated range proofs (m∈{1,2,4,8}) |
-| | BIP-340 Schnorr | In-house sign/verify, independent of noble's schnorr |
-| | ECDH blinding | Deterministic amount encryption/decryption from privkey + chain data |
-| | Kernel signatures | Mimblewimble-style conservation-of-supply proofs |
-| | Poseidon hash | BN254 hash for mixer Merkle trees (via poseidon-lite) |
-| | Groth16 verifier | Optional snarkjs integration for zk-proof verification |
-| | Stealth addresses | Blinded-pubkey commits (`tcs`/`tcsts`), ECDH blinding, scan/send |
-| | Silent payments | BIP-352 sender-side silent payment output derivation (`sp1` addresses) |
-| | xor32 | XOR two 32-byte arrays for encryption/commitment helpers |
-| **Opcodes** | 32 shipped encode/decode | CETCH · T_CXFER_BPP · CXFER · T_MINT · T_BURN · T_AXFER · T_PETCH · T_PMINT · T_DEPOSIT · T_WITHDRAW · T_DROP · T_DCLAIM · T_AXFER_VAR · T_WRAPPER_ATTEST · T_AXFER_BPP · T_AXFER_VAR_BPP · T_SLOT_* · T_CBTC_TAC_* · T_PREAUTH_BID · T_PREAUTH_BID_VAR |
-| **Envelope** | Taproot script-path | TACIT magic, version, chunked pushdata encode/decode |
-| **Transaction** | Tools | BIP-143 sighash (ALL, SINGLE\|ACP), tx serialization, P2WPKH address, preauth, builder, taproot primitives |
-| **Wallet** | Keypair | secp256k1 generation, import, export |
-| | PRF passkey | WebAuthn PRF extension for biometric key derivation (browser) |
-| | Key encryption | AES-GCM + PBKDF2-SHA256 encrypted-at-rest storage |
-| | UTXO manager | Caching, selection, sort, spend-marking |
-| **Indexer** | Esplora client | REST client with base rotation, concurrency cap, cooldown |
-| | Ancestry walker | Memoized, depth-limited, kernel-sig validated |
-| | IPFS | Trustless content retrieval via helia + gateway (`cidToV1`, `ipfsFetchVerified`) |
-| **Validation** | Ancestry | Recursive ancestry validation |
-| | Supply | Pedersen + public supply conservation checks |
-| **Recovery** | Scanner | Chain scan for UTXO recovery |
-| | Decrypt | ECDH trial-decrypt of encrypted amounts |
-| **Interfaces** | ChainClient | Abstract chain data access (fetchTx, fetchUTXOs, etc.) |
-| | Broadcaster | Abstract transaction submission |
-| **Runtime** | Cross-platform | Zero DOM, zero window, runs in Node.js, Bun, Deno, and browsers |
+Explores using Nostr (NIP-01, NIP-59) as an orderbook and discovery layer for tacit assets. 9 files across 6 directories.
 
----
+## Branches
 
-## Quick Start
+## Module Map
 
-```typescript
-import {
-  generateKeypair, importPrivkey, derivePubkey, p2wpkhAddress,
-  pedersenCommit, pedersenVerify, G, H,
-  deriveBlinding, deriveChangeBlinding, encryptAmount, decryptAmount,
-  computeKernelMsg, signKernel, verifyKernel, assetIdFor,
-  bpRangeAggProve, bpRangeAggVerify,
-  encodeCEtch, decodeCEtch, encodeCXfer, decodeCXfer,
-  signSchnorr, verifySchnorr,
-  Opcode, SECP_N, N_BITS,
-  p2wpkhScript, buildAnchor, pointToBytes,
-} from 'lib-tacit';
-
-// Generate a wallet
-const wallet = generateKeypair();
-const address = p2wpkhAddress(wallet.pub, 'bc'); // mainnet
-
-// Etch a new asset
-const anchor = buildAnchor(commitTxid, 0);
-const supply = 1_000_000n;
-const rBlind = deriveEtchBlinding(wallet.priv, anchor);
-const C = pedersenCommit(supply, rBlind);
-const { proof } = bpRangeAggProve([supply], [rBlind]);
-
-const payload = encodeCEtch({
-  ticker: 'MYTOKEN',
-  decimals: 2,
-  commitment: pointToBytes(C),
-  encryptedAmount: encryptAmount(supply, deriveEtchAmountKeystream(wallet.priv, anchor)),
-  rangeproof: proof,
-});
 ```
 
 ---
@@ -181,3 +127,6 @@ This library implements the cryptographic primitives from [SPEC.md](tacit-specs/
 ## License
 
 MIT — same as the [reference implementation](https://github.com/z0r0z/tacit).
+| `tacit-specs/spec/amendments/` | All amendment specs (stealth, preauth-bid, AMM, farm, etc.) |
+
+## Quick Start
