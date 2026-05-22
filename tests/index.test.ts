@@ -114,9 +114,13 @@ describe('lib-tacit barrel exports (src/index.ts)', () => {
     expect(lib.tryDecryptOutput).toBeFunction();
     expect(lib.tryDecryptOutputs).toBeFunction();
 
-    // Stealth
+    // Stealth (blinded-pubkey)
     expect(lib.encodeStealthAddress).toBeFunction();
     expect(lib.decodeStealthAddress).toBeFunction();
+    expect(lib.deriveStealthEcdhBlinding).toBeFunction();
+    expect(lib.senderComputeStealthCommit).toBeFunction();
+    expect(lib.recipientScanTxForStealth).toBeFunction();
+    expect(lib.STEALTH_HRP).toBeDefined();
 
     // Wallet
     expect(lib.generateKeypair).toBeFunction();

@@ -98,7 +98,8 @@ lib-tacit
 ## Test
 
 ```bash
-bun test      # 317+ tests, isolated from tacit-specs/ (pinned vectors in tests/crypto/vectors.test.ts)
+bun run specs:pull   # fetch latest tacit-specs submodule (read-only reference)
+bun test             # 316+ tests, isolated from tacit-specs/ (pinned vectors in tests/crypto/vectors.test.ts)
 bun run typecheck
 bun run build
 ```

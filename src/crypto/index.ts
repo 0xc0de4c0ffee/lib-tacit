@@ -84,12 +84,39 @@ export {
    groth16Verify,
    fetchVkFromIpfs,
  } from './groth16.js';
- export {
-   encodeStealthAddress,
-   decodeStealthAddress,
-   stealthSharedSecret,
-   stealthSharedSecretRecipient,
-   stealthOneTimeAddress,
-   generateStealthEphemKey,
- } from './stealth.js';
- export type { StealthKey, StealthAddress } from './stealth.js';
+export {
+  STEALTH_HRP,
+  DOMAIN_CXFER_STEALTH,
+  DOMAIN_CXFER_BPP_STEALTH,
+  DOMAIN_AXFER_STEALTH,
+  DOMAIN_AXFER_VAR_STEALTH,
+  STEALTH_DOMAIN_BY_OPCODE,
+  MIXER_EMITTING_OPCODES,
+  encodeStealthAddress,
+  decodeStealthAddress,
+  deriveSelfBlinding,
+  deriveStealthEcdhSharedSecret,
+  deriveStealthBlindingFromShared,
+  deriveStealthEcdhBlinding,
+  computeStealthCommit,
+  computeStealthTweakedSk,
+  p2trScript,
+  xOnly,
+  matchesStealthCommit,
+  isStealthEligibleKind,
+  aggregateStealthEligibleInputPubkeys,
+  classifyStealthInput,
+  isMixerDerivedInput,
+  checkStealthEmissionSafety,
+  stealthTxAnchorHead,
+  senderComputeStealthCommit,
+  recipientScanTxForStealth,
+} from './stealth.js';
+export type {
+  StealthNetwork,
+  StealthInputKind,
+  ClassifiedStealthInput,
+  StealthEmissionSafety,
+  StealthCredit,
+  DecodedStealthAddress,
+} from './stealth.js';

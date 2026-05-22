@@ -1,8 +1,8 @@
 # lib-tacit Review: Comparison with tacit-specs Reference
 
-> Generated: 2026-05-21
-> Reference commit: `11e2b99` (z0r0z/tacit)
-> lib-tacit HEAD: `f240577`
+> Updated: 2026-05-22
+> Reference commit: `df064be` (z0r0z/tacit) — refresh with `bun run specs:pull`
+> lib-tacit: stealth stack ported; **316 tests passing**
 
 ## Full Comparison Table
 
@@ -42,10 +42,19 @@
 | `poseidonHash` | `poseidon-lite` | `poseidon.ts` | ✅ Wrapped | poseidon1/poseidon2 from poseidon-lite |
 | `groth16Verify` | snarkjs | `groth16.ts` | ✅ Wrapped | Optional snarkjs dep, dynamic import |
 | `tryDecryptOutput` | tacit.js | `recovery/decrypt.ts` | ✅ Added | ECDH trial-decrypt for recovery |
-| `encodeStealthAddress` | tacit.js:3925+ | `stealth.ts` | ✅ Ported | bech32m stealth address encode |
-| `decodeStealthAddress` | tacit.js:3925+ | `stealth.ts` | ✅ Ported | bech32m stealth address decode |
-| `stealthSharedSecret` | stealth-primitives.mjs | `stealth.ts` | ✅ Ported | ECDH shared secret derivation |
-| `stealthOneTimeAddress` | stealth-primitives.mjs | `stealth.ts` | ✅ Ported | One-time address from shared secret |
+| `encodeStealthAddress` | tacit.js:4074+ | `stealth.ts` | ✅ Match | `tcs`/`tcsts`/`tcsrt` §D.1 codec |
+| `decodeStealthAddress` | tacit.js:4095+ | `stealth.ts` | ✅ Match | throws on malformed (no silent null) |
+| `deriveStealthEcdhSharedSecret` | tacit.js:4121 | `stealth.ts` | ✅ Match | x-only SHA256 ECDH |
+| `deriveStealthBlindingFromShared` | tacit.js:4133 | `stealth.ts` | ✅ Match | per-vout HMAC stage |
+| `deriveStealthEcdhBlinding` | tacit.js:4144 | `stealth.ts` | ✅ Match | convenience wrapper |
+| `computeStealthCommit` | tacit.js:4151 | `stealth.ts` | ✅ Match | P + b·G |
+| `computeStealthTweakedSk` | tacit.js:4160 | `stealth.ts` | ✅ Match | (sk + b) mod n |
+| `classifyStealthInput` | tacit.js:4176 | `stealth.ts` | ✅ Match | §A.2.5 + mixer precedence |
+| `senderComputeStealthCommit` | tacit.js:4281 | `stealth.ts` | ✅ Match | sender-side commit |
+| `recipientScanTxForStealth` | tacit.js:4305 | `stealth.ts` | ✅ Match | §H.1 one ECDH per tx |
+| `stealthTxAnchorHead` | tacit.js:4267 | `stealth.ts` | ✅ Match | alias of `buildAnchor` |
+| `senderComputeSilentPaymentOutput` | tacit.js:4371+ | — | ❌ Gap | BIP-352 native sats send (dapp-only) |
+| `decodeSilentPaymentAddress` | tacit.js:4382 | — | ❌ Gap | BIP-352 sp1… addresses |
 
 ### Validation
 
@@ -209,22 +218,29 @@ See `src/constants/opcodes.ts` for the full table.
 | Proof-of-reserve helpers | Inline in dapp | Not ported | DApp-layer logic; library provides primitives |
 | DApp-specific signing messages | tacit.js (listingMsg, cancelMsg, claimMsg, axintentMsg-family) | Not ported | OTC listing & atomic intent signing — dApp-surface only |
 
-## All Gaps Closed
+## Open Gaps (vs reference @ `df064be`)
 
-All previously tracked gaps have been closed:
+| Area | Reference | lib-tacit | Priority |
+|------|-----------|-----------|----------|
+| BIP-352 silent payments | `senderComputeSilentPaymentOutput`, `decodeSilentPaymentAddress` | not ported | medium — native BTC send path |
+| Slot opcodes `0x43`–`0x47` | dapp encode/decode shipped | types + throw stubs | high for cBTC.zk wallets |
+| cBTC.tac `0x49`–`0x4F`, `0x57`–`0x5A` | dapp encode/decode shipped | types + throw stubs | high for lien model |
+| Drafted AXFER_BPP wire `0x3C`/`0x3D` | dapp encode/decode | not ported (drafted) | low until activation |
+| Drafted AMM/farm/gov `0x2D`–`0x56` | amendments + partial dapp | type stubs only | low |
+
+## Closed Gaps (crypto + core wire)
 
 | Gap | Status |
 |-----|--------|
-| BP+ prover/verifier (bulletproofs-plus.js port) | ✅ `src/crypto/bulletproofs-plus.ts` — 27 tests |
-| Poseidon hash | ✅ `src/crypto/poseidon.ts` — wraps poseidon-lite |
-| Groth16 verifier (snarkjs) | ✅ `src/crypto/groth16.ts` — optional dynamic import |
-| Stealth address codec (bech32m) | ✅ `src/crypto/stealth.ts` — encode/decode + DH + one-time addr |
-| Validation (ancestry + supply checks) | ✅ `src/validation/validator.ts` + `supply.ts` |
-| Recovery (chain scan + ECDH trial-decrypt) | ✅ `src/recovery/scanner.ts` + `decrypt.ts` |
+| BP+ prover/verifier | ✅ `bulletproofs-plus.ts` |
+| Poseidon / Groth16 | ✅ wrapped |
+| Class-2 blinded-pubkey stealth | ✅ `stealth.ts` (ported from stealth-primitives / dapp patch) |
+| Shipped transfer-family wire `0x21`–`0x2C`, `0x37`–`0x38`, `0x5B`–`0x5C` | ✅ encoders/decoders + tests |
+| Validation + recovery | ✅ `validation/`, `recovery/` |
 
 ## Test Status
 
-**285 tests passing**, 0 failing across 35 test files (submodule at `11e2b99`).
+**316 tests passing**, 0 failing across 36 test files (reference at `df064be`, tests run only in lib-tacit).
 
 | Test file | Count | Coverage |
 |-----------|-------|----------|
@@ -237,7 +253,7 @@ All previously tracked gaps have been closed:
 | `tests/crypto/ecdh.test.ts` | 11 | ECDH blinding, keystream, encrypt/decrypt round-trips, determinism, edges |
 | `tests/crypto/poseidon.test.ts` | 9 | poseidonHash consistency, equivalence, edge values |
 | `tests/crypto/groth16.test.ts` | 6 | Error class, verify rejection (snarkjs-optional) |
-| `tests/crypto/stealth.test.ts` | 16 | Encode/decode round-trip, DH symmetry, one-time address, ephem key |
+| `tests/crypto/stealth.test.ts` | 15 | §D.1 codec, §A ECDH/commit, hand-traced e2e, §F.7, classifier |
 | `tests/crypto/fixture-signing.test.ts` | 6 | Deterministic test key (0xaa..aa), Schnorr + kernel fixed-key signing |
 | `tests/opcodes/16 files` | 76 | All 14 shipped + 2 preauth stubs: round-trips, wrong opcode, truncated/empty, field-length validation, boundary values |
 | `tests/transaction/2 files` | 2 | Sighash, preauth, builder, asset ID |

@@ -19,7 +19,7 @@ import { computeKernelMsg, signKernel, verifyKernel, computeCxferExcess, assetId
 import { bpRangeAggProve, bpRangeAggVerify } from '../../src/crypto/bulletproofs.js';
 import { bppRangeProve, bppRangeVerify } from '../../src/crypto/bulletproofs-plus.js';
 import { zeroFill } from '../fixtures/index.js';
-import { encodeStealthAddress, decodeStealthAddress, generateStealthEphemKey } from '../../src/crypto/stealth.js';
+import { encodeStealthAddress, decodeStealthAddress } from '../../src/crypto/stealth.js';
 import { buildAnchor, voutLE } from '../../src/transaction/utils.js';
 
 function keypair(): { priv: Uint8Array; pub: Uint8Array } {
@@ -210,21 +210,19 @@ describe('etch -> mint -> burn integration', () => {
     }
   });
 
-  test('stealth address encode + decode round-trip', () => {
-    const alice = keypair();
-    const bob = keypair();
-
-    const encoded = encodeStealthAddress(bob.pub, alice.pub, 'st');
+  test('stealth address encode + decode round-trip (signet §D.1)', () => {
+    const wallet = keypair();
+    const encoded = encodeStealthAddress({
+      network: 'signet',
+      recipientPub: wallet.pub,
+    });
     expect(typeof encoded).toBe('string');
-    expect(encoded.startsWith('st1')).toBe(true);
+    expect(encoded.startsWith('tcsts1')).toBe(true);
 
     const decoded = decodeStealthAddress(encoded);
-    expect(decoded).not.toBeNull();
-    expect(decoded!.spendPub).toEqual(bob.pub);
-    expect(decoded!.viewPub).toEqual(alice.pub);
-
-    const ephem = generateStealthEphemKey();
-    expect(ephem.priv.length).toBe(32);
-    expect(ephem.pub.length).toBe(33);
+    expect(decoded.mode).toBe('single');
+    if (decoded.mode === 'single') {
+      expect(decoded.recipientPub).toEqual(wallet.pub);
+    }
   });
 });

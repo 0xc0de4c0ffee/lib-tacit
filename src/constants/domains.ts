@@ -108,6 +108,7 @@ export const AXINTENT_ONCHAIN_MAKER_BLINDING_DOMAIN = 'tacit-axintent-onchain-ma
 
 // --- Stealth address domains (SPEC-BLINDED-PUBKEY-AMENDMENT) ---
 export const CXFER_STEALTH_DOMAIN = 'tacit-cxfer-stealth-v1';
+export const CXFER_BPP_STEALTH_DOMAIN = 'tacit-cxfer-bpp-stealth-v1';
 export const AXFER_STEALTH_DOMAIN = 'tacit-axfer-stealth-v1';
 export const AXFER_VAR_STEALTH_DOMAIN = 'tacit-axfer-var-stealth-v1';
 

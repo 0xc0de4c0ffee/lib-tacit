@@ -29,7 +29,7 @@ src/
 │   ├── bulletproofs-plus.ts # BP+ aggregated range proofs (0x22, 14% smaller proofs)
 │   ├── poseidon.ts         # Poseidon hash over BN254 (mixer Merkle trees)
 │   ├── groth16.ts          # Groth16 verifier (optional snarkjs dep)
-│   └── stealth.ts          # Stealth address bech32m encode/decode, DH shared secret
+│   └── stealth.ts          # Blinded-pubkey commits: tcs/tcsts addresses, ECDH blinding, scan/send helpers
 ├── envelope/
 │   ├── script.ts          # Taproot envelope script encode/decode (TACIT magic, pushdata chunking)
 │   └── payload.ts         # ByteWriter utility, u64LE, readU64LE helpers
@@ -103,6 +103,14 @@ src/
 8. Update `docs/opcodes/index.md` implementation status table
 9. Update barrel test `tests/index.test.ts` to verify the new exports
 10. Run `bun run typecheck && bun run build && bun test`
+
+## Reference submodule
+
+Update the read-only reference (do not edit files inside it, do not run `bun test` there):
+
+```bash
+bun run specs:pull
+```
 
 ## How to Verify Correctness
 
