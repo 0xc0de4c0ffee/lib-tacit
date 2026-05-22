@@ -1,6 +1,6 @@
 # lib-tacit
 
-Pure TypeScript library for the **tacit confidential token meta-protocol on Bitcoin**. Provides Pedersen commitments, Bulletproofs range proofs, Mimblewimble-style kernel signatures, ECDH blinding derivation, and full opcode encode/decode for 28 shipped opcodes — zero DOM, zero UI, reusable by any wallet, indexer, or dapp.
+Pure TypeScript library for the **tacit confidential token meta-protocol on Bitcoin**. Provides Pedersen commitments, Bulletproofs range proofs, Mimblewimble-style kernel signatures, ECDH blinding derivation, and full opcode encode/decode for 32 shipped opcodes — zero DOM, zero UI, reusable by any wallet, indexer, or dapp.
 
 ```bash
 bun add lib-tacit @noble/secp256k1 @noble/hashes @scure/base poseidon-lite
@@ -18,7 +18,7 @@ bun add lib-tacit @noble/secp256k1 @noble/hashes @scure/base poseidon-lite
 | | Kernel signatures | Mimblewimble-style conservation-of-supply proofs |
 | | Poseidon hash | BN254 hash for mixer Merkle trees (via poseidon-lite) |
 | | Groth16 verifier | Optional snarkjs integration for zk-proof verification |
-| **Opcodes** | 28 shipped encode/decode | CETCH (0x21) · T_CXFER_BPP (0x22) · CXFER (0x23) · T_MINT (0x24) · T_BURN (0x25) · T_AXFER (0x26) · T_PETCH (0x27) · T_PMINT (0x28) · T_DEPOSIT (0x29) · T_WITHDRAW (0x2A) · T_DROP (0x2B) · T_DCLAIM (0x2C) · T_AXFER_VAR (0x37) · T_WRAPPER_ATTEST (0x38) · T_SLOT_* (0x43–0x47) · T_CBTC_TAC_* (0x49–0x4F, 0x57–0x5A) |
+| **Opcodes** | 32 shipped encode/decode | CETCH (0x21) · T_CXFER_BPP (0x22) · CXFER (0x23) · T_MINT (0x24) · T_BURN (0x25) · T_AXFER (0x26) · T_PETCH (0x27) · T_PMINT (0x28) · T_DEPOSIT (0x29) · T_WITHDRAW (0x2A) · T_DROP (0x2B) · T_DCLAIM (0x2C) · T_AXFER_VAR (0x37) · T_WRAPPER_ATTEST (0x38) · T_SLOT_* (0x43–0x47) · T_CBTC_TAC_* (0x49–0x4F, 0x57–0x5A) · T_PREAUTH_BID (0x5B) · T_PREAUTH_BID_VAR (0x5C) |
 | **Envelope** | Taproot script-path | TACIT magic, version, chunked pushdata encode/decode |
 | **Transaction** | Tools | BIP-143 sighash (ALL, SINGLE\|ACP), tx serialization, P2WPKH address, preauth, builder |
 | **Wallet** | Keypair | secp256k1 generation, import, export |
@@ -86,7 +86,7 @@ lib-tacit
 ├── constants/     — Opcodes, domain tags, generator vectors, protocol limits
 ├── crypto/        — Pedersen, Schnorr, ECDH, Bulletproofs, MSM, Kernel
 ├── envelope/      — Taproot script-path encode/decode, ByteWriter
-├── opcodes/       — 28 shipped + 5 stub/draft modules (see AGENTS.md for full list)
+├── opcodes/       — 32 shipped modules (see AGENTS.md for full list)
 ├── transaction/   — BIP-143 sighash, TX serialization, P2WPKH address
 ├── wallet/        — Keypair, UTXO manager, PRF passkey, key encryption
 ├── indexer/       — Esplora client, ancestry walker
@@ -98,7 +98,7 @@ lib-tacit
 ## Test
 
 ```bash
-bun test      # 285+ tests, isolated from tacit-specs/ (pinned vectors in tests/crypto/vectors.test.ts)
+bun test      # 317+ tests, isolated from tacit-specs/ (pinned vectors in tests/crypto/vectors.test.ts)
 bun run typecheck
 bun run build
 ```

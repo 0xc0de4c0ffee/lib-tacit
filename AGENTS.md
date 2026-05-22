@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is a pure TypeScript library implementing the **tacit confidential token meta-protocol on Bitcoin**. It provides cryptographic primitives (Pedersen, classic Bulletproofs, Schnorr, ECDH, kernel signatures), opcode **wire** encode/decode for 28 shipped opcodes, and transaction utilities — all platform-agnostic with zero UI dependencies.
+This is a pure TypeScript library implementing the **tacit confidential token meta-protocol on Bitcoin**. It provides cryptographic primitives (Pedersen, classic Bulletproofs, Schnorr, ECDH, kernel signatures), opcode **wire** encode/decode for 32 shipped opcodes, and transaction utilities — all platform-agnostic with zero UI dependencies.
 
 **Do not edit `tacit-specs/`** — read-only reference submodule. Port behavior into `src/` and `tests/` only.
 
@@ -113,7 +113,7 @@ src/
 5. Compare against `tacit-specs/dapp/bulletproofs-plus.js` for BP+ crypto (src/crypto/bulletproofs-plus.ts)
 6. Typecheck: `bun run typecheck`
 7. Build: `bun run build`
-8. Test: `bun test` (285+ tests; pinned vectors in `tests/crypto/vectors.test.ts`, no tacit-specs test root)
+8. Test: `bun test` (317+ tests; pinned vectors in `tests/crypto/vectors.test.ts`, no tacit-specs test root)
 9. Read `docs/crypto/validation.md` before adding indexer-facing verify helpers
 
 ## Validation layers
