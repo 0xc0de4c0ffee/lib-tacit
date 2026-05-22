@@ -85,8 +85,14 @@ export type {
   CusdTacDepositInput, CusdTacWithdrawInput, CusdTacForceCloseInput,
 } from './gov-drafts.js';
 
-// Drafted — Preauth-bid family (0x5B-0x5E)
-export { encodePreauthBid, decodePreauthBid } from './preauth-bid.js';
+// Shipped — Preauth-bid family (0x5B-0x5C)
+export {
+  encodePreauthBid, decodePreauthBid, computePreauthBidContextHash,
+} from './preauth-bid.js';
 export type { PreauthBidInput, PreauthBidDecoded, PreauthBidOutput } from './preauth-bid.js';
-export { encodePreauthBidVar, decodePreauthBidVar } from './preauth-bid-var.js';
-export type { PreauthBidVarInput, PreauthBidVarDecoded } from './preauth-bid-var.js';
+export {
+  encodePreauthBidVar, decodePreauthBidVar, computePreauthBidVarContextHash,
+} from './preauth-bid-var.js';
+export type {
+  PreauthBidVarInput, PreauthBidVarDecoded, PreauthBidVarOutput,
+} from './preauth-bid-var.js';

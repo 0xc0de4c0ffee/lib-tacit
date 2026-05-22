@@ -21,6 +21,8 @@ describe('lib-tacit barrel exports (src/index.ts)', () => {
     expect(lib.encryptAmount).toBeFunction();
     expect(lib.decryptAmount).toBeFunction();
     expect(lib.computeKernelMsg).toBeFunction();
+    expect(lib.listingMsg).toBeFunction();
+    expect(lib.axintentMsg).toBeFunction();
     expect(lib.dropKernelMsg).toBeFunction();
     expect(lib.dropReclaimMsg).toBeFunction();
     expect(lib.openingMsg).toBeFunction();
@@ -75,11 +77,13 @@ describe('lib-tacit barrel exports (src/index.ts)', () => {
     expect(lib.encodeWrapperAttest).toBeFunction();
     expect(lib.decodeWrapperAttest).toBeFunction();
 
-    // Drafted opcode stubs (0x5B+)
+    // Shipped preauth-bid family (0x5B-0x5C)
     expect(lib.encodePreauthBid).toBeFunction();
     expect(lib.decodePreauthBid).toBeFunction();
+    expect(lib.computePreauthBidContextHash).toBeFunction();
     expect(lib.encodePreauthBidVar).toBeFunction();
     expect(lib.decodePreauthBidVar).toBeFunction();
+    expect(lib.computePreauthBidVarContextHash).toBeFunction();
     expect(lib.PREAUTH_BID_DOMAIN).toBe('tacit-preauth-bid-v1');
 
     // Opcode stubs (shipped but no wire codec)

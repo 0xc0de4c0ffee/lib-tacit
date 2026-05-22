@@ -18,6 +18,7 @@ import { signSchnorr, verifySchnorr } from '../../src/crypto/schnorr.js';
 import { computeKernelMsg, signKernel, verifyKernel, computeCxferExcess, assetIdFor } from '../../src/crypto/kernel.js';
 import { bpRangeAggProve, bpRangeAggVerify } from '../../src/crypto/bulletproofs.js';
 import { bppRangeProve, bppRangeVerify } from '../../src/crypto/bulletproofs-plus.js';
+import { zeroFill } from '../fixtures/index.js';
 import { encodeStealthAddress, decodeStealthAddress, generateStealthEphemKey } from '../../src/crypto/stealth.js';
 import { buildAnchor, voutLE } from '../../src/transaction/utils.js';
 
@@ -190,8 +191,6 @@ describe('etch -> mint -> burn integration', () => {
     expect(decoded!.outputs.length).toBe(2);
 
     expect(bppRangeVerify([cSend, cChange], proof)).toBe(true);
-
-    function zeroFill(n: number, v = 0x02): Uint8Array { return new Uint8Array(n).fill(v); }
   });
 
   test('envelope encode/decode round-trip with large payload', () => {

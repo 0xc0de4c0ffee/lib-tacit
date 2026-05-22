@@ -23,7 +23,8 @@ src/
 │   ├── schnorr.ts         # BIP-340 Schnorr sign/verify (in-house, independent of noble's schnorr)
 │   ├── ecdh.ts            # ECDH-derived blindings + amount-encryption keystreams
 │   ├── msm.ts             # Pippenger MSM (signed-digit windowed, c=3/4/5)
-│   ├── kernel.ts          # Kernel sigs, Mint msg, Asset ID, excess, DROP/reclaim msgs
+│   ├── kernel.ts          # Kernel sigs, Mint msg, Asset ID, excess, DROP/reclaim msgs,
+│   │                      # listingMsg, axintentMsg, openingMsg, disclosureMsg
 │   ├── bulletproofs.ts    # Classic BP range proofs (0x23)
 │   ├── bulletproofs-plus.ts # BP+ aggregated range proofs (0x22, 14% smaller proofs)
 │   ├── poseidon.ts         # Poseidon hash over BN254 (mixer Merkle trees)
@@ -47,6 +48,8 @@ src/
 │   ├── dclaim.ts          # T_DCLAIM (0x2C) — permissionless claim
 │   ├── axfer-var.ts       # T_AXFER_VAR (0x37) — variable-amount atomic settlement
 │   ├── wrapper-attest.ts  # T_WRAPPER_ATTEST (0x38) — wrapper attestation
+│   ├── preauth-bid.ts      # T_PREAUTH_BID (0x5B) encode/decode/context-hash
+│   ├── preauth-bid-var.ts  # T_PREAUTH_BID_VAR (0x5C) encode/decode/context-hash
 │   ├── slot.ts            # T_SLOT_* (0x43–0x47) — types only (wire TBD)
 │   ├── cbtc-tac.ts        # T_CBTC_TAC_* — types only (wire TBD)
 │   ├── amm-drafts.ts      # Drafted AMM opcodes (0x2D–0x33) — type definitions only

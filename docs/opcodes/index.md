@@ -91,11 +91,10 @@
 | T_WRAPPER_ATTEST (0x38) | `wrapper-attest.ts` | ✅ `encodeWrapperAttest` | ✅ `decodeWrapperAttest` | ✅ |
 | T_SLOT_* (0x43–0x47) | `slot.ts` | ❌ types only | ❌ types only | ❌ |
 | T_CBTC_TAC_* (0x49–0x4F, 0x57–0x5A) | `cbtc-tac.ts` | ❌ types only | ❌ types only | ❌ |
-| T_PREAUTH_BID / T_PREAUTH_BID_VAR (0x5B–0x5C) | `preauth-bid.ts` / `preauth-bid-var.ts` | ❌ stub | ❌ stub | ⏳ |
+| T_PREAUTH_BID / T_PREAUTH_BID_VAR (0x5B–0x5C) | `preauth-bid.ts` / `preauth-bid-var.ts` | ✅ `encodePreauthBid` / `encodePreauthBidVar` | ✅ `decodePreauthBid` / `decodePreauthBidVar` | ⏳ |
 | Drafted AMM (0x2D–0x33) | `amm-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 | Drafted Farm (0x34–0x3E) | `farm-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 | Drafted Gov (0x50–0x56) | `gov-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
-| Drafted Preauth (0x5B) | `preauth-bid.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 
 ## Per-Opcode Documentation
 
@@ -115,6 +114,7 @@ Each shipped opcode has a dedicated document covering wire format, constraints, 
 - [`0x2c-t-dclaim.md`](./0x2c-t-dclaim.md) — Claim event
 - [`0x37-t-axfer-var.md`](./0x37-t-axfer-var.md) — Variable-amount atomic settlement
 - [`0x38-t-wrapper-attest.md`](./0x38-t-wrapper-attest.md) — Wrapper attestation
-- [`0x5b-t-preauth-bid.md`](./0x5b-t-preauth-bid.md) — Preauth bid (drafted)
+- [`0x5b-t-preauth-bid.md`](./0x5b-t-preauth-bid.md) — Preauth bid (shipped)
+- [`0x5c-t-preauth-bid-var.md`](./0x5c-t-preauth-bid-var.md) — Variable-amount preauth bid (shipped)
 
 Drafted and reserved opcodes link to their respective amendment specs in `tacit-specs/spec/amendments/`.

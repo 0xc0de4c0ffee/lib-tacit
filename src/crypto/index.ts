@@ -70,6 +70,8 @@ export {
   dropReclaimMsg,
   openingMsg,
   disclosureMsg,
+  listingMsg,
+  axintentMsg,
   assetIdFor,
 } from './kernel.js';
 export {

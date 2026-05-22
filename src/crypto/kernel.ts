@@ -13,7 +13,7 @@ import {
   bigintToBytes32, bytes32ToBigint,
 } from './pedersen.js';
 import { signSchnorr, verifySchnorr } from './schnorr.js';
-import { KERNEL_MSG_DOMAIN, MINT_MSG_DOMAIN, DROP_DOMAIN, DROP_RECLAIM_DOMAIN, OPENING_MSG_DOMAIN, DISCLOSURE_MSG_DOMAIN } from '../constants/domains.js';
+import { KERNEL_MSG_DOMAIN, MINT_MSG_DOMAIN, DROP_DOMAIN, DROP_RECLAIM_DOMAIN, OPENING_MSG_DOMAIN, DISCLOSURE_MSG_DOMAIN, LISTING_MSG_DOMAIN, AXINTENT_MSG_DOMAIN } from '../constants/domains.js';
 import { reverseBytesHex } from '../transaction/utils.js';
 import type { Outpoint } from '../interfaces/chain-client.js';
 
@@ -226,6 +226,36 @@ export function disclosureMsg(
   const thresholdLE = new Uint8Array(8);
   new DataView(thresholdLE.buffer).setBigUint64(0, thresholdBig, true);
   return sha256(concatBytes(te.encode(DISCLOSURE_MSG_DOMAIN), assetIdBytes, nLE, refsBytes, thresholdLE, rangeproofBytes, ownerPubBytes));
+}
+
+// ---- Listing message (off-chain OTC, SPEC §5.6) ----
+export function listingMsg(
+  assetIdBytes: Uint8Array,
+  anchorBytes: Uint8Array,
+  commitment: Uint8Array,
+  priceSats: bigint,
+): Uint8Array {
+  if (assetIdBytes.length !== 32) throw new Error('asset_id must be 32 bytes');
+  if (anchorBytes.length !== 36) throw new Error('anchor must be 36 bytes (txid_BE||vout_LE)');
+  if (commitment.length !== 33) throw new Error('commitment must be 33 bytes');
+  const priceLE = new Uint8Array(8);
+  new DataView(priceLE.buffer).setBigUint64(0, priceSats, true);
+  return sha256(concatBytes(te.encode(LISTING_MSG_DOMAIN), assetIdBytes, anchorBytes, commitment, priceLE));
+}
+
+// ---- Atomic intent message (SPEC §5.7.6) ----
+export function axintentMsg(
+  assetId: Uint8Array,
+  intentId: Uint8Array,
+  takerPubkey: Uint8Array,
+  amount: bigint,
+): Uint8Array {
+  if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
+  if (intentId.length !== 32) throw new Error('intent_id must be 32 bytes');
+  if (takerPubkey.length !== 33) throw new Error('taker_pubkey must be 33 bytes');
+  const amountLE = new Uint8Array(8);
+  new DataView(amountLE.buffer).setBigUint64(0, amount, true);
+  return sha256(concatBytes(te.encode(AXINTENT_MSG_DOMAIN), assetId, intentId, takerPubkey, amountLE));
 }
 
 // ---- Asset ID derivation ----

@@ -3,7 +3,7 @@ import { bytesToHex } from '@noble/hashes/utils';
 import * as secp from '@noble/secp256k1';
 import {
   assetIdFor, computeKernelMsg, signKernel, verifyKernel, computeExcessPoint,
-  dropKernelMsg, dropReclaimMsg,
+  dropKernelMsg, dropReclaimMsg, listingMsg, axintentMsg,
 } from '../../src/crypto/kernel.js';
 import { pedersenCommit, pointToBytes, modN, randomScalar } from '../../src/crypto/pedersen.js';
 import { deriveBlinding, deriveChangeBlinding } from '../../src/crypto/ecdh.js';
@@ -201,5 +201,40 @@ describe('DROP kernel messages', () => {
     const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
     const msg = dropReclaimMsg({ reclaimDropId, assetId, capAmount: 5000n });
     expect(msg.length).toBe(32);
+  });
+});
+
+describe('listingMsg', () => {
+  test('with valid params returns 32 bytes', () => {
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const anchor = new Uint8Array(36).fill(0xbb);
+    const commitment = new Uint8Array(33).fill(0x02); commitment[0] = 0x02;
+    const msg = listingMsg(assetId, anchor, commitment, 100000n);
+    expect(msg.length).toBe(32);
+  });
+
+  test('rejects wrong-length assetId', () => {
+    expect(() => listingMsg(new Uint8Array(10), new Uint8Array(36), new Uint8Array(33).fill(2), 1n)).toThrow();
+  });
+
+  test('rejects wrong-length anchor', () => {
+    const aid = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    expect(() => listingMsg(aid, new Uint8Array(10), new Uint8Array(33).fill(2), 1n)).toThrow();
+  });
+});
+
+describe('axintentMsg', () => {
+  test('with valid params returns 32 bytes', () => {
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const intentId = new Uint8Array(32).fill(0xdd);
+    const takerPubkey = new Uint8Array(33).fill(0x03); takerPubkey[0] = 0x03;
+    const msg = axintentMsg(assetId, intentId, takerPubkey, 500n);
+    expect(msg.length).toBe(32);
+  });
+
+  test('rejects wrong-length takerPubkey', () => {
+    const aid = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const intentId = new Uint8Array(32).fill(0xdd);
+    expect(() => axintentMsg(aid, intentId, new Uint8Array(10), 1n)).toThrow();
   });
 });
