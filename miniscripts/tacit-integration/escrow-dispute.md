@@ -45,8 +45,8 @@ thresh(2, pk(buyer), s:pk(seller), s:pk(arbitrator))
 
 ```
 witness: [
-  <sig_A>,   // 64-65 B
-  <sig_B>,   // 64-65 B (any 2 of buyer, seller, arbitrator)
+  <sig_A>,   // 64 B
+  <sig_B>,   // 64 B (any 2 of buyer, seller, arbitrator)
   <script>,  // ~106 B
   <control_block>  // 33 B
 ]

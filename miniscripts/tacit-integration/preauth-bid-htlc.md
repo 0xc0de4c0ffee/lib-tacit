@@ -18,7 +18,7 @@ Current preauth bid (T_PREAUTH_BID, opcode 0x5B; T_PREAUTH_BID_VAR, opcode 0x5C)
 |-------|-------------|
 | PSBT coordination | Both parties must exchange partial signatures, requiring multi-round communication |
 | SIGHASH_SINGLE_ACP | Non-standard sighash flag; some wallets/signers may not support it |
-| SIGHASH_SINGLE_ACP | `SIGHASH_SINGLE | SIGHASH_ANYONECANPAY` = 0x83, but with `SIGHASH_ACP` convention = `SIGHASH_SINGLE | SIGHASH_ANYONECANPAY` (0x83) — actually `0x83` is `SIGHASH_SINGLE | SIGHASH_ANYONECANPAY` which is 0x83. The "ACP" in the codebase means "Anyone-Can-Pay" but the standard flag is `SIGHASH_ANYONECANPAY` = 0x80. So SIGHASH_SINGLE_ACP = 0x01 | 0x80 = 0x83. |
+| SIGHASH_SINGLE_ACP | `SIGHASH_SINGLE | SIGHASH_ANYONECANPAY` = 0x83, but with `SIGHASH_ACP` convention = `SIGHASH_SINGLE | SIGHASH_ANYONECANPAY` (0x83) — actually `0x83` is `SIGHASH_SINGLE | SIGHASH_ANYONECANPAY` which is 0x83. The "ACP" in the codebase means "Anyone-Can-Pay" but the standard flag is `SIGHASH_ANYONECANPAY` = 0x80. So SIGHASH_SINGLE_ACP = 0x03 | 0x80 = 0x83. |
 | Reuse risk | Pre-signed tx could be broadcast at any time; no expiry mechanism |
 | Complexity | Error-prone for wallet implementers |
 | On-chain size | 872–1076 B including rangeproofs |
@@ -178,7 +178,7 @@ If Bob claims UTXO_A (revealing `s`), Alice has at least M blocks to claim UTXO_
 
 | Component | Bytes |
 |-----------|-------|
-| Taproot output (internal key + merkle root) | 34 B (1P2TR) |
+| Taproot output (internal key + merkle root) | 34 B (P2TR) |
 | Key path witness (buyer reclaim, no hashlock) | 64 B (sig) |
 | Hashlock leaf script | ~73 B |
 | Hashlock witness (seller claims with preimage) | 64 (sig) + 34 (preimage) + 73 (script) + 33 (cb) = 204 B |

@@ -12,10 +12,31 @@ miniscripts/
 ├── overview.md                        ← why Miniscript matters for Tacit
 ├── concepts/
 │   ├── miniscript-basics.md           ← Miniscript primer (policy language, fragments, types, compilation)
-│   └── taproot-miniscript.md          ← Taproot + Miniscript interplay (key path, script path, multi_a, MuSig2)
-├── tacit-integration/                 ← integration sketches (empty in this branch)
-├── examples/                          ← worked examples (empty in this branch)
-└── analysis/                          ← analysis notes (empty in this branch)
+│   ├── taproot-miniscript.md          ← Taproot + Miniscript interplay (key path, script path, multi_a, MuSig2)
+│   ├── bip-388-policies.md            ← BIP 388 wallet policy descriptors
+│   └── descriptor-wallets.md          ← Descriptor wallet support and integration
+├── tacit-integration/
+│   ├── current-model.md               ← current tacit taproot envelope architecture
+│   ├── byte-comparison.md             ← wire format vs miniscript byte sizing
+│   ├── proposed-architecture.md       ← proposed hybrid taproot + miniscript architecture
+│   ├── vault-patterns.md              ← vault patterns for high-value assets
+│   ├── timelocked-recovery.md         ← timelocked recovery leaf design
+│   ├── anchor-outputs.md              ← P2A anchor outputs for CPFP fee bumping
+│   ├── dao-gov-miniscript.md          ← DAO governance via miniscript thresh() leaves
+│   ├── preauth-bid-htlc.md            ← hashlock-based preauth bid settlement (HTLC)
+│   └── escrow-dispute.md              ← escrow / dispute resolution with thresh()
+├── examples/
+│   ├── fee-estimation-example.md      ← fee estimation from miniscript descriptors
+│   ├── psbt-flow.md                   ← PSBT coordination flow for multi-sig
+│   ├── timelock-recovery-wsh.md       ← P2WSH descriptor with timelocked recovery
+│   ├── taproot-tacit-envelope.md      ← taproot envelope integration example
+│   └── policy-to-script.md            ← policy-to-script compilation walkthrough
+└── analysis/
+    ├── fees.md                        ← fee quantification envelope vs miniscript
+    ├── security.md                    ← security analysis and attack surface
+    ├── privacy.md                     ← privacy analysis script-path vs key-path
+    ├── tradeoffs-p2wsh-vs-taproot-vs-envelope.md  ← tradeoff comparison
+    └── adoption-roadmap.md            ← phased adoption roadmap
 ```
 
 ## Relationship to `tacit-specs/`

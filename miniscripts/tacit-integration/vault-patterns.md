@@ -55,11 +55,11 @@ tr(vault_internal_key, {
 **Tapscript compilation:**
 
 ```
-<hot_key> OP_CHECKSIG
+<hot_key> OP_CHECKSIGVERIFY
+<cold_key> OP_CHECKSIG
+OP_IFDUP
 OP_NOTIF
-    <cold_key> OP_CHECKSIG
-OP_ELSE
-    <144> OP_CHECKSEQUENCEVERIFY OP_DROP
+    <144> OP_CHECKSEQUENCEVERIFY
 OP_ENDIF
 ```
 
@@ -150,7 +150,7 @@ tr(vault_key, {
 - **Oracle** consigns only if conditions are met (e.g., identity verified, court order presented).
 - **Timelock** of 1008 blocks (~1 week) gives the user time to cancel if the oracle acts maliciously.
 
-The oracle key should be a FROST-aggregated key (BIP-327) to avoid a single point of compromise.
+The oracle key should be a MuSig2-aggregated key (BIP 327) to avoid a single point of compromise.
 
 **Oracle integration via tacit opcodes:**
 
@@ -256,7 +256,7 @@ amount (e.g., 500–1000 sats) dedicated to fees.
 - BIP-141: SegWit v0 (P2WSH)
 - BIP-341: Taproot (P2TR)
 - BIP-342: Tapscript
-- BIP-327: FROST Multisig
+- BIP 327: MuSig2 Multisig
 - Liana: https://wizardsardine.com/liana/
 - Revault: https://github.com/re-vault/revault
 - tacit SPEC §5 — Opcode Wire Formats

@@ -76,7 +76,7 @@ In a hashlock swap, Alice locks to `or_d(and_v(pk(Bob), sha256(H)), and_v(pk(Ali
 An attacker observes a timelocked recovery transaction and attaches a **CPFP (child-pays-for-parent)** child transaction that pays high fees to the same mempool. The miner includes the child (high fees) but the parent (recovery tx) has low fees. The attacker's child displaces the intended recipient's transactions.
 
 **Mitigation:**
-- Use **P2A (Pay-to-Anchor) outputs** (BIP 30352) for fee bumping — the anchor output is explicitly for CPFP and cannot be griefed
+- Use **P2A (Pay-to-Anchor) outputs** (PR #30352, Bitcoin Core v28.0) for fee bumping — the anchor output is explicitly for CPFP and cannot be griefed
 - Use **TRUC (v3) transactions** — v3 transactions have strict topological restrictions that prevent certain fee-siphoning patterns
 - Sign with `SIGHASH_SINGLE` or `SIGHASH_ANYONECANPAY` if appropriate (limited use in practice)
 

@@ -129,7 +129,7 @@ aggregation). The combined package feerate = `(parent_fee + child_fee) / (parent
 
 | Item                     | Vsize (vB) | Notes                            |
 |--------------------------|------------|----------------------------------|
-| P2A output creation      | 31         | 34 B × 0.75 (segwit discount) ≈ 25.5 + overhead |
+| P2A output creation      | 43         | Output creation is non-witness data (4 WU/B). A P2A output [value(8) + scriptPubKeyLen(1) + scriptPubKey(34)] = 43 B non-witness = 43 × 4 = 172 WU = 43 vB |
 | P2A spend input          | 68         | 41 WU witness + 36 B outpoint    |
 | Child tx overhead         | 10         | Version, locktime, markers       |
 | **Total CPFP overhead**  | **~109 vB**|                                   |

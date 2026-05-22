@@ -30,6 +30,8 @@ Bitcoin transaction fees = (virtual bytes) × (fee rate in sat/vB). The fee rate
 
 All sizes are in **virtual bytes** (vB), where 1 vB = 4 WU (witness bytes) for segwit inputs.
 
+> CXFER sizes are approximate and vary with N (number of outputs) and rangeproof size (classic BP vs BP+).
+
 | Tx Type | vB |
 |---|---|
 | CXFER (current) | ~305 |

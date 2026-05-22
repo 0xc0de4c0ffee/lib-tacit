@@ -35,7 +35,7 @@ The kernel signature currently produces a signature that is verified against the
 
 ```typescript
 // New: kernel sign produces a key-path signature
-function signKeyPath(kernelPrivKey: Uint32Array, tx: Transaction): Uint8Array {
+function signKeyPath(kernelPrivKey: Uint8Array, tx: Transaction): Uint8Array {
   // BIP 340 sighash over the transaction
   const sighash = taprootSighash(tx, SIGHASH_DEFAULT)
   // Standard Schnorr signature
@@ -90,7 +90,7 @@ src/miniscript/
 
 #### 2. `src/crypto/kernel.ts`
 
-- Add recovery key derivation: `m/48h/0h/0h/2h` (BIP 48 purpose for miniscript)
+- Add recovery key derivation: `m/48h/0h/0h/2h` (custom BIP 48-like key path — project-internal convention, not a BIP standard)
 - Kernel key still the primary signer; recovery key only used after timelock
 
 #### 3. `src/transaction/sighash.ts`
@@ -141,17 +141,16 @@ Leaf 3: or_d(pk(kernel_default), and_v(v:pk(recovery_key), older(52560))) // sup
 
 ### Changes Required
 
-#### 1. Opcode wire format changes
+#### 1. New opcode or envelope extension field
 
-Add a **leaf selection field** to CXFER, AXFER, and other transfer opcodes:
+Add a **new variant opcode** or an **envelope extension field** that conveys the leaf selection:
 
 ```
-CXFER payload (current):
-  asset_id (32 B) | amount_ct (16 B) | owner_ct (33 B) | ... | BP proof (variable)
-
-CXFER payload (proposed):
+New CXFER variant payload (proposed):
   policy_commitment (32 B) | leaf_index (1 B) | asset_id (32 B) | amount_ct (16 B) | ...
 ```
+
+This is a new opcode variant (not a modification of the existing shipped CXFER wire format), ensuring backward compatibility with existing validators.
 
 - `policy_commitment`: hash of the miniscript policy tree (ensures the output's policy is fixed at creation)
 - `leaf_index`: which leaf the recipient should use when spending (0 = key path default, 1 = recovery, 2 = escrow, 3 = hashlock)

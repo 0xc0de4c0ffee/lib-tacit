@@ -61,8 +61,7 @@ This compiles to the following Tapscript (BIP-342):
 3 OP_EQUAL
 ```
 
-**Size:** ~194 vbytes (script) + 64 B × 3 Schnorr sigs = ~386 vbytes total for the witness. At 4× witness discount (segwit), this
-contributes ~290 WU ≈ 72.5 vbytes to the virtual size.
+**Size:** ~173 B (script: 5 × (1 + 32) + 5 opcodes + 3 overhead) + 64 B × 3 Schnorr sigs + 33 B control block = 398 WU total for the witness. At 1 WU/B witness discount, this contributes ~398 WU ≈ 100 vB. Plus input overhead (41 vB non-witness): ~141 vB per input.
 
 The leaf is revealed on-chain only during spends. Before execution, the DAO treasury output is indistinguishable from any other
 taproot output (key-path spend could be used for routine operations — see tiered access below).
@@ -96,7 +95,7 @@ taproot output (key-path spend could be used for routine operations — see tier
 2. **Vote tallying** — Determine approval. A simple heuristic: `yes_votes / total_supply > 50%` and quorum `> 20%` of supply votes.
    Tacit's T_GOV_VOTE opcode carries a weight equal to the voter's tacit asset balance.
 3. **PSBT signing** — M board members independently validate the proposal, then sign a PSBT with their respective
-   `OP_CHECKSIG` inputs. Each signer uses BIP-340 Schnorr (compatible with BIP-327 FROST key aggregation if desired).
+   `OP_CHECKSIG` inputs. Each signer uses BIP-340 Schnorr (compatible with BIP 327 MuSig2 key aggregation if desired).
 4. **Witness assembly** — The PSBT collector compresses M Schnorr signatures into the script witness stack, revealing the
    `thresh(3, ...)` leaf.
 5. **Broadcast** — The transaction spends the DAO treasury UTXO, with the tacit kernel signature proving supply conservation:
@@ -176,7 +175,7 @@ tr(dao_emergency_key, {
 - **Behavior:** A designated safe key can spend _after_ 144 blocks (~1 day).
 - **Purpose:** Emergency pause / freeze. If a vulnerability is discovered, the safe can move funds to a secure address after a
   24-hour delay, giving the board time to counter-sign if the safe key is compromised.
-- **Key rotation:** The safe key should be a FROST-aggregated key (BIP-327) held by a separate set of signers.
+- **Key rotation:** The safe key should be a MuSig2-aggregated key (BIP 327) held by a separate set of signers.
 
 ### Combined Output (All Policies in One UTXO)
 
@@ -270,6 +269,6 @@ transaction.
 - BIP-340: Schnorr Signatures for secp256k1
 - BIP-341: Taproot: SegWit v1 Outputs
 - BIP-342: Tapscript: SegWit v1 Script Validation
-- BIP-327: FROST Multisig
+- BIP 327: MuSig2 Multisig
 - Bitcoin Miniscript: https://bitcoin.science/miniscript
 - tacit SPEC §1.1 — Opcode Table (governance range 0x50–0x56)

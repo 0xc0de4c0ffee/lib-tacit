@@ -12,6 +12,7 @@
 | [BIP 379](https://github.com/bitcoin/bips/blob/master/bip-0379.mediawiki) | Miniscript | Formal miniscript type system and non-malleable satisfaction algorithm |
 | [BIP 380–389](https://github.com/bitcoin/bips/blob/master/bip-0380.mediawiki) | Output Script Descriptors | Standardized format for describing output scripts (BIP 380: general, 381: raw, 382: pkh, 383: sh, 384: wsh, 385: tr, 386: rawtr, 387: combo, 388: wallet policies, 389: multisig) |
 | [BIP 388](https://github.com/bitcoin/bips/blob/master/bip-0388.mediawiki) | Wallet Policies | Defines how wallets exchange miniscript policy descriptors (used by Liana, Sparrow, etc.) |
+| [BIP 389](https://github.com/bitcoin/bips/blob/master/bip-0389.mediawiki) | Multisig Descriptors | Standard descriptor format for multisig output scripts |
 | [BIP 431](https://github.com/bitcoin/bips/blob/master/bip-0431.mediawiki) | TRUC (v3 Transactions) | Topologically Restricted Until Confirmation — enables 1-parent-1-child CPFP with predictable topology |
 
 ---
@@ -52,7 +53,7 @@
 | [bdk (Bitcoin Dev Kit)](https://github.com/bitcoindevkit/bdk) | Rust | Wallet library using rust-miniscript; descriptor-based; supports P2WSH and taproot |
 | [libwally-core](https://github.com/ElementsProject/libwally-core) | C | C library with miniscript support; used by Jade and other hardware wallets |
 | [bip340](https://github.com/bitcoin/bips/blob/master/bip-0340/reference.py) | Python | Reference BIP 340 implementation (useful for testing) |
-| [miniscript.fee](https://miniscript.fee/) | — | Official miniscript website with playground, docs, and examples |
+| [Miniscript playground](https://bitcoin.sipa.be/miniscript/) | — | Official miniscript website with playground, docs, and examples |
 
 ---
 
@@ -66,8 +67,8 @@
 | [Output Script Descriptors](https://bitcoindevkit.org/descriptors/) | BDK docs | Practical guide to descriptors |
 | [Wizardsardine Miniscript Field Report](https://wizardsardine.com/blog/) | Wizardsardine | Production learnings from Liana (miniscript wallet) |
 | [Bitcoin Optech Newsletter](https://bitcoinops.org/en/newsletters/) | Optech | Weekly coverage of miniscript, taproot, and related developments |
-| [Miniscript Policy Language](https://miniscript.fee/playground) | miniscript.fee | Interactive policy → miniscript compiler |
-| [Miniscript.fee Analysis](https://miniscript.fee/analysis) | miniscript.fee | Analyze miniscript properties (malleability, satisfaction cost, etc.) |
+| [Miniscript Policy Language](https://bitcoin.sipa.be/miniscript/) | bitcoin.sipa.be | Interactive policy → miniscript compiler |
+| [Miniscript Analysis](https://bitcoin.sipa.be/miniscript/) | bitcoin.sipa.be | Analyze miniscript properties (malleability, satisfaction cost, etc.) |
 
 ---
 
@@ -77,7 +78,7 @@
 |-------|-----------|
 | Taproot background | [Taproot Overview](https://bitcoinops.org/en/topics/taproot/) (Bitcoin Optech) |
 | Covenants | CheckTemplateVerify, CheckOutputDataVerify (BIP 119), TXHASH/CSFS |
-| MuSig2 | [MuSig2 BIP draft](https://github.com/bitcoin/bips/pull/1492) |
+| MuSig2 | [BIP 327](https://github.com/bitcoin/bips/blob/master/bip-0327.mediawiki) |
 | Cross-input aggregation | [BIP draft: cross-input signature aggregation](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki) |
 | Silent Payments | [BIP 352](https://github.com/bitcoin/bips/blob/master/bip-0352.mediawiki) — static address without on-chain linkability |
 | Atomic swaps | [Scriptless threshold adaptor signatures](https://github.com/BlockchainCommons/SmartCustody/blob/master/Docs/Scriptless.md) |

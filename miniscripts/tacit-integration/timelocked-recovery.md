@@ -61,7 +61,7 @@ and_v(v:pk(K), after(N))  →  <N> CHECKLOCKTIMEVERIFY <K> CHECKSIG
 
 ```
 witness: [
-  <recovery_sig>,          // 64-65 B (BIP-340 or ECDSA)
+  <recovery_sig>,          // 64 B (BIP-340)
   <recovery_script>,       // ~43 B
   <control_block>          // 33 B (1-leaf tree)
 ]
@@ -152,7 +152,7 @@ ENDIF
 Purpose:   m/48'          (Miniscript-compatible)
 Coin type: m/48'/0'       (Bitcoin mainnet)
 Account:   m/48'/0'/0'    (tacit recovery)
-Key type:  m/48'/0'/0'/2' (key type 2 = recovery, per BIP-48)
+Key type:  m/48'/0'/0'/2' (custom BIP 48-like key path — project-internal convention, not a BIP standard)
 ```
 
 Alternative (simpler):
@@ -190,7 +190,7 @@ The BIP-39 seed phrase covers **both** kernel keys and recovery keys. No separat
 ```
 Input:  41 B (outpoint + sequence)
 Witness: 65 B (1 sig, no control block)
-Output: 34 B (1P2TR)
+Output: 34 B (P2TR)
 ----
 Total:  140 vB  × fee_rate = fee
 ```
@@ -200,7 +200,7 @@ Total:  140 vB  × fee_rate = fee
 ```
 Input:  41 B (outpoint + sequence)
 Witness: 65 B (sig) + 38 B (script) + 33 B (control block) = 136 B
-Output: 34 B (1P2TR)
+Output: 34 B (P2TR)
 ----
 Total:  211 vB  × fee_rate = fee
 ```

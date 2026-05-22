@@ -49,7 +49,7 @@ verifySchnorr(kernelSig, computeKernelMsg(...), E'.xonly())
 The kernel signature is a BIP-340 Schnorr signature over a domain-separated message (`tacit-kernel-v1`) that binds the spend to a specific asset, specific input outpoints, and output commitments. This signature sits **inside** the envelope payload (not as the Bitcoin-level signing key). The Bitcoin-level `OP_CHECKSIG` in the envelope script uses a **separate** ephemeral key that is revealed in the witness.
 
 This means every tacit envelope carries:
-- **Bitcoin-level sig**: 64-68 B for the taproot script-path spend (the "envelope key" in the witness)
+- **Bitcoin-level sig**: 64 B for the taproot script-path spend (the "envelope key" in the witness)
 - **Kernel sig**: 64 B inside the envelope payload (the "protocol sig" proving supply conservation)
 - **Kernel key**: derived from Σr_out − Σr_in (the excess blinding), not a persistent key
 
@@ -67,6 +67,8 @@ Payload chunking adds 1–5 B per MAX_SCRIPT_PUSH=520 B boundary based on push o
 - ≤255 B → 2 B push (`OP_PUSHDATA1` + len)
 - ≤65535 B → 3 B push (`OP_PUSHDATA2` + 2B len)
 
+> Overhead percentage = (on-chain − payload) / payload × 100%.
+
 | Opcode | Payload | On-Chain | Overhead | Notes |
 |---|---|---|---|---|
 | T_PETCH (0x27) | 30 B | 76 B | 153% | 4-char ticker, no image URI, no rangeproof |
@@ -76,7 +78,7 @@ Payload chunking adds 1–5 B per MAX_SCRIPT_PUSH=520 B boundary based on push o
 | CXFER N=2 (0x23) | 829 B | 879 B | 6% | 2 outputs (recipient + change) + rangeproof |
 | CXFER N=4 (0x23) | 1013 B | 1063 B | 5% | 4 outputs + rangeproof |
 | T_CXFER_BPP N=2 (0x22) | 717 B | 767 B | 7% | BP+ variant, ~14% smaller than classic CXFER |
-| T_AXFER (0x26) | 893 B | 943 B | 6% | Atomic settlement with BTC auxiliary input |
+| T_AXFER (0x26) | 830 B | 880 B | 6% | Atomic settlement with BTC auxiliary input |
 | T_DROP (0x2B) | 299 B | 347 B | 16% | Pool init with 2 asset inputs |
 | T_PREAUTH_BID (0x5B) | 919 B | 969 B | 5% | Preauth bid with exact-fill outputs + rangeproof |
 | T_PREAUTH_BID_VAR (0x5C) | 1031 B | 1089 B | 6% | Variable-fill with K pre-sigs |

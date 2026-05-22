@@ -258,7 +258,7 @@ Round up to **128 vB**.
 | Output P2TR | 43 B | 172 WU |
 | Locktime | 4 B | 16 WU |
 | **Total weight** | | **~1349 WU** |
-| **Virtual size** | | **~337 vB** |
+| **Virtual size** | | **~305 vB** |
 
 **The key-path spend is ~3x cheaper than the script-path envelope spend.**
 
@@ -270,7 +270,7 @@ Round up to **128 vB**.
 |------------|-------|-------------|-------------|--------------|
 | Key path | 110 vB | 1,100 sats | 5,500 sats | 27,500 sats |
 | Script path (recovery) | 128 vB | 1,280 sats | 6,400 sats | 32,000 sats |
-| Current envelope (CXFER) | ~337 vB | 3,370 sats | 16,850 sats | 84,250 sats |
+| Current envelope (CXFER) | ~305 vB | 3,050 sats | 15,250 sats | 76,250 sats |
 | Current envelope (PETCH) | ~170 vB | 1,700 sats | 8,500 sats | 42,500 sats |
 
 **Savings with key path vs current envelope:**
@@ -279,7 +279,7 @@ Round up to **128 vB**.
 |--------|-----------|-------------|---------|----------------------|
 | PETCH (0x27) | ~170 | ~110 | 35% | 600 |
 | BURN N=0 (0x25) | ~200 | ~110 | 45% | 900 |
-| CXFER (0x23) | ~337 | ~110 | 67% | 2,270 |
+| CXFER (0x23) | ~305 | ~110 | 64% | 1,950 |
 | CETCH (0x21) | ~335 | ~110 | 67% | 2,250 |
 
 ---
@@ -363,8 +363,8 @@ Script path adds ~18 vB overhead.
 | Output | 172 WU | 172 WU | 172 WU |
 | Overhead (ver, locktime) | 20 WU | 20 WU | 20 WU |
 | **Total weight** | **~421 WU** | **~493 WU** | **~1,333 WU** |
-| **vSize** | **~105 vB** | **~123 vB** | **~333 vB** |
-| **Fee @ 10 sat/vB** | **~1,050 sats** | **~1,230 sats** | **~3,330 sats** |
+| **vSize** | **~105 vB** | **~123 vB** | **~305 vB** |
+| **Fee @ 10 sat/vB** | **~1,050 sats** | **~1,230 sats** | **~3,050 sats** |
 
 ### Key Finding
 
