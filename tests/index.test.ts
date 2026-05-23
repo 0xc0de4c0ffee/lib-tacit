@@ -135,6 +135,18 @@ describe('lib-tacit barrel exports (src/index.ts)', () => {
     expect(lib.recipientScanTxForStealth).toBeFunction();
     expect(lib.STEALTH_HRP).toBeDefined();
 
+    // Silent payments (BIP-352)
+    expect(lib.decodeSilentPaymentAddress).toBeFunction();
+    expect(lib.senderComputeSilentPaymentOutput).toBeFunction();
+    expect(lib.bip352OutpointBytes).toBeFunction();
+    expect(lib.bip352SmallestOutpoint).toBeFunction();
+    expect(lib.bip352TaggedHash).toBeFunction();
+    expect(lib.BIP352_HRP_BY_NETWORK).toBeDefined();
+    expect(lib.deriveSilentPaymentScanPriv).toBeFunction();
+    expect(lib.deriveSilentPaymentKeys).toBeFunction();
+    expect(lib.encodeSilentPaymentAddress).toBeFunction();
+    expect(lib.receiverScanTxForSilentPayments).toBeFunction();
+
     // Wallet
     expect(lib.generateKeypair).toBeFunction();
     expect(lib.importPrivkey).toBeFunction();

@@ -92,6 +92,22 @@ export {
   xor32,
 } from './primitives.js';
 export {
+  decodeSilentPaymentAddress,
+  senderComputeSilentPaymentOutput,
+  bip352OutpointBytes,
+  bip352SmallestOutpoint,
+  bip352TaggedHash,
+  BIP352_HRP_BY_NETWORK,
+  deriveSilentPaymentScanPriv,
+  deriveSilentPaymentKeys,
+  encodeSilentPaymentAddress,
+  receiverScanTxForSilentPayments,
+} from './silent-payments.js';
+export type {
+  SilentPaymentAddress,
+  ReceiverScanResult,
+} from './silent-payments.js';
+export {
    Groth16NotAvailableError,
    groth16Verify,
    fetchVkFromIpfs,

@@ -5,8 +5,10 @@ import * as secp from '@noble/secp256k1';
 import { sha256 } from '@noble/hashes/sha256';
 import { concatBytes, bytesToHex, hexToBytes } from '@noble/hashes/utils';
 import { SECP_N } from '../constants/limits.js';
-import { G, ZERO, bytes32ToBigint, bytesToPoint } from './pedersen.js';
+import { G, ZERO, bytes32ToBigint, bytesToPoint, bigintToBytes32, modN } from './pedersen.js';
 import { reverseBytes } from '../transaction/utils.js';
+import { aggregateStealthEligibleInputPubkeys } from './stealth.js';
+import type { ClassifiedStealthInput } from './stealth.js';
 
 // --- Bech32m helpers (BIP-350) ---
 
@@ -202,4 +204,101 @@ export function senderComputeSilentPaymentOutput(opts: {
   const P = bytesToPoint(spendPub).add(G.multiply(tBig));
   if (P.equals(ZERO)) throw new Error('output P is point at infinity');
   return { xOnly: P.toRawBytes(true).slice(1) };
+}
+
+// --- Bech32m checksum (BIP-350) ---
+
+function bech32mChecksum(hrp: string, data: number[]): number[] {
+  const v = bech32mExpandHrp(hrp).concat(data).concat([0, 0, 0, 0, 0, 0]);
+  const pm = bech32mPolymod(v) ^ BECH32M_CONST;
+  const out: number[] = [];
+  for (let i = 0; i < 6; i++) out.push((pm >>> (5 * (5 - i))) & 31);
+  return out;
+}
+
+// --- Derive scan private key from spend private key (BIP-352 §3.1) ---
+
+export function deriveSilentPaymentScanPriv(spendPriv: Uint8Array): Uint8Array {
+  const h = taggedHash('BIP0352/ScanKey', spendPriv);
+  const s = bytes32ToBigint(h) % SECP_N;
+  if (s === 0n) throw new Error('scan priv derived zero');
+  return bigintToBytes32(s);
+}
+
+// --- Derive scan+spend keypair (BIP-352 §3.1) ---
+
+export function deriveSilentPaymentKeys(spendPriv: Uint8Array): {
+  scanPriv: Uint8Array;
+  scanPub: Uint8Array;
+  spendPub: Uint8Array;
+} {
+  const scanPriv = deriveSilentPaymentScanPriv(spendPriv);
+  const scanPub = secp.getPublicKey(scanPriv, true);
+  const spendPub = secp.getPublicKey(spendPriv, true);
+  return { scanPriv, scanPub, spendPub };
+}
+
+// --- Encode silent payment address (sp1... / tsp1...) ---
+
+export function encodeSilentPaymentAddress(opts: {
+  scanPub: Uint8Array;
+  spendPub: Uint8Array;
+  network: string;
+}): string {
+  const { scanPub, spendPub, network } = opts;
+  const hrp = BIP352_HRP_BY_NETWORK[network];
+  if (!hrp) throw new Error(`unknown network: ${network}`);
+  const payload8 = new Uint8Array(66);
+  payload8.set(scanPub, 0);
+  payload8.set(spendPub, 33);
+  const data5 = bech32mConvertBits(Array.from(payload8), 8, 5, true);
+  data5.unshift(0);
+  const chk = bech32mChecksum(hrp, data5);
+  const combined = data5.concat(chk);
+  let out = hrp + '1';
+  for (const v of combined) out += BECH32M_ALPHABET[v]!;
+  return out;
+}
+
+// --- Receiver scan result ---
+
+export interface ReceiverScanResult {
+  voutIndex: number;
+  outputKey: Uint8Array;
+}
+
+// --- Receiver scans a tx for silent payments paying us (BIP-352 §3.3) ---
+
+export function receiverScanTxForSilentPayments(opts: {
+  classifiedInputs: ClassifiedStealthInput[];
+  allInputOutpoints: Uint8Array[];
+  outputs: { script: Uint8Array }[];
+  scanPriv: Uint8Array;
+  spendPub: Uint8Array;
+}): ReceiverScanResult[] {
+  const { classifiedInputs, allInputOutpoints, outputs, scanPriv, spendPub } = opts;
+  const { aggregatePub } = aggregateStealthEligibleInputPubkeys(classifiedInputs);
+  if (!aggregatePub) return [];
+  const op_L = bip352SmallestOutpoint(allInputOutpoints);
+  const inputHash = taggedHash('BIP0352/Inputs', op_L, aggregatePub);
+  const ih = modN(bytes32ToBigint(inputHash));
+  if (ih === 0n) throw new Error('input_hash mod N is zero');
+  const A_sum = bytesToPoint(aggregatePub);
+  const ecdhPt = A_sum.multiply(ih).multiply(modN(bytes32ToBigint(scanPriv)));
+  const ecdhBytes = ecdhPt.toRawBytes(true).slice(1);
+  const results: ReceiverScanResult[] = [];
+  for (let v = 0; v < outputs.length; v++) {
+    const script = outputs[v]!.script;
+    if (script.length !== 34 || script[0] !== 0x51 || script[1] !== 0x20) continue;
+    const outputKey = script.slice(2, 34);
+    const tweak = taggedHash('BIP0352/SharedSecret', ecdhBytes, u32be(v));
+    const t = modN(bytes32ToBigint(tweak));
+    if (t === 0n) continue;
+    const P = bytesToPoint(spendPub).add(G.multiply(t));
+    const expected = P.toRawBytes(true).slice(1);
+    if (expected.length === 32 && expected.every((b, i) => b === outputKey[i]!)) {
+      results.push({ voutIndex: v, outputKey });
+    }
+  }
+  return results;
 }

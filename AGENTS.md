@@ -156,7 +156,7 @@ Decoders never substitute for layer 3.
 
 ## Reference Submodule
 
-The `tacit-specs/` directory is a git submodule at `6e1d3c7` pointing at `https://github.com/z0r0z/tacit`. Key reference files:
+The `tacit-specs/` directory is a git submodule at `b313809` pointing at `https://github.com/z0r0z/tacit`. Key reference files:
 
 | File | Purpose |
 |------|---------|
@@ -170,6 +170,7 @@ The `tacit-specs/` directory is a git submodule at `6e1d3c7` pointing at `https:
 | `tacit-specs/tests/cxfer-stealth.test.mjs` | CXFER-to-stealth-address integration tests |
 | `tacit-specs/tests/swap-residual.test.mjs` | AMM swap residual (inventory-aware) verification |
 | `tacit-specs/tests/bip352-sender-vectors.test.mjs` | BIP-352 sender-side silent payment test vectors (23/23 passing) |
+| `tacit-specs/tests/bip352-receiver-vectors.test.mjs` | BIP-352 receiver-side silent payment test vectors (new in b313809) |
 | `tacit-specs/tests/stealth-credit-persistence.test.mjs` | Stealth credit schema persistence + migration |
 | `tacit-specs/dapp/tacit.js` | Monolithic dapp — source of truth for all shipped opcode encode/decode |
 | `tacit-specs/dapp/bulletproofs-plus.js` | BP+ prover/verifier reference (T_CXFER_BPP, 907 LOC) |
