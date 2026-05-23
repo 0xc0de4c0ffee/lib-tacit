@@ -151,8 +151,8 @@ Decoders never substitute for layer 3.
 - `@noble/hashes` ^1.4.0 — SHA256, HMAC, RIPEMD160, keccak
 - `@scure/base` ^1.1.6 — bech32 (P2WPKH address encoding)
 - `poseidon-lite` ^0.3.0 — Poseidon hash over BN254 (for future mixer module)
+- `snarkjs` ^0.7.6 — Groth16 verifier (for shielded-pool withdrawals)
 - `@helia/verified-fetch` ^7.2.10 — Trustless IPFS content retrieval
-- `snarkjs` (optional) — Groth16 verifier (for future mixer module)
 
 ## Reference Submodule
 

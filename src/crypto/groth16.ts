@@ -33,11 +33,11 @@ export async function groth16Verify(
 }
 
 export async function fetchVkFromIpfs(cid: string, gateway?: string): Promise<any> {
-  const gw = gateway ?? 'https://ipfs.io/ipfs';
-  const url = `${gw}/${cid}`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`fetchVkFromIpfs: HTTP ${res.status} fetching ${url}`);
+  try {
+    const { ipfsFetchVerified } = await import('../indexer/ipfs.js');
+    const result = await ipfsFetchVerified(cid, { gateways: gateway ? [gateway] : undefined });
+    return JSON.parse(new TextDecoder().decode(result.bytes));
+  } catch {
+    throw new Error(`fetchVkFromIpfs: failed to fetch ${cid} from IPFS`);
   }
-  return res.json();
 }

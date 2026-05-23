@@ -51,11 +51,10 @@
     "@noble/hashes": "1.4.0",
     "@noble/secp256k1": "2.1.0",
     "@scure/base": "1.1.6",
-    "poseidon-lite": "0.3.0"
-  },
-  "optionalDependencies": {
+    "poseidon-lite": "0.3.0",
     "snarkjs": "0.7.6"
   },
+  "optionalDependencies": {},
   "devDependencies": {
     "@types/bun": "latest",
     "typescript": "5.8.3"
