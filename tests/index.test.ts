@@ -76,6 +76,14 @@ describe('lib-tacit barrel exports (src/index.ts)', () => {
     expect(lib.decodeAXferVar).toBeFunction();
     expect(lib.encodeWrapperAttest).toBeFunction();
     expect(lib.decodeWrapperAttest).toBeFunction();
+    expect(lib.axintentClaimMsg).toBeFunction();
+    expect(lib.axintentFulfilMsg).toBeFunction();
+    expect(lib.axintentCancelMsg).toBeFunction();
+    expect(lib.bidIntentMsg).toBeFunction();
+    expect(lib.encodeAXferBpp).toBeFunction();
+    expect(lib.decodeAXferBpp).toBeFunction();
+    expect(lib.encodeAXferVarBpp).toBeFunction();
+    expect(lib.decodeAXferVarBpp).toBeFunction();
 
     // Shipped preauth-bid family (0x5B-0x5C)
     expect(lib.encodePreauthBid).toBeFunction();

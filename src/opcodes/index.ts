@@ -45,6 +45,12 @@ export type { WithdrawInput, WithdrawOutput } from './withdraw.js';
 export { encodeAXferVar, decodeAXferVar } from './axfer-var.js';
 export type { AXFERVarInput, AXFERVarOutput } from './axfer-var.js';
 
+// Shipped — BP+ variants of AXFER (SPEC-AXFER-BPP-AMENDMENT)
+export { encodeAXferBpp, decodeAXferBpp } from './axfer-bpp.js';
+export type { AXFERBPPInput, AXFERBPPOutput } from './axfer-bpp.js';
+export { encodeAXferVarBpp, decodeAXferVarBpp } from './axfer-var-bpp.js';
+export type { AXFERVarBPPInput, AXFERVarBPPOutput } from './axfer-var-bpp.js';
+
 // Shipped — Wrapper attestation (SPEC §5.19)
 export { encodeWrapperAttest, decodeWrapperAttest } from './wrapper-attest.js';
 export type { WrapperAttestInput, WrapperAttestOutput } from './wrapper-attest.js';

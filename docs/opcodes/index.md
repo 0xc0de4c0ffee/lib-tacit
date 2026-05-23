@@ -93,6 +93,8 @@
 | T_CBTC_TAC_* (0x49–0x4F, 0x57–0x5A) | `cbtc-tac.ts` | ❌ types only | ❌ types only | ❌ |
 | T_PREAUTH_BID / T_PREAUTH_BID_VAR (0x5B–0x5C) | `preauth-bid.ts` / `preauth-bid-var.ts` | ✅ `encodePreauthBid` / `encodePreauthBidVar` | ✅ `decodePreauthBid` / `decodePreauthBidVar` | ⏳ |
 | Drafted AMM (0x2D–0x33) | `amm-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
+| T_AXFER_BPP (0x3C) | `axfer-bpp.ts` | ❌ stub | ❌ stub | ❌ |
+| T_AXFER_VAR_BPP (0x3D) | `axfer-var-bpp.ts` | ❌ stub | ❌ stub | ❌ |
 | Drafted Farm (0x34–0x3E) | `farm-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 | Drafted Gov (0x50–0x56) | `gov-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 
@@ -114,6 +116,8 @@ Each shipped opcode has a dedicated document covering wire format, constraints, 
 - [`0x2c-t-dclaim.md`](./0x2c-t-dclaim.md) — Claim event
 - [`0x37-t-axfer-var.md`](./0x37-t-axfer-var.md) — Variable-amount atomic settlement
 - [`0x38-t-wrapper-attest.md`](./0x38-t-wrapper-attest.md) — Wrapper attestation
+- [`0x3c-t-axfer-bpp.md`](./0x3c-t-axfer-bpp.md) — Atomic settlement with BP+ (drafted)
+- [`0x3d-t-axfer-var-bpp.md`](./0x3d-t-axfer-var-bpp.md) — Variable-amount atomic settlement with BP+ (drafted)
 - [`0x5b-t-preauth-bid.md`](./0x5b-t-preauth-bid.md) — Preauth bid (shipped)
 - [`0x5c-t-preauth-bid-var.md`](./0x5c-t-preauth-bid-var.md) — Variable-amount preauth bid (shipped)
 

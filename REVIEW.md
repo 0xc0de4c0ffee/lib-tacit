@@ -1,8 +1,9 @@
 # lib-tacit Review: Comparison with tacit-specs Reference
 
-> Updated: 2026-05-22
-> Reference commit: `df064be` (z0r0z/tacit) — refresh with `bun run specs:pull`
-> lib-tacit: stealth stack ported; **316 tests passing**
+> Updated: 2026-05-23
+> Reference commit: `6e1d3c7` (z0r0z/tacit) — refresh with `bun run specs:pull`
+> lib-tacit HEAD: `a923206` — ceremony key separation, BIP-352 wording
+> **316 tests passing**, 2454 expect calls, 36 test files
 
 ## Full Comparison Table
 
@@ -53,23 +54,8 @@
 | `senderComputeStealthCommit` | tacit.js:4281 | `stealth.ts` | ✅ Match | sender-side commit |
 | `recipientScanTxForStealth` | tacit.js:4305 | `stealth.ts` | ✅ Match | §H.1 one ECDH per tx |
 | `stealthTxAnchorHead` | tacit.js:4267 | `stealth.ts` | ✅ Match | alias of `buildAnchor` |
-| `senderComputeSilentPaymentOutput` | tacit.js:4371+ | — | ❌ Gap | BIP-352 native sats send (dapp-only) |
-| `decodeSilentPaymentAddress` | tacit.js:4382 | — | ❌ Gap | BIP-352 sp1… addresses |
-
-### Validation
-
-| Function | Ref file | Lib file | Status | Notes |
-|----------|----------|----------|--------|-------|
-| `validateAncestry` | (ancestry walker) | `validation/validator.ts` | ✅ Added | Wraps AncestryWalker.walkAncestry |
-| `checkSupplyConservation` | (kernel helper) | `validation/supply.ts` | ✅ Added | Excess point non-degenerate check |
-
-### Recovery
-
-| Function | Ref file | Lib file | Status | Notes |
-|----------|----------|----------|--------|-------|
-| `scanForUTXOs` | (chain scan) | `recovery/scanner.ts` | ✅ Added | Batch UTXO fetch + envelope detection |
-| `tryDecryptOutput` | tacit.js | `recovery/decrypt.ts` | ✅ Added | ECDH self-decrypt path |
-| `tryDecryptOutputs` | tacit.js | `recovery/decrypt.ts` | ✅ Added | Batch variant |
+| `senderComputeSilentPaymentOutput` | tacit.js:4371+ | `silent-payments.ts` | ✅ Ported | BIP-352 native sats send |
+| `decodeSilentPaymentAddress` | tacit.js:4382 | `silent-payments.ts` | ✅ Ported | BIP-352 sp1… addresses |
 
 ### Kernel Signatures
 
@@ -85,6 +71,12 @@
 | `dropReclaimMsg` | tacit.js:6685 | `kernel.ts:186` | ✅ Added | Domain `tacit-drop-reclaim-v1` |
 | `openingMsg` | tacit.js:29542 | `kernel.ts:201` | ✅ Added | Domain `tacit-opening-v1` |
 | `disclosureMsg` | tacit.js:29595 | `kernel.ts:218` | ✅ Added | Domain `tacit-disclosure-v1` |
+| `listingMsg` | tacit.js (dapp) | `kernel.ts:232` | ✅ Added | Off-chain OTC listing (SPEC §5.6) |
+| `axintentMsg` | tacit.js (dapp) | `kernel.ts:247` | ✅ Added | Atomic intent message (SPEC §5.7.6) |
+| `axintentClaimMsg` | tacit.js (dapp) | `kernel.ts:262` | ✅ Added | AXINTENT claim variant |
+| `axintentFulfilMsg` | tacit.js (dapp) | `kernel.ts:277` | ✅ Added | AXINTENT fulfil variant |
+| `axintentCancelMsg` | tacit.js (dapp) | `kernel.ts:292` | ✅ Added | AXINTENT cancel variant |
+| `bidIntentMsg` | tacit.js (dapp) | `kernel.ts:304` | ✅ Added | Bid intent message (SPEC §5.7.6.1) |
 | `dropIdFromRevealTxid` | tacit.js:6632 | `drop.ts:184` | ✅ Added | DROP identifier derivation |
 | `assetIdFor` | tacit.js:3785 | `kernel.ts:146` | ✅ Match |
 | `computeWithdrawBindHash` | tacit.js:4504 | *not ported* | 🔶 Missing | Crypto verify function; low priority |
@@ -94,7 +86,7 @@
 | Opcode | Ref encoder | Lib encoder | Lib decoder | Status | Notes |
 |--------|------------|------------|------------|--------|-------|
 | CETCH (0x21) | tacit.js:5688 | `etch.ts:41` | `etch.ts:70` | ✅ Match | `Number.isInteger(decimals)` guard added |
-| T_CXFER_BPP (0x22) | tacit.js:5789 | `cxfer-bpp.ts:25` | `cxfer-bpp.ts:45` | ✅ Match | BP+ wire only; BP+ crypto not ported |
+| T_CXFER_BPP (0x22) | tacit.js:5789 | `cxfer-bpp.ts:25` | `cxfer-bpp.ts:45` | ✅ Match | BP+ wire only; BP+ crypto ported |
 | CXFER (0x23) | tacit.js:5744 | `transfer.ts:33` | `transfer.ts:55` | ✅ Match |
 | T_MINT (0x24) | tacit.js:6114 | `mint.ts:30` | `mint.ts:50` | ✅ Match |
 | T_BURN (0x25) | tacit.js:6172 | `burn.ts:37` | `burn.ts:75` | ✅ Match | Zero-output rangeproof guard added |
@@ -107,6 +99,8 @@
 | T_DCLAIM (0x2C) | tacit.js:6533 | `dclaim.ts:37` | `dclaim.ts:81` | ✅ Match |
 | T_AXFER_VAR (0x37) | tacit.js:5859 | `axfer-var.ts:23` | `axfer-var.ts:44` | ✅ Match |
 | T_WRAPPER_ATTEST (0x38) | tacit.js:5498 | `wrapper-attest.ts:20` | `wrapper-attest.ts:33` | ✅ Match |
+| T_AXFER_BPP (0x3C) | tacit.js (dapp) | `axfer-bpp.ts` | `axfer-bpp.ts` | ❌ stub | BP+ variant of T_AXFER; types + stub codec |
+| T_AXFER_VAR_BPP (0x3D) | tacit.js (dapp) | `axfer-var-bpp.ts` | `axfer-var-bpp.ts` | ❌ stub | BP+ variant of T_AXFER_VAR; types + stub codec |
 
 ### Envelope Script
 
@@ -182,10 +176,27 @@
 | Chain scanner | tacit.js | `recovery/scanner.ts` | ✅ Added | scanForUTXOs batch fetch + envelope detect |
 | ECDH trial-decrypt | tacit.js | `recovery/decrypt.ts` | ✅ Added | tryDecryptOutput + batch |
 
+### Validation
+
+| Function | Ref file | Lib file | Status | Notes |
+|----------|----------|----------|--------|-------|
+| `validateAncestry` | (ancestry walker) | `validation/validator.ts` | ✅ Added | Wraps AncestryWalker.walkAncestry |
+| `checkSupplyConservation` | (kernel helper) | `validation/supply.ts` | ✅ Added | Excess point non-degenerate check |
+
+### Recovery
+
+| Function | Ref file | Lib file | Status | Notes |
+|----------|----------|----------|--------|-------|
+| `scanForUTXOs` | (chain scan) | `recovery/scanner.ts` | ✅ Added | Batch UTXO fetch + envelope detection |
+| `tryDecryptOutput` | tacit.js | `recovery/decrypt.ts` | ✅ Added | ECDH self-decrypt path |
+| `tryDecryptOutputs` | tacit.js | `recovery/decrypt.ts` | ✅ Added | Batch variant |
+
 ## Opcode Assignments
 
 | Hex | Opcode | Section | Status | Notes |
 |-----|--------|---------|--------|-------|
+| `0x3C` | T_AXFER_BPP | — | 📝 Drafted | BP+ variant of T_AXFER. Stub codec in `axfer-bpp.ts`. |
+| `0x3D` | T_AXFER_VAR_BPP | — | 📝 Drafted | BP+ variant of T_AXFER_VAR. Stub codec in `axfer-var-bpp.ts`. |
 | `0x59–0x5A` | T_CBTC_TAC_TOP_UP / T_CBTC_TAC_BOND_RELEASE | §5.50–5.51 | ✅ Shipped | Moved from `0x59` free slot in prior SPEC; now matches dapp ground truth. |
 | `0x5B` | T_PREAUTH_BID | §5.7.11 | ✅ Shipped | Promoted from drafted per spec commit 5979c1c. |
 | `0x5C` | T_PREAUTH_BID_VAR | §5.7.12 | ✅ Shipped | Promoted from drafted; signet-validated end-to-end. |
@@ -196,17 +207,17 @@ See `src/constants/opcodes.ts` for the full table.
 ## Bugs Found and Fixed During Review
 
 ### 1. `decodeWithdraw` — Missing zero-length proof guard
-**File:** `src/opcodes/withdraw.ts:72`
+**File:** `src/opcodes/withdraw.ts:72` (fixed)
 **Impact:** A zero-length `proof` field would be accepted by the decoder. The reference rejects `proofLen === 0` (tacit.js:6862). A zero-length Groth16 proof is invalid per SPEC §5.11.
 **Fix:** Added `if (proofLen === 0) return null;` before the length-exactness check. Also relocated the `denomination` range check before proof parse for early rejection.
 
 ### 2. `encodePoolInit` — Missing CID length validation
-**File:** `src/opcodes/deposit.ts:69`
+**File:** `src/opcodes/deposit.ts:69` (fixed)
 **Impact:** `vkCid` and `ceremonyCid` were accepted at any length, including zero. The reference requires 1–64 bytes (tacit.js:6749-6750). Empty CIDs would produce malformed pool-init envelopes.
 **Fix:** Added `vkCid.length` and `ceremonyCid.length` range checks (1–64).
 
 ### 3. `decodeDeposit` — Missing CID length bounds
-**File:** `src/opcodes/deposit.ts:96-99`
+**File:** `src/opcodes/deposit.ts:96-99` (fixed)
 **Impact:** The decoder accepted zero-length or >64-byte CIDs. The reference rejects these (tacit.js:6788, 6793). An adversarial envelope with out-of-bounds CIDs would decode successfully.
 **Fix:** Added `vkCidLen < 1 || vkCidLen > 64` and `ceremonyCidLen < 1 || ceremonyCidLen > 64` guards.
 
@@ -216,16 +227,14 @@ See `src/constants/opcodes.ts` for the full table.
 |------|-----------|-----------|-----------|
 | `decodeTWithdrawPayload` `bindHash` check | Computes expected `bindHash` via `computeWithdrawBindHash` during decode | Does NOT verify during decode | Per `docs/crypto/validation.md`, decoders are layer 1 (wire) only. Crypto verification is layer 3. |
 | Proof-of-reserve helpers | Inline in dapp | Not ported | DApp-layer logic; library provides primitives |
-| DApp-specific signing messages | tacit.js (listingMsg, cancelMsg, claimMsg, axintentMsg-family) | Not ported | OTC listing & atomic intent signing — dApp-surface only |
 
-## Open Gaps (vs reference @ `df064be`)
+## Open Gaps (vs reference @ `6e1d3c7`)
 
 | Area | Reference | lib-tacit | Priority |
 |------|-----------|-----------|----------|
-| BIP-352 silent payments | `senderComputeSilentPaymentOutput`, `decodeSilentPaymentAddress` | not ported | medium — native BTC send path |
+| `computeWithdrawBindHash` | tacit.js:4504 | not ported | low — crypto verify function |
 | Slot opcodes `0x43`–`0x47` | dapp encode/decode shipped | types + throw stubs | high for cBTC.zk wallets |
 | cBTC.tac `0x49`–`0x4F`, `0x57`–`0x5A` | dapp encode/decode shipped | types + throw stubs | high for lien model |
-| Drafted AXFER_BPP wire `0x3C`/`0x3D` | dapp encode/decode | not ported (drafted) | low until activation |
 | Drafted AMM/farm/gov `0x2D`–`0x56` | amendments + partial dapp | type stubs only | low |
 
 ## Closed Gaps (crypto + core wire)
@@ -234,13 +243,16 @@ See `src/constants/opcodes.ts` for the full table.
 |-----|--------|
 | BP+ prover/verifier | ✅ `bulletproofs-plus.ts` |
 | Poseidon / Groth16 | ✅ wrapped |
-| Class-2 blinded-pubkey stealth | ✅ `stealth.ts` (ported from stealth-primitives / dapp patch) |
+| Class-2 blinded-pubkey stealth (full rewrite matching df064be) | ✅ `stealth.ts` (ported from stealth-primitives / dapp patch) |
+| BIP-352 silent payments | ✅ `silent-payments.ts` (`senderComputeSilentPaymentOutput`, `decodeSilentPaymentAddress`) |
+| AXINTENT message variants | ✅ `kernel.ts` (`axintentClaimMsg`, `axintentFulfilMsg`, `axintentCancelMsg`, `bidIntentMsg`) |
+| T_AXFER_BPP / T_AXFER_VAR_BPP | ✅ `axfer-bpp.ts`, `axfer-var-bpp.ts` (stub wire codec) |
 | Shipped transfer-family wire `0x21`–`0x2C`, `0x37`–`0x38`, `0x5B`–`0x5C` | ✅ encoders/decoders + tests |
 | Validation + recovery | ✅ `validation/`, `recovery/` |
 
 ## Test Status
 
-**316 tests passing**, 0 failing across 36 test files (reference at `df064be`, tests run only in lib-tacit).
+**316 tests passing**, 2454 expect calls across 36 test files (reference at `6e1d3c7`, tests run only in lib-tacit).
 
 | Test file | Count | Coverage |
 |-----------|-------|----------|

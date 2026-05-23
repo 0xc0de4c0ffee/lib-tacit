@@ -29,7 +29,8 @@ src/
 │   ├── bulletproofs-plus.ts # BP+ aggregated range proofs (0x22, 14% smaller proofs)
 │   ├── poseidon.ts         # Poseidon hash over BN254 (mixer Merkle trees)
 │   ├── groth16.ts          # Groth16 verifier (optional snarkjs dep)
-│   └── stealth.ts          # Blinded-pubkey commits: tcs/tcsts addresses, ECDH blinding, scan/send helpers
+│   ├── stealth.ts          # Blinded-pubkey commits: tcs/tcsts addresses, ECDH blinding, scan/send helpers
+│   └── silent-payments.ts  # BIP-352 silent payments sender-side
 ├── envelope/
 │   ├── script.ts          # Taproot envelope script encode/decode (TACIT magic, pushdata chunking)
 │   └── payload.ts         # ByteWriter utility, u64LE, readU64LE helpers
@@ -121,7 +122,7 @@ bun run specs:pull
 5. Compare against `tacit-specs/dapp/bulletproofs-plus.js` for BP+ crypto (src/crypto/bulletproofs-plus.ts)
 6. Typecheck: `bun run typecheck`
 7. Build: `bun run build`
-8. Test: `bun test` (317+ tests; pinned vectors in `tests/crypto/vectors.test.ts`, no tacit-specs test root)
+8. Test: `bun test` (316+ tests; pinned vectors in `tests/crypto/vectors.test.ts`, no tacit-specs test root)
 9. Read `docs/crypto/validation.md` before adding indexer-facing verify helpers
 
 ## Validation layers
@@ -150,7 +151,7 @@ Decoders never substitute for layer 3.
 
 ## Reference Submodule
 
-The `tacit-specs/` directory is a git submodule pointing at `https://github.com/z0r0z/tacit`. Key reference files:
+The `tacit-specs/` directory is a git submodule at `6e1d3c7` pointing at `https://github.com/z0r0z/tacit`. Key reference files:
 
 | File | Purpose |
 |------|---------|

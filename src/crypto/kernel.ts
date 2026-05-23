@@ -13,7 +13,7 @@ import {
   bigintToBytes32, bytes32ToBigint,
 } from './pedersen.js';
 import { signSchnorr, verifySchnorr } from './schnorr.js';
-import { KERNEL_MSG_DOMAIN, MINT_MSG_DOMAIN, DROP_DOMAIN, DROP_RECLAIM_DOMAIN, OPENING_MSG_DOMAIN, DISCLOSURE_MSG_DOMAIN, LISTING_MSG_DOMAIN, AXINTENT_MSG_DOMAIN } from '../constants/domains.js';
+import { KERNEL_MSG_DOMAIN, MINT_MSG_DOMAIN, DROP_DOMAIN, DROP_RECLAIM_DOMAIN, OPENING_MSG_DOMAIN, DISCLOSURE_MSG_DOMAIN, LISTING_MSG_DOMAIN, AXINTENT_MSG_DOMAIN, AXINTENT_CLAIM_DOMAIN, AXINTENT_FULFIL_DOMAIN, AXINTENT_CANCEL_DOMAIN, BID_INTENT_DOMAIN } from '../constants/domains.js';
 import { reverseBytesHex } from '../transaction/utils.js';
 import type { Outpoint } from '../interfaces/chain-client.js';
 
@@ -256,6 +256,66 @@ export function axintentMsg(
   const amountLE = new Uint8Array(8);
   new DataView(amountLE.buffer).setBigUint64(0, amount, true);
   return sha256(concatBytes(te.encode(AXINTENT_MSG_DOMAIN), assetId, intentId, takerPubkey, amountLE));
+}
+
+// ---- AXINTENT claim message (SPEC §5.7.6) ----
+export function axintentClaimMsg(
+  intentId: Uint8Array,
+  assetId: Uint8Array,
+  takerPubkey: Uint8Array,
+  amount: bigint,
+): Uint8Array {
+  if (intentId.length !== 32) throw new Error('intent_id must be 32 bytes');
+  if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
+  if (takerPubkey.length !== 33) throw new Error('taker_pubkey must be 33 bytes');
+  const amountLE = new Uint8Array(8);
+  new DataView(amountLE.buffer).setBigUint64(0, amount, true);
+  return sha256(concatBytes(te.encode(AXINTENT_CLAIM_DOMAIN), intentId, assetId, takerPubkey, amountLE));
+}
+
+// ---- AXINTENT fulfil message (SPEC §5.7.6) ----
+export function axintentFulfilMsg(
+  intentId: Uint8Array,
+  assetId: Uint8Array,
+  makerPubkey: Uint8Array,
+  amount: bigint,
+): Uint8Array {
+  if (intentId.length !== 32) throw new Error('intent_id must be 32 bytes');
+  if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
+  if (makerPubkey.length !== 33) throw new Error('maker_pubkey must be 33 bytes');
+  const amountLE = new Uint8Array(8);
+  new DataView(amountLE.buffer).setBigUint64(0, amount, true);
+  return sha256(concatBytes(te.encode(AXINTENT_FULFIL_DOMAIN), intentId, assetId, makerPubkey, amountLE));
+}
+
+// ---- AXINTENT cancel message (SPEC §5.7.6) ----
+export function axintentCancelMsg(
+  intentId: Uint8Array,
+  assetId: Uint8Array,
+  makerPubkey: Uint8Array,
+): Uint8Array {
+  if (intentId.length !== 32) throw new Error('intent_id must be 32 bytes');
+  if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
+  if (makerPubkey.length !== 33) throw new Error('maker_pubkey must be 33 bytes');
+  return sha256(concatBytes(te.encode(AXINTENT_CANCEL_DOMAIN), intentId, assetId, makerPubkey));
+}
+
+// ---- Bid intent message (SPEC §5.7.6.1) ----
+export function bidIntentMsg(
+  bidId: Uint8Array,
+  assetId: Uint8Array,
+  makerPubkey: Uint8Array,
+  amount: bigint,
+  priceSats: bigint,
+): Uint8Array {
+  if (bidId.length !== 16) throw new Error('bid_id must be 16 bytes');
+  if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
+  if (makerPubkey.length !== 33) throw new Error('maker_pubkey must be 33 bytes');
+  const amountLE = new Uint8Array(8);
+  new DataView(amountLE.buffer).setBigUint64(0, amount, true);
+  const priceLE = new Uint8Array(8);
+  new DataView(priceLE.buffer).setBigUint64(0, priceSats, true);
+  return sha256(concatBytes(te.encode(BID_INTENT_DOMAIN), bidId, assetId, makerPubkey, amountLE, priceLE));
 }
 
 // ---- Asset ID derivation ----

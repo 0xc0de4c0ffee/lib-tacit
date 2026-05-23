@@ -72,6 +72,10 @@ export {
   disclosureMsg,
   listingMsg,
   axintentMsg,
+  axintentClaimMsg,
+  axintentFulfilMsg,
+  axintentCancelMsg,
+  bidIntentMsg,
   assetIdFor,
 } from './kernel.js';
 export {
