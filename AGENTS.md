@@ -30,7 +30,7 @@ src/
 │   ├── poseidon.ts         # Poseidon hash over BN254 (mixer Merkle trees)
 │   ├── groth16.ts          # Groth16 verifier (optional snarkjs dep)
 │   ├── stealth.ts          # Blinded-pubkey commits: tcs/tcsts addresses, ECDH blinding, scan/send helpers
-│   └── silent-payments.ts  # BIP-352 silent payments sender-side
+│   └── silent-payments.ts  # BIP-352 silent payments sender-side (sp1/tsp1 addresses)
 ├── envelope/
 │   ├── script.ts          # Taproot envelope script encode/decode (TACIT magic, pushdata chunking)
 │   └── payload.ts         # ByteWriter utility, u64LE, readU64LE helpers
@@ -49,6 +49,8 @@ src/
 │   ├── dclaim.ts          # T_DCLAIM (0x2C) — permissionless claim
 │   ├── axfer-var.ts       # T_AXFER_VAR (0x37) — variable-amount atomic settlement
 │   ├── wrapper-attest.ts  # T_WRAPPER_ATTEST (0x38) — wrapper attestation
+│   ├── axfer-bpp.ts        # T_AXFER_BPP (0x3C) — BP+ variant of atomic settlement
+│   ├── axfer-var-bpp.ts    # T_AXFER_VAR_BPP (0x3D) — BP+ variant of variable-amount settlement
 │   ├── preauth-bid.ts      # T_PREAUTH_BID (0x5B) encode/decode/context-hash
 │   ├── preauth-bid-var.ts  # T_PREAUTH_BID_VAR (0x5C) encode/decode/context-hash
 │   ├── slot.ts            # T_SLOT_* (0x43–0x47) — types only (wire TBD)
@@ -145,7 +147,7 @@ Decoders never substitute for layer 3.
 
 - `@noble/secp256k1` ^2.1.0 — secp256k1 curve operations
 - `@noble/hashes` ^1.4.0 — SHA256, HMAC, RIPEMD160, keccak
-- `@scure/base` ^1.1.6 — bech32, base58 encoding
+- `@scure/base` ^1.1.6 — bech32 (P2WPKH address encoding)
 - `poseidon-lite` ^0.3.0 — Poseidon hash over BN254 (for future mixer module)
 - `snarkjs` (optional) — Groth16 verifier (for future mixer module)
 
@@ -155,7 +157,7 @@ The `tacit-specs/` directory is a git submodule at `6e1d3c7` pointing at `https:
 
 | File | Purpose |
 |------|---------|
-| `tacit-specs/SPEC.md` | Canonical protocol specification (opcode table §1.1, wire formats §§5.1–5.49) |
+| `tacit-specs/SPEC.md` | Canonical protocol specification (opcode table §1.1, wire formats §§5.1–5.51) |
 | `tacit-specs/tests/bulletproofs.mjs` | Reference BP implementation (Pedersen, MSM, IPA, prove/verify/batch) |
 | `tacit-specs/tests/composition.mjs` | Reference composition (Schnorr, ECDH, opcode encode/decode, kernel, DROP/DCLAIM) |
 | `tacit-specs/tests/vectors.test.mjs` | Pinned hex test vectors (generators, asset IDs, blindings, keystreams) |
@@ -164,6 +166,8 @@ The `tacit-specs/` directory is a git submodule at `6e1d3c7` pointing at `https:
 | `tacit-specs/tests/stealth-primitives.mjs` | Stealth address EC math + DH shared-secret derivation |
 | `tacit-specs/tests/cxfer-stealth.test.mjs` | CXFER-to-stealth-address integration tests |
 | `tacit-specs/tests/swap-residual.test.mjs` | AMM swap residual (inventory-aware) verification |
+| `tacit-specs/tests/bip352-sender-vectors.test.mjs` | BIP-352 sender-side silent payment test vectors (23/23 passing) |
+| `tacit-specs/tests/stealth-credit-persistence.test.mjs` | Stealth credit schema persistence + migration |
 | `tacit-specs/dapp/tacit.js` | Monolithic dapp — source of truth for all shipped opcode encode/decode |
 | `tacit-specs/dapp/bulletproofs-plus.js` | BP+ prover/verifier reference (T_CXFER_BPP, 907 LOC) |
 | `tacit-specs/spec/CIRCUITS.md` | Circuit composition: mixer + AMM Groth16 families |

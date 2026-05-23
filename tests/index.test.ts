@@ -22,6 +22,9 @@ describe('lib-tacit barrel exports (src/index.ts)', () => {
     expect(lib.decryptAmount).toBeFunction();
     expect(lib.computeKernelMsg).toBeFunction();
     expect(lib.listingMsg).toBeFunction();
+    expect(lib.listingMsgBytes).toBeFunction();
+    expect(lib.listingCancelMsgBytes).toBeFunction();
+    expect(lib.listingClaimMsgBytes).toBeFunction();
     expect(lib.axintentMsg).toBeFunction();
     expect(lib.dropKernelMsg).toBeFunction();
     expect(lib.dropReclaimMsg).toBeFunction();
@@ -77,9 +80,11 @@ describe('lib-tacit barrel exports (src/index.ts)', () => {
     expect(lib.encodeWrapperAttest).toBeFunction();
     expect(lib.decodeWrapperAttest).toBeFunction();
     expect(lib.axintentClaimMsg).toBeFunction();
+    expect(lib.axintentClaimMsgVar).toBeFunction();
     expect(lib.axintentFulfilMsg).toBeFunction();
     expect(lib.axintentCancelMsg).toBeFunction();
     expect(lib.bidIntentMsg).toBeFunction();
+    expect(lib.bidClaimMsg).toBeFunction();
     expect(lib.encodeAXferBpp).toBeFunction();
     expect(lib.decodeAXferBpp).toBeFunction();
     expect(lib.encodeAXferVarBpp).toBeFunction();
@@ -152,5 +157,9 @@ describe('lib-tacit barrel exports (src/index.ts)', () => {
     // Indexer
     expect(lib.EsploraClient).toBeDefined();
     expect(lib.AncestryWalker).toBeDefined();
+    expect(lib.ipfsFetchVerified).toBeFunction();
+    expect(lib.ipfsCidMatches).toBeFunction();
+    expect(lib.ipfsFetchBatch).toBeFunction();
+    expect(lib.cidToV1).toBeFunction();
   });
 });

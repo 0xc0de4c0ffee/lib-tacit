@@ -71,11 +71,16 @@ export {
   openingMsg,
   disclosureMsg,
   listingMsg,
+  listingMsgBytes,
+  listingCancelMsgBytes,
+  listingClaimMsgBytes,
   axintentMsg,
   axintentClaimMsg,
+  axintentClaimMsgVar,
   axintentFulfilMsg,
   axintentCancelMsg,
   bidIntentMsg,
+  bidClaimMsg,
   assetIdFor,
 } from './kernel.js';
 export {
@@ -83,6 +88,9 @@ export {
   poseidonHash1,
   poseidonHash2,
 } from './poseidon.js';
+export {
+  xor32,
+} from './primitives.js';
 export {
    Groth16NotAvailableError,
    groth16Verify,

@@ -3,9 +3,14 @@
 
 import { sha256 } from '@noble/hashes/sha256';
 import { ripemd160 } from '@noble/hashes/ripemd160';
-import { concatBytes } from '@noble/hashes/utils';
+import { concatBytes, bytesToHex } from '@noble/hashes/utils';
 import { reverseBytes, reverseBytesHex } from './utils.js';
 import { ByteWriter } from '../envelope/payload.js';
+import * as secp from '@noble/secp256k1';
+import { SECP_N } from '../constants/limits.js';
+import { G, bytes32ToBigint } from '../crypto/pedersen.js';
+import { signSchnorr } from '../crypto/schnorr.js';
+import { p2wpkhScript } from './address.js';
 
 export { reverseBytes, reverseBytesHex } from './utils.js';
 
@@ -182,6 +187,108 @@ export function serializeTx(tx: TxTemplate, withWitness: boolean = true): Uint8A
 // Double-SHA256 of serialized tx (no witness), reversed = txid hex.
 export function txid(tx: TxTemplate): string {
   return secpHex(reverseBytes(hash256(serializeTx(tx, false))));
+}
+
+// ============== TAPROOT (BIP-341) ==============
+
+// NUMS key used as internal key for tacit taproot outputs.
+// No one knows the discrete log of this point.
+// Generated as: lift_x(SHA256("tacit/tap-nums"))
+export const TAP_NUMS: Uint8Array = (() => {
+  const hex = '50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0';
+  const b = new Uint8Array(32);
+  for (let i = 0; i < 32; i++) b[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+  return b;
+})();
+
+// BIP-341 tagged hash
+export function taggedHash(tag: string, ...data: Uint8Array[]): Uint8Array {
+  const tagHash = sha256(new TextEncoder().encode(tag));
+  return sha256(concatBytes(tagHash, tagHash, ...data));
+}
+
+// BIP-341 compact size prefix
+export function compactSize(n: number): Uint8Array {
+  if (n < 0xfd) return new Uint8Array([n]);
+  if (n <= 0xffff) { const b = new Uint8Array(3); b[0] = 0xfd; new DataView(b.buffer).setUint16(1, n, true); return b; }
+  const b = new Uint8Array(5); b[0] = 0xfe; new DataView(b.buffer).setUint32(1, n, true); return b;
+}
+
+// BIP-341 tapleaf hash
+export function tapLeafHash(script: Uint8Array, leafVersion: number = 0xc0): Uint8Array {
+  const leafVer = new Uint8Array([leafVersion]);
+  const ser = concatBytes(leafVer, compactSize(script.length), script);
+  return taggedHash('TapLeaf', ser);
+}
+
+// BIP-341 tweaked output key (returns x-only pubkey)
+export function tweakedOutputKey(internalPub: Uint8Array, merkleRoot: Uint8Array | null): Uint8Array {
+  const ip = internalPub.length === 33 ? internalPub.slice(1) : internalPub;
+  const h = merkleRoot
+    ? taggedHash('TapTweak', ip, merkleRoot)
+    : taggedHash('TapTweak', ip);
+  const t = bytes32ToBigint(h) % SECP_N;
+  const P = secp.ProjectivePoint.fromHex('02' + bytesToHex(ip));
+  const Q = P.add(G.multiply(t));
+  return Q.toRawBytes(true).slice(1);
+}
+
+// Build a control block for taproot script-path spend (BIP-341).
+export function controlBlock(
+  internalKey: Uint8Array,
+  merkleProof: Uint8Array[],
+  leafVersion: number = 0xc0,
+): Uint8Array {
+  const xonly = internalKey.length === 33 ? internalKey.slice(1) : internalKey;
+  if (xonly.length !== 32) throw new Error('internalKey must be 32 or 33 bytes');
+  const parity = internalKey.length === 33 ? (internalKey[0] === 0x03 ? 1 : 0) : 0;
+  const depth = merkleProof.length;
+  if (depth > 128) throw new Error('merkle proof depth max 128');
+  const output = new Uint8Array(1 + 32 + depth * 32);
+  output[0] = (parity << 5) | (leafVersion & 0x1f);
+  output.set(xonly, 1);
+  for (let i = 0; i < depth; i++) {
+    if (merkleProof[i]!.length !== 32) throw new Error('merkle proof element must be 32 bytes');
+    output.set(merkleProof[i]!, 1 + 32 + i * 32);
+  }
+  return output;
+}
+
+// ============== SIGNING HELPERS ==============
+
+// Sign a P2WPKH input per BIP-143.
+export function signP2wpkhInput(
+  tx: TxTemplate,
+  inputIndex: number,
+  privKey: Uint8Array,
+  amount: bigint,
+  hashType: number = 0x01,
+): Uint8Array {
+  const pub = secp.getPublicKey(privKey, true);
+  const scriptCode = p2wpkhScript(pub);
+  const sighash = sighashV0WithType(tx, inputIndex, scriptCode, Number(amount), hashType);
+  return signSchnorr(sighash, privKey);
+}
+
+// BIP-341 key-path sighash (taproot) — stub awaiting full implementation.
+export function tapSighashKeyPath(
+  tx: TxTemplate,
+  inputIndex: number,
+  hashType: number = 0x00,
+): Uint8Array {
+  // TODO: implement per BIP-341
+  throw new Error('not yet implemented');
+}
+
+// Sign a taproot key-path input.
+export function signTaprootKeyPathInputWithKey(
+  tx: TxTemplate,
+  inputIndex: number,
+  privKey: Uint8Array,
+  hashType: number = 0x00,
+): Uint8Array {
+  const sighash = tapSighashKeyPath(tx, inputIndex, hashType);
+  return signSchnorr(sighash, privKey);
 }
 
 // Very minimal import — just byte manipulation

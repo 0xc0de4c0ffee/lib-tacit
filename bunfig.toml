@@ -2,3 +2,14 @@
 # Only discover test files in lib-tacit's tests/ directory
 # This prevents bun from picking up tacit-specs/ tests (reference only)
 root = "./tests"
+
+[install]
+# Supply-chain security: only install packages published at least 3 days ago
+# This prevents dependency confusion / typo-squatting via freshly-published
+# malicious versions. Excludes trusted toolchain packages.
+minimumReleaseAge = 259200
+minimumReleaseAgeExcludes = [
+  "@types/bun",
+  "typescript",
+  "@helia/verified-fetch",
+]

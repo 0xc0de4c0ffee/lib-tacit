@@ -13,7 +13,7 @@ import {
   bigintToBytes32, bytes32ToBigint,
 } from './pedersen.js';
 import { signSchnorr, verifySchnorr } from './schnorr.js';
-import { KERNEL_MSG_DOMAIN, MINT_MSG_DOMAIN, DROP_DOMAIN, DROP_RECLAIM_DOMAIN, OPENING_MSG_DOMAIN, DISCLOSURE_MSG_DOMAIN, LISTING_MSG_DOMAIN, AXINTENT_MSG_DOMAIN, AXINTENT_CLAIM_DOMAIN, AXINTENT_FULFIL_DOMAIN, AXINTENT_CANCEL_DOMAIN, BID_INTENT_DOMAIN } from '../constants/domains.js';
+import { KERNEL_MSG_DOMAIN, MINT_MSG_DOMAIN, DROP_DOMAIN, DROP_RECLAIM_DOMAIN, OPENING_MSG_DOMAIN, DISCLOSURE_MSG_DOMAIN, LISTING_MSG_DOMAIN, AXINTENT_MSG_DOMAIN, AXINTENT_CLAIM_DOMAIN, AXINTENT_FULFIL_DOMAIN, AXINTENT_CANCEL_DOMAIN, AXINTENT_CLAIM_V3_DOMAIN, BID_INTENT_DOMAIN, BID_CLAIM_DOMAIN, LISTING_CANCEL_DOMAIN, LISTING_CLAIM_DOMAIN } from '../constants/domains.js';
 import { reverseBytesHex } from '../transaction/utils.js';
 import type { Outpoint } from '../interfaces/chain-client.js';
 
@@ -243,49 +243,174 @@ export function listingMsg(
   return sha256(concatBytes(te.encode(LISTING_MSG_DOMAIN), assetIdBytes, anchorBytes, commitment, priceLE));
 }
 
+// ---- Listing message bytes (off-chain OTC, full format) ----
+// Domain: 'tacit-listing-v1'
+// Preimage: assetId(32) || txid_BE(32) || vout_LE(4) || priceSats_LE(8) || expiry_LE(8) ||
+//           addrLen_LE(2) || makerAddress || openingSig(64)
+export function listingMsgBytes(
+  assetIdBytes: Uint8Array,
+  txidHex: string,
+  vout: number,
+  priceSats: bigint,
+  expiry: bigint,
+  makerAddress: string,
+  openingSigBytes: Uint8Array,
+): Uint8Array {
+  if (assetIdBytes.length !== 32) throw new Error('asset_id must be 32 bytes');
+  if (openingSigBytes.length !== 64) throw new Error('opening_sig must be 64 bytes');
+  const txidBE = reverseBytesHex(txidHex);
+  const voutLE = new Uint8Array(4);
+  new DataView(voutLE.buffer).setUint32(0, vout >>> 0, true);
+  const priceLE = new Uint8Array(8);
+  new DataView(priceLE.buffer).setBigUint64(0, priceSats, true);
+  const expiryLE = new Uint8Array(8);
+  new DataView(expiryLE.buffer).setBigUint64(0, expiry, true);
+  const addrBytes = te.encode(makerAddress);
+  const addrLen = new Uint8Array(2);
+  new DataView(addrLen.buffer).setUint16(0, addrBytes.length, true);
+  return sha256(concatBytes(
+    te.encode(LISTING_MSG_DOMAIN),
+    assetIdBytes, txidBE, voutLE, priceLE, expiryLE,
+    addrLen, addrBytes, openingSigBytes,
+  ));
+}
+
+// ---- Listing cancel message ----
+// Domain: 'tacit-listing-cancel-v1'
+// Preimage: assetId(32) || txid_BE(32) || vout_LE(4)
+export function listingCancelMsgBytes(
+  assetIdBytes: Uint8Array,
+  txidHex: string,
+  vout: number,
+): Uint8Array {
+  if (assetIdBytes.length !== 32) throw new Error('asset_id must be 32 bytes');
+  const txidBE = reverseBytesHex(txidHex);
+  const voutLE = new Uint8Array(4);
+  new DataView(voutLE.buffer).setUint32(0, vout >>> 0, true);
+  return sha256(concatBytes(
+    te.encode(LISTING_CANCEL_DOMAIN),
+    assetIdBytes, txidBE, voutLE,
+  ));
+}
+
+// ---- Listing claim message ----
+// Domain: 'tacit-listing-claim-v1'
+// Preimage: assetId(32) || txid_BE(32) || vout_LE(4) || takerPub(33)
+export function listingClaimMsgBytes(
+  assetIdBytes: Uint8Array,
+  txidHex: string,
+  vout: number,
+  takerPubBytes: Uint8Array,
+): Uint8Array {
+  if (assetIdBytes.length !== 32) throw new Error('asset_id must be 32 bytes');
+  if (takerPubBytes.length !== 33) throw new Error('taker_pubkey must be 33 bytes');
+  const txidBE = reverseBytesHex(txidHex);
+  const voutLE = new Uint8Array(4);
+  new DataView(voutLE.buffer).setUint32(0, vout >>> 0, true);
+  return sha256(concatBytes(
+    te.encode(LISTING_CLAIM_DOMAIN),
+    assetIdBytes, txidBE, voutLE, takerPubBytes,
+  ));
+}
+
 // ---- Atomic intent message (SPEC §5.7.6) ----
+// Binds the maker to a specific intent, price, expiry, and backing UTXO.
 export function axintentMsg(
   assetId: Uint8Array,
   intentId: Uint8Array,
-  takerPubkey: Uint8Array,
-  amount: bigint,
-): Uint8Array {
-  if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
-  if (intentId.length !== 32) throw new Error('intent_id must be 32 bytes');
-  if (takerPubkey.length !== 33) throw new Error('taker_pubkey must be 33 bytes');
-  const amountLE = new Uint8Array(8);
-  new DataView(amountLE.buffer).setBigUint64(0, amount, true);
-  return sha256(concatBytes(te.encode(AXINTENT_MSG_DOMAIN), assetId, intentId, takerPubkey, amountLE));
-}
-
-// ---- AXINTENT claim message (SPEC §5.7.6) ----
-export function axintentClaimMsg(
-  intentId: Uint8Array,
-  assetId: Uint8Array,
-  takerPubkey: Uint8Array,
-  amount: bigint,
-): Uint8Array {
-  if (intentId.length !== 32) throw new Error('intent_id must be 32 bytes');
-  if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
-  if (takerPubkey.length !== 33) throw new Error('taker_pubkey must be 33 bytes');
-  const amountLE = new Uint8Array(8);
-  new DataView(amountLE.buffer).setBigUint64(0, amount, true);
-  return sha256(concatBytes(te.encode(AXINTENT_CLAIM_DOMAIN), intentId, assetId, takerPubkey, amountLE));
-}
-
-// ---- AXINTENT fulfil message (SPEC §5.7.6) ----
-export function axintentFulfilMsg(
-  intentId: Uint8Array,
-  assetId: Uint8Array,
   makerPubkey: Uint8Array,
   amount: bigint,
+  priceSats: bigint,
+  expiry: bigint,
+  commitTxidHex: string,
+  assetUtxoTxidHex: string,
+  assetUtxoVout: number,
 ): Uint8Array {
-  if (intentId.length !== 32) throw new Error('intent_id must be 32 bytes');
   if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
+  if (intentId.length !== 32) throw new Error('intent_id must be 32 bytes');
   if (makerPubkey.length !== 33) throw new Error('maker_pubkey must be 33 bytes');
   const amountLE = new Uint8Array(8);
   new DataView(amountLE.buffer).setBigUint64(0, amount, true);
-  return sha256(concatBytes(te.encode(AXINTENT_FULFIL_DOMAIN), intentId, assetId, makerPubkey, amountLE));
+  const priceLE = new Uint8Array(8);
+  new DataView(priceLE.buffer).setBigUint64(0, priceSats, true);
+  const expiryLE = new Uint8Array(8);
+  new DataView(expiryLE.buffer).setBigUint64(0, expiry, true);
+  const utxoVoutLE = new Uint8Array(4);
+  new DataView(utxoVoutLE.buffer).setUint32(0, assetUtxoVout >>> 0, true);
+  return sha256(concatBytes(
+    te.encode(AXINTENT_MSG_DOMAIN),
+    assetId, intentId, makerPubkey,
+    amountLE, priceLE, expiryLE,
+    reverseBytesHex(commitTxidHex),
+    reverseBytesHex(assetUtxoTxidHex), utxoVoutLE,
+  ));
+}
+
+// ---- AXINTENT claim message (SPEC §5.7.6) ----
+// v2: binds a taker-controlled sat UTXO ≥ priceSats so free-claim DoS is prevented.
+export function axintentClaimMsg(
+  assetId: Uint8Array,
+  intentId: Uint8Array,
+  takerPubkey: Uint8Array,
+  takerUtxoTxidHex: string,
+  takerUtxoVout: number,
+): Uint8Array {
+  if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
+  if (intentId.length !== 32) throw new Error('intent_id must be 32 bytes');
+  if (takerPubkey.length !== 33) throw new Error('taker_pubkey must be 33 bytes');
+  const txidBE = reverseBytesHex(takerUtxoTxidHex);
+  const voutLE = new Uint8Array(4);
+  new DataView(voutLE.buffer).setUint32(0, takerUtxoVout >>> 0, true);
+  return sha256(concatBytes(
+    te.encode(AXINTENT_CLAIM_DOMAIN),
+    assetId, intentId, takerPubkey,
+    txidBE, voutLE,
+  ));
+}
+
+// ---- AXINTENT claim v3 (variable-amount) message ----
+// Preimage: assetId(32) || intentId(32) || takerPub(33) || txid_BE(32) || vout_LE(4) || requestedAmount_LE(8)
+// Domain: 'tacit-axintent-claim-v3'
+export function axintentClaimMsgVar(
+  assetId: Uint8Array,
+  intentId: Uint8Array,
+  takerPubkey: Uint8Array,
+  takerUtxoTxidHex: string,
+  takerUtxoVout: number,
+  requestedAmount: bigint,
+): Uint8Array {
+  if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
+  if (intentId.length !== 32) throw new Error('intent_id must be 32 bytes');
+  if (takerPubkey.length !== 33) throw new Error('taker_pubkey must be 33 bytes');
+  const txidBE = reverseBytesHex(takerUtxoTxidHex);
+  const voutLE = new Uint8Array(4);
+  new DataView(voutLE.buffer).setUint32(0, takerUtxoVout >>> 0, true);
+  const reqLE = new Uint8Array(8);
+  new DataView(reqLE.buffer).setBigUint64(0, requestedAmount, true);
+  return sha256(concatBytes(
+    te.encode(AXINTENT_CLAIM_V3_DOMAIN),
+    assetId, intentId, takerPubkey,
+    txidBE, voutLE, reqLE,
+  ));
+}
+
+// ---- AXINTENT fulfil message (SPEC §5.7.6) ----
+// Domain: 'tacit-axintent-fulfilment-v1'
+// Preimage: assetId(32) || intentId(32) || takerPub(33) || sha256(partialJson)(32)
+export function axintentFulfilMsg(
+  assetId: Uint8Array,
+  intentId: Uint8Array,
+  takerPubkey: Uint8Array,
+  partialJson: string,
+): Uint8Array {
+  if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
+  if (intentId.length !== 32) throw new Error('intent_id must be 32 bytes');
+  if (takerPubkey.length !== 33) throw new Error('taker_pubkey must be 33 bytes');
+  const phash = sha256(te.encode(partialJson));
+  return sha256(concatBytes(
+    te.encode(AXINTENT_FULFIL_DOMAIN),
+    assetId, intentId, takerPubkey, phash,
+  ));
 }
 
 // ---- AXINTENT cancel message (SPEC §5.7.6) ----
@@ -301,21 +426,60 @@ export function axintentCancelMsg(
 }
 
 // ---- Bid intent message (SPEC §5.7.6.1) ----
+// Domain: 'tacit-bid-intent' (no -v1 suffix)
+// Preimage: assetId(32) || bidId(16) || buyerPub(33) || amount_LE(8) || priceSats_LE(8) ||
+//           minFillAmount_LE(8) || expiry_LE(8) || nonce(32)
 export function bidIntentMsg(
-  bidId: Uint8Array,
   assetId: Uint8Array,
-  makerPubkey: Uint8Array,
+  bidId: Uint8Array,
+  buyerPubkey: Uint8Array,
   amount: bigint,
   priceSats: bigint,
+  minFillAmount: bigint,
+  expiry: bigint,
+  nonceBytes: Uint8Array,
 ): Uint8Array {
-  if (bidId.length !== 16) throw new Error('bid_id must be 16 bytes');
   if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
-  if (makerPubkey.length !== 33) throw new Error('maker_pubkey must be 33 bytes');
+  if (bidId.length !== 16) throw new Error('bid_id must be 16 bytes');
+  if (buyerPubkey.length !== 33) throw new Error('buyer_pubkey must be 33 bytes');
+  if (nonceBytes.length !== 32) throw new Error('nonce must be 32 bytes');
   const amountLE = new Uint8Array(8);
   new DataView(amountLE.buffer).setBigUint64(0, amount, true);
   const priceLE = new Uint8Array(8);
   new DataView(priceLE.buffer).setBigUint64(0, priceSats, true);
-  return sha256(concatBytes(te.encode(BID_INTENT_DOMAIN), bidId, assetId, makerPubkey, amountLE, priceLE));
+  const minFillLE = new Uint8Array(8);
+  new DataView(minFillLE.buffer).setBigUint64(0, minFillAmount, true);
+  const expiryLE = new Uint8Array(8);
+  new DataView(expiryLE.buffer).setBigUint64(0, expiry, true);
+  return sha256(concatBytes(
+    te.encode(BID_INTENT_DOMAIN),
+    assetId, bidId, buyerPubkey,
+    amountLE, priceLE, minFillLE, expiryLE,
+    nonceBytes,
+  ));
+}
+
+// ---- Bid claim message ----
+// Domain: 'tacit-bid-claim' (no -v1 suffix)
+// Seller signs after fulfilment to prove they delivered the asset.
+// Preimage: assetId(32) || bidId(16) || sellerPub(33) || axintentId(32) || fillAmount_LE(8)
+export function bidClaimMsg(
+  assetId: Uint8Array,
+  bidId: Uint8Array,
+  sellerPubkey: Uint8Array,
+  axintentId: Uint8Array,
+  fillAmount: bigint,
+): Uint8Array {
+  if (assetId.length !== 32) throw new Error('asset_id must be 32 bytes');
+  if (bidId.length !== 16) throw new Error('bid_id must be 16 bytes');
+  if (sellerPubkey.length !== 33) throw new Error('seller_pubkey must be 33 bytes');
+  if (axintentId.length !== 32) throw new Error('axintent_id must be 32 bytes');
+  const fillLE = new Uint8Array(8);
+  new DataView(fillLE.buffer).setBigUint64(0, fillAmount, true);
+  return sha256(concatBytes(
+    te.encode(BID_CLAIM_DOMAIN),
+    assetId, bidId, sellerPubkey, axintentId, fillLE,
+  ));
 }
 
 // ---- Asset ID derivation ----

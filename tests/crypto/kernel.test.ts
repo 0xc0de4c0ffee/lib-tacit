@@ -4,6 +4,9 @@ import * as secp from '@noble/secp256k1';
 import {
   assetIdFor, computeKernelMsg, signKernel, verifyKernel, computeExcessPoint,
   dropKernelMsg, dropReclaimMsg, listingMsg, axintentMsg,
+  axintentClaimMsg, axintentClaimMsgVar, axintentFulfilMsg,
+  bidIntentMsg, bidClaimMsg,
+  listingMsgBytes, listingCancelMsgBytes, listingClaimMsgBytes,
 } from '../../src/crypto/kernel.js';
 import { pedersenCommit, pointToBytes, modN, randomScalar } from '../../src/crypto/pedersen.js';
 import { deriveBlinding, deriveChangeBlinding } from '../../src/crypto/ecdh.js';
@@ -227,14 +230,126 @@ describe('axintentMsg', () => {
   test('with valid params returns 32 bytes', () => {
     const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
     const intentId = new Uint8Array(32).fill(0xdd);
-    const takerPubkey = new Uint8Array(33).fill(0x03); takerPubkey[0] = 0x03;
-    const msg = axintentMsg(assetId, intentId, takerPubkey, 500n);
+    const makerPub = new Uint8Array(33).fill(0x02); makerPub[0] = 0x02;
+    const txidHex = 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899';
+    const msg = axintentMsg(assetId, intentId, makerPub, 500n, 10000n, 1700000000n, txidHex, txidHex, 0);
     expect(msg.length).toBe(32);
   });
 
-  test('rejects wrong-length takerPubkey', () => {
+  test('rejects wrong-length makerPubkey', () => {
     const aid = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
     const intentId = new Uint8Array(32).fill(0xdd);
-    expect(() => axintentMsg(aid, intentId, new Uint8Array(10), 1n)).toThrow();
+    const txidHex = 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899';
+    expect(() => axintentMsg(aid, intentId, new Uint8Array(10), 500n, 10000n, 1700000000n, txidHex, txidHex, 0)).toThrow();
+  });
+
+  test('deterministic', () => {
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const intentId = new Uint8Array(32).fill(0xdd);
+    const makerPub = new Uint8Array(33).fill(0x02); makerPub[0] = 0x02;
+    const txidHex = 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899';
+    const a = axintentMsg(assetId, intentId, makerPub, 500n, 10000n, 1700000000n, txidHex, txidHex, 0);
+    const b = axintentMsg(assetId, intentId, makerPub, 500n, 10000n, 1700000000n, txidHex, txidHex, 0);
+    expect(a).toEqual(b);
+  });
+});
+
+describe('axintentClaimMsg', () => {
+  test('with valid params returns 32 bytes', () => {
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const intentId = new Uint8Array(32).fill(0xdd);
+    const takerPub = new Uint8Array(33).fill(0x03); takerPub[0] = 0x03;
+    const txidHex = 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899';
+    const msg = axintentClaimMsg(assetId, intentId, takerPub, txidHex, 1);
+    expect(msg.length).toBe(32);
+  });
+
+  test('deterministic', () => {
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const intentId = new Uint8Array(32).fill(0xdd);
+    const takerPub = new Uint8Array(33).fill(0x03); takerPub[0] = 0x03;
+    const txidHex = 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899';
+    const a = axintentClaimMsg(assetId, intentId, takerPub, txidHex, 1);
+    const b = axintentClaimMsg(assetId, intentId, takerPub, txidHex, 1);
+    expect(a).toEqual(b);
+  });
+});
+
+describe('axintentClaimMsgVar', () => {
+  test('with valid params returns 32 bytes', () => {
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const intentId = new Uint8Array(32).fill(0xdd);
+    const takerPub = new Uint8Array(33).fill(0x03); takerPub[0] = 0x03;
+    const txidHex = 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899';
+    const msg = axintentClaimMsgVar(assetId, intentId, takerPub, txidHex, 1, 250n);
+    expect(msg.length).toBe(32);
+  });
+});
+
+describe('axintentFulfilMsg', () => {
+  test('with valid params returns 32 bytes', () => {
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const intentId = new Uint8Array(32).fill(0xdd);
+    const takerPub = new Uint8Array(33).fill(0x03); takerPub[0] = 0x03;
+    const msg = axintentFulfilMsg(assetId, intentId, takerPub, '{"psbt":"cHNidP8A"}');
+    expect(msg.length).toBe(32);
+  });
+});
+
+describe('bidIntentMsg', () => {
+  test('with valid params returns 32 bytes', () => {
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const bidId = new Uint8Array(16).fill(0xaa);
+    const buyerPub = new Uint8Array(33).fill(0x02); buyerPub[0] = 0x02;
+    const nonce = new Uint8Array(32).fill(0xbb);
+    const msg = bidIntentMsg(assetId, bidId, buyerPub, 500n, 10000n, 100n, 1700000000n, nonce);
+    expect(msg.length).toBe(32);
+  });
+
+  test('rejects wrong-length nonce', () => {
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const bidId = new Uint8Array(16).fill(0xaa);
+    const buyerPub = new Uint8Array(33).fill(0x02); buyerPub[0] = 0x02;
+    expect(() => bidIntentMsg(assetId, bidId, buyerPub, 500n, 10000n, 100n, 1700000000n, new Uint8Array(10))).toThrow();
+  });
+});
+
+describe('bidClaimMsg', () => {
+  test('with valid params returns 32 bytes', () => {
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const bidId = new Uint8Array(16).fill(0xaa);
+    const sellerPub = new Uint8Array(33).fill(0x02); sellerPub[0] = 0x02;
+    const axintentId = new Uint8Array(32).fill(0xdd);
+    const msg = bidClaimMsg(assetId, bidId, sellerPub, axintentId, 500n);
+    expect(msg.length).toBe(32);
+  });
+});
+
+describe('listingMsgBytes', () => {
+  test('with valid params returns 32 bytes', () => {
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const txidHex = 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899';
+    const sig = new Uint8Array(64).fill(0xcc);
+    const msg = listingMsgBytes(assetId, txidHex, 0, 100000n, 1700000000n, 'bc1q...', sig);
+    expect(msg.length).toBe(32);
+  });
+});
+
+describe('listingCancelMsgBytes', () => {
+  test('with valid params returns 32 bytes', () => {
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const txidHex = 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899';
+    const msg = listingCancelMsgBytes(assetId, txidHex, 0);
+    expect(msg.length).toBe(32);
+  });
+});
+
+describe('listingClaimMsgBytes', () => {
+  test('with valid params returns 32 bytes', () => {
+    const assetId = assetIdFor('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 0);
+    const txidHex = 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899';
+    const takerPub = new Uint8Array(33).fill(0x03); takerPub[0] = 0x03;
+    const msg = listingClaimMsgBytes(assetId, txidHex, 0, takerPub);
+    expect(msg.length).toBe(32);
   });
 });
