@@ -76,4 +76,18 @@ describe('validateAncestry', () => {
     const result = await validateAncestry(walker, 'ee'.repeat(32), 0);
     expect(result).toBe('tx not found');
   });
+
+  test('with empty txid returns error', async () => {
+    const client = makeMockClient(new Map());
+    const walker = new AncestryWalker(client);
+    const result = await validateAncestry(walker, '', 0);
+    expect(result).toBe('tx not found');
+  });
+
+  test('with negative vout returns error', async () => {
+    const client = makeMockClient(new Map());
+    const walker = new AncestryWalker(client);
+    const result = await validateAncestry(walker, 'ff'.repeat(32), -1);
+    expect(result).toBe('tx not found');
+  });
 });
