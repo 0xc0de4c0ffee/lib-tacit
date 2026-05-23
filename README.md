@@ -18,16 +18,19 @@ bun add lib-tacit @noble/secp256k1 @noble/hashes @scure/base poseidon-lite
 | | Kernel signatures | Mimblewimble-style conservation-of-supply proofs |
 | | Poseidon hash | BN254 hash for mixer Merkle trees (via poseidon-lite) |
 | | Groth16 verifier | Optional snarkjs integration for zk-proof verification |
+| | Stealth addresses | Blinded-pubkey commits (tcs/tcsts), ECDH blinding, scan/send |
 | | Silent payments | BIP-352 sender-side silent payment output derivation (sp1... addresses) |
+| | xor32 | XOR two 32-byte arrays for encryption/commitment helpers |
 | **Opcodes** | 32 shipped encode/decode | CETCH (0x21) · T_CXFER_BPP (0x22) · CXFER (0x23) · T_MINT (0x24) · T_BURN (0x25) · T_AXFER (0x26) · T_PETCH (0x27) · T_PMINT (0x28) · T_DEPOSIT (0x29) · T_WITHDRAW (0x2A) · T_DROP (0x2B) · T_DCLAIM (0x2C) · T_AXFER_VAR (0x37) · T_WRAPPER_ATTEST (0x38) · T_AXFER_BPP (0x3C) · T_AXFER_VAR_BPP (0x3D) · T_SLOT_* (0x43–0x47) · T_CBTC_TAC_* (0x49–0x4F, 0x57–0x5A) · T_PREAUTH_BID (0x5B) · T_PREAUTH_BID_VAR (0x5C) |
 | **Envelope** | Taproot script-path | TACIT magic, version, chunked pushdata encode/decode |
-| **Transaction** | Tools | BIP-143 sighash (ALL, SINGLE\|ACP), tx serialization, P2WPKH address, preauth, builder |
+| **Transaction** | Tools | BIP-143 sighash (ALL, SINGLE\|ACP), tx serialization, P2WPKH address, preauth, builder, taproot primitives |
 | **Wallet** | Keypair | secp256k1 generation, import, export |
 | | PRF passkey | WebAuthn PRF extension for biometric key derivation (browser) |
 | | Key encryption | AES-GCM + PBKDF2-SHA256 encrypted-at-rest storage |
 | | UTXO manager | Caching, selection, sort, spend-marking |
 | **Indexer** | Esplora client | REST client with base rotation, concurrency cap, cooldown |
 | | Ancestry walker | Memoized, depth-limited, kernel-sig validated |
+| | IPFS | Trustless content retrieval via helia + gateway (cidToV1, ipfsFetchVerified) |
 | **Validation** | Ancestry | Recursive ancestry validation |
 | | Supply | Pedersen + public supply conservation checks |
 | **Recovery** | Scanner | Chain scan for UTXO recovery |
@@ -85,12 +88,12 @@ const payload = encodeCEtch({
 ```
 lib-tacit
 ├── constants/     — Opcodes, domain tags, generator vectors, protocol limits
-├── crypto/        — Pedersen, Schnorr, ECDH, Bulletproofs, MSM, Kernel
+├── crypto/        — Pedersen, Schnorr, ECDH, Bulletproofs, MSM, Kernel, stealth, silent-payments, primitives
 ├── envelope/      — Taproot script-path encode/decode, ByteWriter
 ├── opcodes/       — 32 shipped modules (see AGENTS.md for full list)
-├── transaction/   — BIP-143 sighash, TX serialization, P2WPKH address
+├── transaction/   — BIP-143 sighash, TX serialization, P2WPKH address, taproot primitives
 ├── wallet/        — Keypair, UTXO manager, PRF passkey, key encryption
-├── indexer/       — Esplora client, ancestry walker
+├── indexer/       — Esplora client, ancestry walker, IPFS verified fetch
 ├── validation/    — Ancestry validation, supply conservation
 ├── recovery/      — Chain scan, ECDH trial-decrypt
 └── interfaces/    — ChainClient, Broadcaster (abstract)
@@ -100,7 +103,7 @@ lib-tacit
 
 ```bash
 bun run specs:pull   # fetch latest tacit-specs submodule (read-only reference)
-bun test             # 316+ tests, isolated from tacit-specs/ (pinned vectors in tests/crypto/vectors.test.ts)
+bun test             # 419+ tests, isolated from tacit-specs/ (pinned vectors in tests/crypto/vectors.test.ts)
 bun run typecheck
 bun run build
 ```
@@ -119,6 +122,17 @@ This library implements the cryptographic primitives from [SPEC.md](tacit-specs/
 - Transaction broadcasting (`Broadcaster` interface)
 - Key storage (encrypted localStorage, hardware wallet, etc.)
 - UI rendering
+
+## Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `@noble/hashes` | 1.4.0 | SHA256, HMAC, RIPEMD160, keccak |
+| `@noble/secp256k1` | 2.1.0 | secp256k1 curve operations |
+| `@scure/base` | 1.1.6 | bech32, base58 encoding |
+| `poseidon-lite` | 0.3.0 | Poseidon hash over BN254 |
+| `@helia/verified-fetch` | 7.2.10 | Trustless IPFS content retrieval |
+| `snarkjs` | 0.7.6 | Groth16 zk-proof verification (optional) |
 
 ## License
 

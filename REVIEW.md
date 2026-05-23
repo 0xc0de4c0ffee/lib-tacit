@@ -2,8 +2,8 @@
 
 > Updated: 2026-05-23
 > Reference commit: `6e1d3c7` (z0r0z/tacit) — refresh with `bun run specs:pull`
-> lib-tacit HEAD: `a923206` — ceremony key separation, BIP-352 wording
-> **316 tests passing**, 2454 expect calls, 36 test files
+> lib-tacit HEAD: `766373a`
+> **419 tests passing**, 2576 expect calls, 39 test files
 
 ## Full Comparison Table
 
@@ -56,6 +56,13 @@
 | `stealthTxAnchorHead` | tacit.js:4267 | `stealth.ts` | ✅ Match | alias of `buildAnchor` |
 | `senderComputeSilentPaymentOutput` | tacit.js:4371+ | `silent-payments.ts` | ✅ Ported | BIP-352 native sats send |
 | `decodeSilentPaymentAddress` | tacit.js:4382 | `silent-payments.ts` | ✅ Ported | BIP-352 sp1… addresses |
+| `xor32` | (new) | `primitives.ts` | ✅ Added | XOR two 32-byte arrays for encryption/commitment |
+| `ipfsFetchVerified` | (new) | `ipfs.ts` | ✅ Added | Trustless IPFS via helia + gateway fallback |
+| `cidToV1` | (new) | `ipfs.ts` | ✅ Added | CIDv0 → CIDv1 conversion for consistency |
+| `taggedHash` | BIP-340 | `sighash.ts` | ✅ Added | BIP-340 tagged hash SHA256(tag ‖ tag ‖ m) |
+| `tapLeafHash` | BIP-342 | `sighash.ts` | ✅ Added | Tapleaf hash for script-path inclusion proof |
+| `tweakedOutputKey` | BIP-342 | `sighash.ts` | ✅ Added | P2TR output key = internal + t·G |
+| `controlBlock` | BIP-342 | `sighash.ts` | ✅ Added | Control block encoding for tapscript |
 
 ### Kernel Signatures
 
@@ -71,13 +78,17 @@
 | `dropReclaimMsg` | tacit.js:6685 | `kernel.ts:186` | ✅ Added | Domain `tacit-drop-reclaim-v1` |
 | `openingMsg` | tacit.js:29542 | `kernel.ts:201` | ✅ Added | Domain `tacit-opening-v1` |
 | `disclosureMsg` | tacit.js:29595 | `kernel.ts:218` | ✅ Added | Domain `tacit-disclosure-v1` |
-| `listingMsg` | tacit.js (dapp) | `kernel.ts:232` | ✅ Added | Off-chain OTC listing (SPEC §5.6) |
-| `axintentMsg` | tacit.js (dapp) | `kernel.ts:247` | ✅ Added | Atomic intent message (SPEC §5.7.6) |
-| `axintentClaimMsg` | tacit.js (dapp) | `kernel.ts:262` | ✅ Added | AXINTENT claim variant |
-| `axintentFulfilMsg` | tacit.js (dapp) | `kernel.ts:277` | ✅ Added | AXINTENT fulfil variant |
-| `axintentCancelMsg` | tacit.js (dapp) | `kernel.ts:292` | ✅ Added | AXINTENT cancel variant |
-| `bidIntentMsg` | tacit.js (dapp) | `kernel.ts:304` | ✅ Added | Bid intent message (SPEC §5.7.6.1) |
-| `dropIdFromRevealTxid` | tacit.js:6632 | `drop.ts:184` | ✅ Added | DROP identifier derivation |
+| `listingMsg` | tacit.js (dapp) | `kernel.ts` | ✅ Match | Off-chain OTC listing (SPEC §5.6) |
+| `listingMsgBytes` | tacit.js (dapp) | `kernel.ts` | ✅ Match | Low-level serialized listing bytes |
+| `listingCancelMsgBytes` | tacit.js (dapp) | `kernel.ts` | ✅ Match | Cancel message bytes for OTC listing |
+| `listingClaimMsgBytes` | tacit.js (dapp) | `kernel.ts` | ✅ Match | Claim message bytes for OTC listing |
+| `axintentMsg` | tacit.js (dapp) | `kernel.ts` | ✅ Match | Atomic intent message (SPEC §5.7.6) |
+| `axintentClaimMsg` | tacit.js (dapp) | `kernel.ts` | ✅ Match | AXINTENT claim variant |
+| `axintentClaimMsgVar` | tacit.js (dapp) | `kernel.ts` | ✅ Match | Variable-amount AXINTENT claim variant |
+| `axintentFulfilMsg` | tacit.js (dapp) | `kernel.ts` | ✅ Match | AXINTENT fulfil variant |
+| `axintentCancelMsg` | tacit.js (dapp) | `kernel.ts` | ✅ Added | AXINTENT cancel variant |
+| `bidIntentMsg` | tacit.js (dapp) | `kernel.ts` | ✅ Match | Bid intent message (SPEC §5.7.6.1) |
+| `bidClaimMsg` | tacit.js (dapp) | `kernel.ts` | ✅ Match | Bid claim message |
 | `assetIdFor` | tacit.js:3785 | `kernel.ts:146` | ✅ Match |
 | `computeWithdrawBindHash` | tacit.js:4504 | *not ported* | 🔶 Missing | Crypto verify function; low priority |
 
@@ -195,9 +206,9 @@
 
 | Hex | Opcode | Section | Status | Notes |
 |-----|--------|---------|--------|-------|
-| `0x3C` | T_AXFER_BPP | — | 📝 Drafted | BP+ variant of T_AXFER. Stub codec in `axfer-bpp.ts`. |
-| `0x3D` | T_AXFER_VAR_BPP | — | 📝 Drafted | BP+ variant of T_AXFER_VAR. Stub codec in `axfer-var-bpp.ts`. |
-| `0x59–0x5A` | T_CBTC_TAC_TOP_UP / T_CBTC_TAC_BOND_RELEASE | §5.50–5.51 | ✅ Shipped | Moved from `0x59` free slot in prior SPEC; now matches dapp ground truth. |
+| `0x3C` | T_AXFER_BPP | — | ✅ Shipped | BP+ variant of T_AXFER. Stub codec in `axfer-bpp.ts`. |
+| `0x3D` | T_AXFER_VAR_BPP | — | ✅ Shipped | BP+ variant of T_AXFER_VAR. Stub codec in `axfer-var-bpp.ts`. |
+| `0x59–0x5A` | T_CBTC_TAC_TOP_UP / T_CBTC_TAC_BOND_RELEASE | §5.50–5.51 | ❌ stub | Moved from `0x59` free slot in prior SPEC; now matches dapp ground truth. |
 | `0x5B` | T_PREAUTH_BID | §5.7.11 | ✅ Shipped | Promoted from drafted per spec commit 5979c1c. |
 | `0x5C` | T_PREAUTH_BID_VAR | §5.7.12 | ✅ Shipped | Promoted from drafted; signet-validated end-to-end. |
 | `0x5D–0x5E` | T_PREAUTH_BID_BATCH / T_PREAUTH_MATCH | preauth-family | 🔒 Reserved | Preauth/offline-trading follow-ups. |
@@ -249,30 +260,38 @@ See `src/constants/opcodes.ts` for the full table.
 | T_AXFER_BPP / T_AXFER_VAR_BPP | ✅ `axfer-bpp.ts`, `axfer-var-bpp.ts` (stub wire codec) |
 | Shipped transfer-family wire `0x21`–`0x2C`, `0x37`–`0x38`, `0x5B`–`0x5C` | ✅ encoders/decoders + tests |
 | Validation + recovery | ✅ `validation/`, `recovery/` |
+| XOR32 primitive | ✅ `primitives.ts` |
+| IPFS verified fetch + CID conversion | ✅ `ipfs.ts` (`ipfsFetchVerified`, `cidToV1`) |
+| Taproot sighash primitives | ✅ `sighash.ts` (`taggedHash`, `tapLeafHash`, `tweakedOutputKey`, `controlBlock`) |
 
 ## Test Status
 
-**316 tests passing**, 2454 expect calls across 36 test files (reference at `6e1d3c7`, tests run only in lib-tacit).
+**419 tests passing**, 2576 expect calls across 39 test files.
 
 | Test file | Count | Coverage |
 |-----------|-------|----------|
-| `tests/crypto/kernel.test.ts` | 18 | Kernel msg, DROP msgs, sign, verify, E'=0 rejection, BURN, replays, domain separation |
-| `tests/crypto/vectors.test.ts` | 11 | Pinned hex vectors for H, BP gens, blindings, keystreams, asset IDs |
-| `tests/crypto/schnorr.test.ts` | 8 | BIP-340 sign/verify, KAT vectors, R_x tamper, all-zero sig |
-| `tests/crypto/pedersen.test.ts` | 8 | Pedersen commit/verify, H invariant, pinned vectors, C(0,1)=G, C(1,0)=H |
-| `tests/crypto/bulletproofs.test.ts` | 9 | BP prove/verify/batch, edge values |
-| `tests/crypto/bulletproofs-plus.test.ts` | 21 | BP+ KAT, round-trip m=1/2/4/8, tampered rejection, RNG determinism |
-| `tests/crypto/ecdh.test.ts` | 11 | ECDH blinding, keystream, encrypt/decrypt round-trips, determinism, edges |
-| `tests/crypto/poseidon.test.ts` | 9 | poseidonHash consistency, equivalence, edge values |
-| `tests/crypto/groth16.test.ts` | 6 | Error class, verify rejection (snarkjs-optional) |
-| `tests/crypto/stealth.test.ts` | 15 | §D.1 codec, §A ECDH/commit, hand-traced e2e, §F.7, classifier |
-| `tests/crypto/fixture-signing.test.ts` | 6 | Deterministic test key (0xaa..aa), Schnorr + kernel fixed-key signing |
-| `tests/opcodes/16 files` | 76 | All 14 shipped + 2 preauth stubs: round-trips, wrong opcode, truncated/empty, field-length validation, boundary values |
-| `tests/transaction/2 files` | 2 | Sighash, preauth, builder, asset ID |
-| `tests/indexer/ancestry.test.ts` | 4 | Ancestry walk, kernel-sig validation |
-| `tests/validation/2 files` | 11 | Supply conservation, public supply, validateAncestry |
-| `tests/recovery/decrypt.test.ts` | 6 | tryDecryptOutput correct/wrong/bad, batch |
-| `tests/integration/etch-mint-burn.test.ts` | 6 | Full pipeline: etch→mint→burn, balanced CXFER, BP+ via CXFER_BPP, envelope chunking, stealth |
+| `tests/crypto/kernel.test.ts` | 34 | Kernel msg, sign/verify, E'=0, domain tags, axintent/bid msg variants |
+| `tests/crypto/silent-payments.test.ts` | 15 | BIP-352 decode, sender compute, outpoint bytes, tagged hash |
+| `tests/crypto/stealth.test.ts` | 15 | Codec, ECDH, commit, classifier, scan |
+| `tests/crypto/msm.test.ts` | 15 | Pippenger MSM, signed-digit windowed |
+| `tests/crypto/ecdh.test.ts` | 11 | Blinding, keystream, encrypt/decrypt |
+| `tests/crypto/vectors.test.ts` | 11 | Pinned hex vectors |
+| `tests/crypto/bulletproofs.test.ts` | 9 | BP prove/verify/batch |
+| `tests/crypto/poseidon.test.ts` | 9 | poseidonHash consistency |
+| `tests/crypto/schnorr.test.ts` | 8 | BIP-340 sign/verify, KAT |
+| `tests/crypto/pedersen.test.ts` | 8 | Commit/verify, H invariant |
+| `tests/crypto/bulletproofs-plus.test.ts` | 21 | BP+ KAT, round-trip m=1/2/4/8 |
+| `tests/crypto/groth16.test.ts` | 6 | snarkjs verify (optional) |
+| `tests/crypto/fixture-signing.test.ts` | 5 | Deterministic 0xaa..aa key |
+| `tests/crypto/primitives.test.ts` | 8 | xor32 identity, symmetry, length |
+| `tests/opcodes/16 files` | ~130 | All shipped + stub opcodes: round-trips, decode reject, truncated, boundary |
+| `tests/envelope.test.ts` | 22 | Encode/decode round-trip, 200 random buffer fuzz, chunking |
+| `tests/indexer/ipfs.test.ts` | 12 | CIDv0/v1 match, cidToV1, corrupt rejection |
+| `tests/transaction/sighash.test.ts` | 25 | ALL/SINGLE/NONE/ACP, taproot primitives |
+| `tests/validation/2 files` | 17 | Supply conservation, E'=0 degenerate, ancestry |
+| `tests/recovery/decrypt.test.ts` | 6 | ECDH trial-decrypt, batch |
+| `tests/integration/etch-mint-burn.test.ts` | 6 | Full pipeline, BP+, stealth |
+| `tests/indexer/ancestry.test.ts` | 6 | Memoized walks, kernel-sig |
 | `tests/index.test.ts` | 1 | Barrel export completeness |
 
 ## MEV & Frontrunning Analysis
