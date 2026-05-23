@@ -20,4 +20,13 @@ describe('T_BURN (0x25)', () => {
     const p = encodeCBurn({ assetId: zeroFill(32), burnedAmount: 1n, kernelSig: zeroFill(64), outputs: [], rangeproof: zeroFill(0) });
     expect(decodeCBurn(p.slice(0, -2))).toBeNull();
   });
+  test('decode rejects wrong opcode', () => {
+    expect(decodeCBurn(new Uint8Array([0x24, ...zeroFill(32)]))).toBeNull();
+  });
+  test('decode rejects empty payload', () => {
+    expect(decodeCBurn(new Uint8Array())).toBeNull();
+  });
+  test('rejects negative burned amount', () => {
+    expect(() => encodeCBurn({ assetId: zeroFill(32), burnedAmount: -1n, kernelSig: zeroFill(64), outputs: [], rangeproof: zeroFill(0) })).toThrow();
+  });
 });

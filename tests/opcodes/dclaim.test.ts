@@ -19,4 +19,13 @@ describe('T_DCLAIM (0x2C)', () => {
   test('rejects bad asset id length', () => {
     expect(() => encodeCDClaim({ assetId: zeroFill(10), dropRevealTxid: zeroFill(32), commitment: new Uint8Array(33).fill(2), amount: 100n, blinding: zeroFill(32) })).toThrow();
   });
+  test('rejects zero amount', () => {
+    expect(() => encodeCDClaim({ assetId: zeroFill(32), dropRevealTxid: zeroFill(32), commitment: new Uint8Array(33).fill(2), amount: 0n, blinding: zeroFill(32) })).toThrow();
+  });
+  test('rejects blinding shorter than 32 bytes', () => {
+    expect(() => encodeCDClaim({ assetId: zeroFill(32), dropRevealTxid: zeroFill(32), commitment: new Uint8Array(33).fill(2), amount: 100n, blinding: zeroFill(10) })).toThrow();
+  });
+  test('rejects witness too large', () => {
+    expect(() => encodeCDClaim({ assetId: zeroFill(32), dropRevealTxid: zeroFill(32), commitment: new Uint8Array(33).fill(2), amount: 100n, blinding: zeroFill(32), witness: new Uint8Array(70000) })).toThrow();
+  });
 });

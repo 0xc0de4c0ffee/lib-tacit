@@ -20,4 +20,14 @@ describe('T_PMINT (0x28)', () => {
   test('rejects empty payload', () => {
     expect(decodePMint(new Uint8Array())).toBeNull();
   });
+  test('rejects overlong payload (extra trailing bytes)', () => {
+    const p = encodePMint({ assetId: zeroFill(32, 0xaa), etchTxid: zeroFill(32, 0xbb), commitment: zeroFill(33, 2), amount: 1000n, blinding: zeroFill(32, 0xcc) });
+    const overlong = new Uint8Array([...p, 0x00]);
+    expect(decodePMint(overlong)).toBeNull();
+  });
+  test('rejects overlong payload (more trailing bytes)', () => {
+    const p = encodePMint({ assetId: zeroFill(32, 0xaa), etchTxid: zeroFill(32, 0xbb), commitment: zeroFill(33, 2), amount: 1000n, blinding: zeroFill(32, 0xcc) });
+    const overlong = new Uint8Array([...p, 0x00, 0x01, 0x02]);
+    expect(decodePMint(overlong)).toBeNull();
+  });
 });

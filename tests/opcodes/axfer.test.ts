@@ -22,4 +22,15 @@ describe('T_AXFER (0x26)', () => {
   test('rejects empty payload', () => {
     expect(decodeAXfer(new Uint8Array())).toBeNull();
   });
+  test('rejects N=0 (not in BP_AGG_CAPS)', () => {
+    expect(() => encodeAXfer({ assetId: zeroFill(32), assetInputCount: 1, kernelSig: zeroFill(64), outputs: [], rangeproof: zeroFill(0) })).toThrow();
+  });
+  test('rejects excessive asset input count', () => {
+    expect(() => encodeAXfer({ assetId: zeroFill(32), assetInputCount: 0, kernelSig: zeroFill(64), outputs: [{ commitment: zeroFill(33), encryptedAmount: zeroFill(8) }], rangeproof: zeroFill(0) })).toThrow();
+  });
+  test('rejects decode with extra trailing bytes', () => {
+    const p = encodeAXfer({ assetId: zeroFill(32), assetInputCount: 1, kernelSig: zeroFill(64), outputs: [{ commitment: zeroFill(33), encryptedAmount: zeroFill(8) }], rangeproof: zeroFill(10) });
+    const padded = new Uint8Array([...p, 0x00, 0x00]);
+    expect(decodeAXfer(padded)).toBeNull();
+  });
 });

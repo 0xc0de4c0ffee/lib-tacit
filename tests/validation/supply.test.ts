@@ -36,6 +36,33 @@ describe('checkSupplyConservation', () => {
     const c = pointToBytes(pedersenCommit(42n, r));
     expect(checkSupplyConservation([c], [c])).toBe(true);
   });
+
+  test('degenerate case (same commitments, no burn) returns true', () => {
+    const r = randomScalar();
+    const c = pointToBytes(pedersenCommit(100n, r));
+    expect(checkSupplyConservation([c, c], [c, c])).toBe(true);
+  });
+
+  test('mismatched array lengths does not throw', () => {
+    const r1 = randomScalar();
+    const r2 = randomScalar();
+    const c1 = pointToBytes(pedersenCommit(100n, r1));
+    const c2 = pointToBytes(pedersenCommit(200n, r2));
+    expect(checkSupplyConservation([c1, c2], [c1])).toBe(true);
+    expect(checkSupplyConservation([c1], [c1, c2])).toBe(true);
+  });
+
+  test('large arrays (8 outputs, 8 inputs) works', () => {
+    const commitments: Uint8Array[] = [];
+    for (let i = 0; i < 8; i++) {
+      commitments.push(pointToBytes(pedersenCommit(BigInt(i + 1) * 100n, randomScalar())));
+    }
+    expect(checkSupplyConservation(commitments, commitments)).toBe(true);
+  });
+
+  test('invalid commitment bytes returns false', () => {
+    expect(checkSupplyConservation([new Uint8Array(33)], [new Uint8Array(33)])).toBe(false);
+  });
 });
 
 describe('checkPublicSupply', () => {

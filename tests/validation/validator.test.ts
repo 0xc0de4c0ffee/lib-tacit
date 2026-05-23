@@ -60,4 +60,20 @@ describe('validateAncestry', () => {
     const result = await validateAncestry(walker, txid, 0);
     expect(result).toBe('no envelope witness');
   });
+
+  test('with null txid returns error', async () => {
+    const txs = new Map<string, ChainTx>();
+    const client = makeMockClient(txs);
+    const walker = new AncestryWalker(client);
+    const result = await validateAncestry(walker, 'ff'.repeat(32), 999);
+    expect(result).toBe('tx not found');
+  });
+
+  test('with mismatched output index returns error', async () => {
+    const txs = new Map<string, ChainTx>();
+    const client = makeMockClient(txs);
+    const walker = new AncestryWalker(client);
+    const result = await validateAncestry(walker, 'ee'.repeat(32), 0);
+    expect(result).toBe('tx not found');
+  });
 });

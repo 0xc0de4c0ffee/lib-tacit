@@ -20,4 +20,13 @@ describe('T_CXFER_BPP (0x22)', () => {
   test('rejects empty payload', () => {
     expect(decodeCXferBpp(new Uint8Array())).toBeNull();
   });
+  test('rejects N=0 (not in {1,2,4,8})', () => {
+    expect(() => encodeCXferBpp({ assetId: zeroFill(32), kernelSig: zeroFill(64), outputs: [], rangeproof: zeroFill(0) })).toThrow();
+  });
+  test('decode rejects mismatched rangeproof length', () => {
+    const p = encodeCXferBpp({ assetId: zeroFill(32), kernelSig: zeroFill(64), outputs: [{ commitment: zeroFill(33), encryptedAmount: zeroFill(8) }], rangeproof: zeroFill(10) });
+    // corrupt rpLen u16 at offset 1+32+64+1+41 = 139
+    p[139] = 0xff;
+    expect(decodeCXferBpp(p)).toBeNull();
+  });
 });
