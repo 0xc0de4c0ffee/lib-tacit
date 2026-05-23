@@ -30,7 +30,8 @@ src/
 │   ├── poseidon.ts         # Poseidon hash over BN254 (mixer Merkle trees)
 │   ├── groth16.ts          # Groth16 verifier (optional snarkjs dep)
 │   ├── stealth.ts          # Blinded-pubkey commits: tcs/tcsts addresses, ECDH blinding, scan/send helpers
-│   └── silent-payments.ts  # BIP-352 silent payments sender-side (sp1/tsp1 addresses)
+│   ├── silent-payments.ts  # BIP-352 silent payments sender-side (sp1/tsp1 addresses)
+│   └── primitives.ts       # xor32, taggedHash, tapLeafHash, controlBlock utilities
 ├── envelope/
 │   ├── script.ts          # Taproot envelope script encode/decode (TACIT magic, pushdata chunking)
 │   └── payload.ts         # ByteWriter utility, u64LE, readU64LE helpers
@@ -71,6 +72,7 @@ src/
 ├── indexer/
 │   ├── esplora-client.ts  # Esplora REST client (base rotation, concurrency cap, cooldown)
 │   ├── ancestry.ts        # Memoized, depth-limited, kernel-sig validated ancestry walker
+│   ├── ipfs.ts            # Verified IPFS fetch via helia + gateway failover
 │   └── index.ts           # Barrel export
 ├── validation/
 │   ├── validator.ts       # Recursive ancestry validation
@@ -124,7 +126,7 @@ bun run specs:pull
 5. Compare against `tacit-specs/dapp/bulletproofs-plus.js` for BP+ crypto (src/crypto/bulletproofs-plus.ts)
 6. Typecheck: `bun run typecheck`
 7. Build: `bun run build`
-8. Test: `bun test` (316+ tests; pinned vectors in `tests/crypto/vectors.test.ts`, no tacit-specs test root)
+8. Test: `bun test` (421+ tests; pinned vectors in `tests/crypto/vectors.test.ts`, no tacit-specs test root)
 9. Read `docs/crypto/validation.md` before adding indexer-facing verify helpers
 
 ## Validation layers
@@ -149,6 +151,7 @@ Decoders never substitute for layer 3.
 - `@noble/hashes` ^1.4.0 — SHA256, HMAC, RIPEMD160, keccak
 - `@scure/base` ^1.1.6 — bech32 (P2WPKH address encoding)
 - `poseidon-lite` ^0.3.0 — Poseidon hash over BN254 (for future mixer module)
+- `@helia/verified-fetch` ^7.2.10 — Trustless IPFS content retrieval
 - `snarkjs` (optional) — Groth16 verifier (for future mixer module)
 
 ## Reference Submodule

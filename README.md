@@ -1,10 +1,12 @@
 # lib-tacit
 
-Pure TypeScript library for the **tacit confidential token meta-protocol on Bitcoin**. Provides Pedersen commitments, Bulletproofs range proofs, Mimblewimble-style kernel signatures, ECDH blinding derivation, and full opcode encode/decode for 32 shipped opcodes — zero DOM, zero UI, reusable by any wallet, indexer, or dapp.
+Pure TypeScript library for the **tacit confidential token meta-protocol on Bitcoin**. Provides Pedersen commitments, Bulletproofs range proofs, Mimblewimble-style kernel signatures, ECDH blinding, stealth addresses, BIP-352 silent payments, and full opcode encode/decode for 32 shipped opcodes — zero DOM, zero UI, reusable by any wallet, indexer, or dapp.
 
 ```bash
-bun add lib-tacit @noble/secp256k1 @noble/hashes @scure/base poseidon-lite
+bun add lib-tacit @noble/secp256k1 @noble/hashes @scure/base poseidon-lite @helia/verified-fetch
 ```
+
+---
 
 ## Features
 
@@ -18,10 +20,10 @@ bun add lib-tacit @noble/secp256k1 @noble/hashes @scure/base poseidon-lite
 | | Kernel signatures | Mimblewimble-style conservation-of-supply proofs |
 | | Poseidon hash | BN254 hash for mixer Merkle trees (via poseidon-lite) |
 | | Groth16 verifier | Optional snarkjs integration for zk-proof verification |
-| | Stealth addresses | Blinded-pubkey commits (tcs/tcsts), ECDH blinding, scan/send |
-| | Silent payments | BIP-352 sender-side silent payment output derivation (sp1... addresses) |
+| | Stealth addresses | Blinded-pubkey commits (`tcs`/`tcsts`), ECDH blinding, scan/send |
+| | Silent payments | BIP-352 sender-side silent payment output derivation (`sp1` addresses) |
 | | xor32 | XOR two 32-byte arrays for encryption/commitment helpers |
-| **Opcodes** | 32 shipped encode/decode | CETCH (0x21) · T_CXFER_BPP (0x22) · CXFER (0x23) · T_MINT (0x24) · T_BURN (0x25) · T_AXFER (0x26) · T_PETCH (0x27) · T_PMINT (0x28) · T_DEPOSIT (0x29) · T_WITHDRAW (0x2A) · T_DROP (0x2B) · T_DCLAIM (0x2C) · T_AXFER_VAR (0x37) · T_WRAPPER_ATTEST (0x38) · T_AXFER_BPP (0x3C) · T_AXFER_VAR_BPP (0x3D) · T_SLOT_* (0x43–0x47) · T_CBTC_TAC_* (0x49–0x4F, 0x57–0x5A) · T_PREAUTH_BID (0x5B) · T_PREAUTH_BID_VAR (0x5C) |
+| **Opcodes** | 32 shipped encode/decode | CETCH · T_CXFER_BPP · CXFER · T_MINT · T_BURN · T_AXFER · T_PETCH · T_PMINT · T_DEPOSIT · T_WITHDRAW · T_DROP · T_DCLAIM · T_AXFER_VAR · T_WRAPPER_ATTEST · T_AXFER_BPP · T_AXFER_VAR_BPP · T_SLOT_* · T_CBTC_TAC_* · T_PREAUTH_BID · T_PREAUTH_BID_VAR |
 | **Envelope** | Taproot script-path | TACIT magic, version, chunked pushdata encode/decode |
 | **Transaction** | Tools | BIP-143 sighash (ALL, SINGLE\|ACP), tx serialization, P2WPKH address, preauth, builder, taproot primitives |
 | **Wallet** | Keypair | secp256k1 generation, import, export |
@@ -30,7 +32,7 @@ bun add lib-tacit @noble/secp256k1 @noble/hashes @scure/base poseidon-lite
 | | UTXO manager | Caching, selection, sort, spend-marking |
 | **Indexer** | Esplora client | REST client with base rotation, concurrency cap, cooldown |
 | | Ancestry walker | Memoized, depth-limited, kernel-sig validated |
-| | IPFS | Trustless content retrieval via helia + gateway (cidToV1, ipfsFetchVerified) |
+| | IPFS | Trustless content retrieval via helia + gateway (`cidToV1`, `ipfsFetchVerified`) |
 | **Validation** | Ancestry | Recursive ancestry validation |
 | | Supply | Pedersen + public supply conservation checks |
 | **Recovery** | Scanner | Chain scan for UTXO recovery |
@@ -39,28 +41,21 @@ bun add lib-tacit @noble/secp256k1 @noble/hashes @scure/base poseidon-lite
 | | Broadcaster | Abstract transaction submission |
 | **Runtime** | Cross-platform | Zero DOM, zero window, runs in Node.js, Bun, Deno, and browsers |
 
+---
+
 ## Quick Start
 
 ```typescript
 import {
-  // Key management
   generateKeypair, importPrivkey, derivePubkey, p2wpkhAddress,
-  // Pedersen commitments
   pedersenCommit, pedersenVerify, G, H,
-  // ECDH blinding & encryption
   deriveBlinding, deriveChangeBlinding, encryptAmount, decryptAmount,
-  // Kernel signatures
   computeKernelMsg, signKernel, verifyKernel, assetIdFor,
-  // Bulletproofs
   bpRangeAggProve, bpRangeAggVerify,
-  // Opcode encode/decode
   encodeCEtch, decodeCEtch, encodeCXfer, decodeCXfer,
-  // Schnorr
   signSchnorr, verifySchnorr,
-  // Constants
   Opcode, SECP_N, N_BITS,
-  // Transaction
-  p2wpkhScript, buildAnchor,
+  p2wpkhScript, buildAnchor, pointToBytes,
 } from 'lib-tacit';
 
 // Generate a wallet
@@ -83,15 +78,19 @@ const payload = encodeCEtch({
 });
 ```
 
+---
+
 ## Module Map
 
 ```
 lib-tacit
 ├── constants/     — Opcodes, domain tags, generator vectors, protocol limits
-├── crypto/        — Pedersen, Schnorr, ECDH, Bulletproofs, MSM, Kernel, stealth, silent-payments, primitives
+├── crypto/        — Pedersen, Schnorr, ECDH, Bulletproofs, MSM, Kernel,
+│                    stealth, silent-payments, primitives
 ├── envelope/      — Taproot script-path encode/decode, ByteWriter
-├── opcodes/       — 32 shipped modules (see AGENTS.md for full list)
-├── transaction/   — BIP-143 sighash, TX serialization, P2WPKH address, taproot primitives
+├── opcodes/       — 32 shipped modules (0x21–0x5C)
+├── transaction/   — BIP-143 sighash, TX serialization, P2WPKH address,
+│                    taproot primitives (taggedHash, controlBlock, etc.)
 ├── wallet/        — Keypair, UTXO manager, PRF passkey, key encryption
 ├── indexer/       — Esplora client, ancestry walker, IPFS verified fetch
 ├── validation/    — Ancestry validation, supply conservation
@@ -99,29 +98,61 @@ lib-tacit
 └── interfaces/    — ChainClient, Broadcaster (abstract)
 ```
 
+---
+
+## Cryptographic Invariants
+
+These guarantees are enforced at the protocol level and hold regardless of wallet implementation:
+
+1. **Pedersen binding** — H is a NUMS generator with no known discrete log wrt G. Two implementations producing different H would reject each other's proofs. This is the foundation of the confidential amount system.
+
+2. **Kernel sig soundness** — Every confidential transaction proves supply conservation via `E' = ΣC_out - ΣC_in`. If `E' = 0` (degenerate, all commitments cancel out), the kernel is rejected. `verifyKernel` returns `false` (never throws) on bad points or length mismatch.
+
+3. **Domain separation** — Every HMAC, BIP-340 message, and Bulletproofs transcript uses a unique v1 domain tag (e.g. `tacit-kernel-v1`, `tacit-blind-v1`, `tacit-drop-v1`). Cross-context replay is cryptographically impossible — no signature from one opcode can substitute for another.
+
+4. **Anchor uniqueness** — Each UTXO's anchor is `(txid_BE || vout_LE)`. Bitcoin consensus prevents double-spends, so no two outputs across all valid envelopes can share an anchor. This guarantees blinding uniqueness.
+
+5. **Amount verification** — `amount_ct` is XOR with an HMAC-derived keystream. The Pedersen commitment provides the integrity check: tampering with the ciphertext yields a candidate amount that fails `pedersenCommit(candidate, r) == C`.
+
+---
+
+## Validation Model
+
+Decode functions (`decodeCXfer`, `decodeCEtch`, etc.) parse **wire format only**. A parsed envelope is not valid tacit state until you also run:
+
+1. **Kernel verification** — `verifyKernel` checks supply conservation
+2. **Range proofs** — `bpRangeAggVerify` / `bppRangeVerify` check amounts are in range [0, 2^64)
+3. **Amount–commitment consistency** — `pedersenVerify` checks encrypted amount matches commitment
+
+This is the three-layer model:
+- **Layer 1 (Wire)**: `decode*` returns `null` on malformed bytes
+- **Layer 2 (Points)**: `tryBytesToPoint` before curve ops on untrusted commitments
+- **Layer 3 (Crypto)**: `verifyKernel`, range proofs, amount checks
+
+Decoders never substitute for layer 3.
+
+---
+
+## How to Verify Correctness
+
+1. Compare against `tacit-specs/tests/composition.mjs` for Schnorr, ECDH, kernel, and opcode wire formats
+2. Check pinned hex vectors in `tests/crypto/vectors.test.ts` for NUMS generators, asset IDs, blindings
+3. Compare against `tacit-specs/dapp/tacit.js` for wire format encode/decode functions
+4. Compare against `tacit-specs/dapp/bulletproofs-plus.js` for BP+ crypto
+5. Run `bun run typecheck && bun run build && bun test` (421+ tests)
+
+---
+
 ## Test
 
 ```bash
-bun run specs:pull   # fetch latest tacit-specs submodule (read-only reference)
-bun test             # 419+ tests, isolated from tacit-specs/ (pinned vectors in tests/crypto/vectors.test.ts)
+bun run specs:pull   # fetch latest tacit-specs submodule
+bun test             # 421+ tests, isolated from tacit-specs/
 bun run typecheck
 bun run build
 ```
 
-## Validation model
-
-Opcode `decode*` functions parse **wire format only**. A parsed envelope is not valid tacit state until you also run kernel verification, range proofs, and amount–commitment checks. See [docs/crypto/validation.md](docs/crypto/validation.md).
-
-`verifyKernel` returns `false` on malformed commitments (never throws). Use `tryBytesToPoint` when parsing individual points from untrusted payloads.
-
-## Trust Model
-
-This library implements the cryptographic primitives from [SPEC.md](tacit-specs/SPEC.md). It contains **no network I/O and no DOM access**. Consumers (wallets, indexers, dapps) are responsible for:
-
-- Chain data fetching (`ChainClient` interface)
-- Transaction broadcasting (`Broadcaster` interface)
-- Key storage (encrypted localStorage, hardware wallet, etc.)
-- UI rendering
+---
 
 ## Dependencies
 
@@ -133,6 +164,19 @@ This library implements the cryptographic primitives from [SPEC.md](tacit-specs/
 | `poseidon-lite` | 0.3.0 | Poseidon hash over BN254 |
 | `@helia/verified-fetch` | 7.2.10 | Trustless IPFS content retrieval |
 | `snarkjs` | 0.7.6 | Groth16 zk-proof verification (optional) |
+
+---
+
+## Trust Model
+
+This library implements the cryptographic primitives from [SPEC.md](tacit-specs/SPEC.md). It contains **no network I/O and no DOM access**. Consumers are responsible for:
+
+- Chain data fetching (`ChainClient` interface)
+- Transaction broadcasting (`Broadcaster` interface)
+- Key storage (encrypted localStorage, hardware wallet, etc.)
+- UI rendering
+
+---
 
 ## License
 
