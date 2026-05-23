@@ -41,8 +41,8 @@
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "lint": "echo 'TODO: lint'",
-    "specs:pull": "git submodule update --init --remote --force tacit-specs && echo \"✅ tacit-specs @ $(git -C tacit-specs rev-parse --short HEAD) — $(git -C tacit-specs log -1 --format=%s)\"",
-    "specs:status": "echo \"📌 tacit-specs @ $(git -C tacit-specs rev-parse --short HEAD)\" && git -C tacit-specs log --oneline -3 | cat",
+    "specs:pull": "git submodule update --init --remote tacit-specs && sh -c 'echo \"✅ tacit-specs @ $(git -C tacit-specs rev-parse --short HEAD) — $(git -C tacit-specs log -1 --format=%s)\"'",
+    "specs:status": "sh -c 'echo \"📌 tacit-specs @ $(git -C tacit-specs rev-parse --short HEAD)\"' && git -C tacit-specs log --oneline -3",
     "specs:log": "git -C tacit-specs log --oneline --graph -20",
     "verify": "bun run typecheck && bun run build && bun test"
   },
