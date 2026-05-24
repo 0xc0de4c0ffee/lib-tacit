@@ -23,3 +23,6 @@ export const ANCHOR_LEN = 36; // txid_BE(32) || vout_LE(4)
 export const BLINDING_LEN = 32;
 
 export const DUST_SATS = 546;
+
+export const SWAP_ROUTE_N_HOPS_MAX = 8;
+export const SWAP_ROUTE_HOP_BYTES = 67;

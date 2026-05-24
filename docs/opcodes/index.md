@@ -89,12 +89,13 @@
 | T_DCLAIM (0x2C) | `dclaim.ts` | ✅ `encodeCDClaim` | ✅ `decodeCDClaim` | ✅ |
 | T_AXFER_VAR (0x37) | `axfer-var.ts` | ✅ `encodeAXferVar` | ✅ `decodeAXferVar` | ✅ |
 | T_WRAPPER_ATTEST (0x38) | `wrapper-attest.ts` | ✅ `encodeWrapperAttest` | ✅ `decodeWrapperAttest` | ✅ |
-| T_SLOT_* (0x43–0x47) | `slot.ts` | ❌ types only | ❌ types only | ❌ |
-| T_CBTC_TAC_* (0x49–0x4F, 0x57–0x5A) | `cbtc-tac.ts` | ❌ types only | ❌ types only | ❌ |
+| T_SLOT_* (0x43–0x47) | `slot.ts` | ✅ `encodeSlot*` | ✅ `decodeSlot*` | ✅ |
+| T_CBTC_TAC_* (0x49–0x4F, 0x57–0x5A) | `cbtc-tac.ts` | ✅ `encodeCBtcTac*` | ✅ `decodeCBtcTac*` | ✅ |
+| T_SWAP_VAR / T_SWAP_ROUTE (0x32–0x33) | `amm-swap.ts` | ✅ `encodeSwapVar` / `encodeSwapRoute` | ✅ `decodeSwapVar` / `decodeSwapRoute` | ✅ |
 | T_PREAUTH_BID / T_PREAUTH_BID_VAR (0x5B–0x5C) | `preauth-bid.ts` / `preauth-bid-var.ts` | ✅ `encodePreauthBid` / `encodePreauthBidVar` | ✅ `decodePreauthBid` / `decodePreauthBidVar` | ⏳ |
-| Drafted AMM (0x2D–0x33) | `amm-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
-| T_AXFER_BPP (0x3C) | `axfer-bpp.ts` | ❌ stub | ❌ stub | ❌ |
-| T_AXFER_VAR_BPP (0x3D) | `axfer-var-bpp.ts` | ❌ stub | ❌ stub | ❌ |
+| Drafted AMM (0x2D–0x31) | `amm-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
+| T_AXFER_BPP (0x3C) | `axfer-bpp.ts` | ✅ `encodeAXferBpp` | ✅ `decodeAXferBpp` | ❌ |
+| T_AXFER_VAR_BPP (0x3D) | `axfer-var-bpp.ts` | ✅ `encodeAXferVarBpp` | ✅ `decodeAXferVarBpp` | ❌ |
 | Drafted Farm (0x34–0x3E) | `farm-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 | Drafted Gov (0x50–0x56) | `gov-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 
@@ -114,10 +115,31 @@ Each shipped opcode has a dedicated document covering wire format, constraints, 
 - [`0x2a-t-withdraw.md`](./0x2a-t-withdraw.md) — Shielded pool withdrawal
 - [`0x2b-t-drop.md`](./0x2b-t-drop.md) — Public-claim pool
 - [`0x2c-t-dclaim.md`](./0x2c-t-dclaim.md) — Claim event
+- [`0x32-t-swap-var.md`](./0x32-t-swap-var.md) — Variable-amount AMM swap (shipped)
+- [`0x33-t-swap-route.md`](./0x33-t-swap-route.md) — Multi-hop AMM routing (shipped)
 - [`0x37-t-axfer-var.md`](./0x37-t-axfer-var.md) — Variable-amount atomic settlement
 - [`0x38-t-wrapper-attest.md`](./0x38-t-wrapper-attest.md) — Wrapper attestation
-- [`0x3c-t-axfer-bpp.md`](./0x3c-t-axfer-bpp.md) — Atomic settlement with BP+ (drafted)
-- [`0x3d-t-axfer-var-bpp.md`](./0x3d-t-axfer-var-bpp.md) — Variable-amount atomic settlement with BP+ (drafted)
+- [`0x3c-t-axfer-bpp.md`](./0x3c-t-axfer-bpp.md) — Atomic settlement with BP+
+- [`0x3d-t-axfer-var-bpp.md`](./0x3d-t-axfer-var-bpp.md) — Variable-amount atomic settlement with BP+
+- [`0x43-t-slot-mint.md`](./0x43-t-slot-mint.md) — Slot mint (shipped)
+- [`0x44-t-slot-burn.md`](./0x44-t-slot-burn.md) — Slot burn (shipped)
+- [`0x45-t-slot-rotate.md`](./0x45-t-slot-rotate.md) — Slot rotate (shipped)
+- [`0x46-t-slot-split.md`](./0x46-t-slot-split.md) — Slot split (shipped)
+- [`0x47-t-slot-merge.md`](./0x47-t-slot-merge.md) — Slot merge (shipped)
+- [`0x49-t-cbtc-tac-deposit.md`](./0x49-t-cbtc-tac-deposit.md) — cBTC.tac deposit (shipped)
+- [`0x4a-t-cbtc-tac-withdraw.md`](./0x4a-t-cbtc-tac-withdraw.md) — cBTC.tac withdraw (shipped)
+- [`0x4b-t-cbtc-tac-force-close.md`](./0x4b-t-cbtc-tac-force-close.md) — cBTC.tac force close (shipped)
+- [`0x4c-t-ctac-lien-claim.md`](./0x4c-t-ctac-lien-claim.md) — cBTC.tac lien claim (shipped)
+- [`0x4f-t-ctac-lien-split.md`](./0x4f-t-ctac-lien-split.md) — cBTC.tac lien split (shipped)
+- [`0x57-t-cbtc-tac-deposit-atomic.md`](./0x57-t-cbtc-tac-deposit-atomic.md) — cBTC.tac atomic deposit (shipped)
+- [`0x58-t-cbtc-tac-withdraw-atomic.md`](./0x58-t-cbtc-tac-withdraw-atomic.md) — cBTC.tac atomic withdraw (shipped)
+- [`0x59-t-cbtc-tac-top-up.md`](./0x59-t-cbtc-tac-top-up.md) — cBTC.tac top-up (shipped)
+- [`0x5a-t-cbtc-tac-bond-release.md`](./0x5a-t-cbtc-tac-bond-release.md) — cBTC.tac bond release (shipped)
+- [`0x43-t-slot-mint.md`](./0x43-t-slot-mint.md) — Slot mint (shipped)
+- [`0x44-t-slot-burn.md`](./0x44-t-slot-burn.md) — Slot burn (shipped)
+- [`0x45-t-slot-rotate.md`](./0x45-t-slot-rotate.md) — Slot rotate (shipped)
+- [`0x46-t-slot-split.md`](./0x46-t-slot-split.md) — Slot split (shipped)
+- [`0x47-t-slot-merge.md`](./0x47-t-slot-merge.md) — Slot merge (shipped)
 - [`0x5b-t-preauth-bid.md`](./0x5b-t-preauth-bid.md) — Preauth bid (shipped)
 - [`0x5c-t-preauth-bid-var.md`](./0x5c-t-preauth-bid-var.md) — Variable-amount preauth bid (shipped)
 

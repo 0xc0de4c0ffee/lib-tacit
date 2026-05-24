@@ -1,7 +1,6 @@
-# 0x32 T_SWAP_VAR
+# T_SWAP_VAR (0x32) — Variable-Amount AMM Swap
 
-> Opcode wire format from the [Tacit protocol specification](https://github.com/z0r0z/tacit/blob/main/SPEC.md).
-> See the [opcode index](./index.md) for all opcodes or [tacit.finance](https://tacit.finance) for the protocol.
+**Status:** ✅ Shipped (SPEC §5.20)
 
 **Produces 1 confidential receipt UTXO** (`vout[1]`), **optional change UTXO** (`vout[2]`) if `C_change_or_sentinel` ≠ NO_CHANGE_SENTINEL, **optional tip** (`vout[3]`) if `tip_amount > 0`.
 
@@ -77,8 +76,15 @@ export interface T_SWAP_VAR {
   intentSig: Uint8Array;
 }
 
----
+## Implementation
+
+✅ Wire encode/decode available in `src/opcodes/amm-swap.ts`:
+- `encodeSwapVar(input: SwapVarInput): Uint8Array`
+- `decodeSwapVar(payload: Uint8Array): SwapVarDecoded | null`
+
+Also exported: `swapVarCurveDeltaOut` for curve recomputation, `ammDerivePoolId` for pool ID derivation, `lexCanonicalAssetPair` for deterministic asset ordering.
 
 ---
+
 **Reference:** [Tacit SPEC.md §5.20](https://github.com/z0r0z/tacit/blob/main/SPEC.md) — authoritative wire format definition.
 **Index:** [All opcodes](./index.md)

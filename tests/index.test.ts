@@ -99,10 +99,46 @@ describe('lib-tacit barrel exports (src/index.ts)', () => {
     expect(lib.computePreauthBidVarContextHash).toBeFunction();
     expect(lib.PREAUTH_BID_DOMAIN).toBe('tacit-preauth-bid-v1');
 
-    // Opcode stubs (shipped but no wire codec)
+    // Slot family (0x43-0x47) — full encode/decode
     expect(lib.encodeSlotMint).toBeFunction();
+    expect(lib.decodeSlotMint).toBeFunction();
     expect(lib.encodeSlotBurn).toBeFunction();
+    expect(lib.decodeSlotBurn).toBeFunction();
+    expect(lib.encodeSlotRotate).toBeFunction();
+    expect(lib.decodeSlotRotate).toBeFunction();
+    expect(lib.encodeSlotSplit).toBeFunction();
+    expect(lib.decodeSlotSplit).toBeFunction();
+    expect(lib.encodeSlotMerge).toBeFunction();
+    expect(lib.decodeSlotMerge).toBeFunction();
+
+    // cBTC.tac family (0x49-0x5A) — full encode/decode
     expect(lib.encodeCBtcTacDeposit).toBeFunction();
+    expect(lib.decodeCBtcTacDeposit).toBeFunction();
+    expect(lib.encodeCBtcTacWithdraw).toBeFunction();
+    expect(lib.decodeCBtcTacWithdraw).toBeFunction();
+    expect(lib.encodeCBtcTacForceClose).toBeFunction();
+    expect(lib.decodeCBtcTacForceClose).toBeFunction();
+    expect(lib.encodeCTacLienClaim).toBeFunction();
+    expect(lib.decodeCTacLienClaim).toBeFunction();
+    expect(lib.encodeCTacLienSplit).toBeFunction();
+    expect(lib.decodeCTacLienSplit).toBeFunction();
+    expect(lib.encodeCBtcTacDepositAtomic).toBeFunction();
+    expect(lib.decodeCBtcTacDepositAtomic).toBeFunction();
+    expect(lib.encodeCBtcTacWithdrawAtomic).toBeFunction();
+    expect(lib.decodeCBtcTacWithdrawAtomic).toBeFunction();
+    expect(lib.encodeCBtcTacTopUp).toBeFunction();
+    expect(lib.decodeCBtcTacTopUp).toBeFunction();
+    expect(lib.encodeCBtcTacBondRelease).toBeFunction();
+    expect(lib.decodeCBtcTacBondRelease).toBeFunction();
+
+    // AMM swap (0x32-0x33) — full encode/decode
+    expect(lib.encodeSwapVar).toBeFunction();
+    expect(lib.decodeSwapVar).toBeFunction();
+    expect(lib.encodeSwapRoute).toBeFunction();
+    expect(lib.decodeSwapRoute).toBeFunction();
+    expect(lib.lexCanonicalAssetPair).toBeFunction();
+    expect(lib.swapVarCurveDeltaOut).toBeFunction();
+    expect(lib.ammDerivePoolId).toBeFunction();
 
     // Transaction
     expect(lib.hash160).toBeFunction();

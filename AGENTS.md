@@ -54,9 +54,10 @@ src/
 │   ├── axfer-var-bpp.ts    # T_AXFER_VAR_BPP (0x3D) — BP+ variant of variable-amount settlement
 │   ├── preauth-bid.ts      # T_PREAUTH_BID (0x5B) encode/decode/context-hash
 │   ├── preauth-bid-var.ts  # T_PREAUTH_BID_VAR (0x5C) encode/decode/context-hash
-│   ├── slot.ts            # T_SLOT_* (0x43–0x47) — types only (wire TBD)
-│   ├── cbtc-tac.ts        # T_CBTC_TAC_* — types only (wire TBD)
-│   ├── amm-drafts.ts      # Drafted AMM opcodes (0x2D–0x33) — type definitions only
+│   ├── slot.ts            # T_SLOT_* (0x43–0x47) — full encode/decode (SPEC-CBTC-ZK)
+│   ├── cbtc-tac.ts        # T_CBTC_TAC_* (0x49–0x5A) — full encode/decode (SPEC-CBTC-TAC)
+│   ├── amm-swap.ts        # T_SWAP_VAR (0x32) + T_SWAP_ROUTE (0x33) — full encode/decode + pool helpers
+│   ├── amm-drafts.ts      # Drafted AMM opcodes (0x2D–0x31) — type definitions only
 │   ├── farm-drafts.ts     # Drafted farm opcodes (0x34–0x3E) — type definitions
 │   ├── gov-drafts.ts      # Drafted governance + cUSD.tac (0x50–0x56) — type definitions
 │   └── index.ts           # Barrel export for all opcode modules
@@ -156,7 +157,7 @@ Decoders never substitute for layer 3.
 
 ## Reference Submodule
 
-The `tacit-specs/` directory is a git submodule at `b313809` pointing at `https://github.com/z0r0z/tacit`. Key reference files:
+The `tacit-specs/` directory is a git submodule at `4264fa3` pointing at `https://github.com/z0r0z/tacit`. Key reference files:
 
 | File | Purpose |
 |------|---------|

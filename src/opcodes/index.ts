@@ -57,23 +57,59 @@ export type { WrapperAttestInput, WrapperAttestOutput } from './wrapper-attest.j
 
 // Shipped — Self-custody slot family (SPEC-CBTC-ZK)
 export {
-  encodeSlotMint, encodeSlotBurn, encodeSlotRotate,
-  encodeSlotSplit, encodeSlotMerge,
+  encodeSlotMint, decodeSlotMint,
+  encodeSlotBurn, decodeSlotBurn,
+  encodeSlotRotate, decodeSlotRotate,
+  encodeSlotSplit, decodeSlotSplit,
+  encodeSlotMerge, decodeSlotMerge,
 } from './slot.js';
 export type {
-  SlotMintInput, SlotBurnInput, SlotRotateInput,
-  SlotSplitInput, SlotMergeInput,
+  SlotMintInput, SlotMintOutput,
+  SlotBurnInput, SlotBurnOutput,
+  SlotRotateInput, SlotRotateOutput,
+  SlotSplitInput, SlotSplitOutput, SlotSplitOutputEntry,
+  SlotMergeInput, SlotMergeOutput, SlotMergeInputEntry,
 } from './slot.js';
 
 // Shipped — cBTC.tac lien family (SPEC-CBTC-TAC)
 export {
-  encodeCBtcTacDeposit, encodeCBtcTacWithdraw,
-  encodeCBtcTacForceClose, encodeCTacLienClaim, encodeCTacLienSplit,
+  encodeCBtcTacDeposit, decodeCBtcTacDeposit,
+  encodeCBtcTacWithdraw, decodeCBtcTacWithdraw,
+  encodeCBtcTacForceClose, decodeCBtcTacForceClose,
+  encodeCTacLienClaim, decodeCTacLienClaim,
+  encodeCTacLienSplit, decodeCTacLienSplit,
+  encodeCBtcTacDepositAtomic, decodeCBtcTacDepositAtomic,
+  encodeCBtcTacWithdrawAtomic, decodeCBtcTacWithdrawAtomic,
+  encodeCBtcTacTopUp, decodeCBtcTacTopUp,
+  encodeCBtcTacBondRelease, decodeCBtcTacBondRelease,
 } from './cbtc-tac.js';
 export type {
-  CBtcTacDepositInput, CBtcTacWithdrawInput,
-  CBtcTacForceCloseInput, CTacLienClaimInput, CTacLienSplitInput,
+  CBtcTacDepositInput, CBtcTacDepositOutput,
+  CBtcTacWithdrawInput, CBtcTacWithdrawOutput,
+  CBtcTacForceCloseInput, CBtcTacForceCloseOutput,
+  CTacLienClaimInput, CTacLienClaimOutput,
+  CTacLienSplitInput, CTacLienSplitOutput,
+  CBtcTacDepositAtomicInput, CBtcTacDepositAtomicOutput,
+  CBtcTacWithdrawAtomicInput, CBtcTacWithdrawAtomicOutput,
+  CBtcTacTopUpInput, CBtcTacTopUpOutput,
+  CBtcTacBondReleaseInput, CBtcTacBondReleaseOutput,
 } from './cbtc-tac.js';
+
+// Shipped — AMM swap opcodes (0x32-0x33)
+// u64LE/u32LE/u16LE/readU64/readU32/readU16 helpers are available
+// as deep imports from './amm-swap.js' but omitted from the barrel
+// to avoid collision with envelope/payload exports.
+export {
+  encodeSwapVar, decodeSwapVar,
+  encodeSwapRoute, decodeSwapRoute,
+  lexCanonicalAssetPair,
+  swapVarCurveDeltaOut,
+  ammDerivePoolId,
+} from './amm-swap.js';
+export type {
+  SwapVarInput, SwapVarDecoded,
+  SwapRouteInput, SwapRouteDecoded, SwapRouteHop,
+} from './amm-swap.js';
 
 // Drafted AMM opcodes (0x2D-0x33)
 export { AMM_DRAFT_OPCODES } from './amm-drafts.js';
