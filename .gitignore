@@ -27,7 +27,10 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .cache
 *.tsbuildinfo
 
-# IntelliJ based IDEs
+# trailmark audit artifacts (keep only final report)
+audit/*
+!audit/audit-report.md
+!audit/.gitkeep
 .idea
 
 # Finder (MacOS) folder config
