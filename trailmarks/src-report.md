@@ -1,20 +1,101 @@
-# trailmark: cross-comparison
-Generated: trailmark v0.3.1
+# trailmark: lib-tacit src/
+
+Generated: trailmark v0.3.1  |  path: `src`
+
 ## Overview
-| Metric | Reference (tacit-specs/dapp/) | Our Library (src/) |
-| --- | --- | --- |
-| Total nodes | 1779 | 1457 |
-| Functions | 1741 | 1248 |
-| Call edges | 33361 | 4041 |## Function Set Comparison
-- **Unique to reference**: 1558- **Unique to our src**: 1113- **Common**: 118
-### In reference only (first 40)
-- `$`- `$$`- `ASSET_DETAIL_URL`- `ATOMIC_INTENTS_URL`- `ATOMIC_INTENT_CLAIM_URL`- `ATOMIC_INTENT_DELETE_URL`- `ATOMIC_INTENT_FINALIZE_URL`- `ATOMIC_INTENT_FULFILMENT_URL`- `ATOMIC_INTENT_GET_URL`- `ATTEST_URL`- `DISCLOSURES_URL`- `DROP_URL`- `G_BJJ`- `G_BJJ_BASE_U`- `G_BJJ_BASE_V`- `G_BJJ_meta`- `H_BJJ`- `H_BJJ_BASE_U`- `H_BJJ_BASE_V`- `H_BJJ_meta`- `LISTINGS_URL`- `LISTING_CLAIM_URL`- `LISTING_DELETE_URL`- `MINT_ATTEST_URL`- `PETCH_ASSET_URL`- `PMINTS_URL`- `PREAUTH_BIDS_URL`- `PREAUTH_BIDS_VAR_URL`- `PREAUTH_BID_URL`- `PREAUTH_BID_VAR_URL`- `PREAUTH_SALES_URL`- `PREAUTH_SALE_URL`- `RANGE_LISTINGS_URL`- `RANGE_LISTING_CLAIM_URL`- `RANGE_LISTING_DELETE_URL`- `RECENT_RECIPIENTS_KEY`- `UTXO_OPENING_URL`- `W.constructor`- `W.out`- `W.push`- ... and 1518 more### In our src only (first 40)
-- `AXFERBPPInput.assetId`- `AXFERBPPInput.assetInputCount`- `AXFERBPPInput.kernelSig`- `AXFERBPPInput.outputs`- `AXFERBPPInput.rangeproof`- `AXFERBPPOutput.assetId`- `AXFERBPPOutput.assetInputCount`- `AXFERBPPOutput.kernelSig`- `AXFERBPPOutput.kind`- `AXFERBPPOutput.outputs`- `AXFERBPPOutput.rangeproof`- `AXFERInput.assetId`- `AXFERInput.assetInputCount`- `AXFERInput.kernelSig`- `AXFERInput.outputs`- `AXFERInput.rangeproof`- `AXFEROutput.assetId`- `AXFEROutput.assetInputCount`- `AXFEROutput.kernelSig`- `AXFEROutput.kind`- `AXFEROutput.outputs`- `AXFEROutput.rangeproof`- `AXFERVarBPPInput.assetId`- `AXFERVarBPPInput.kernelSig`- `AXFERVarBPPInput.outputs`- `AXFERVarBPPInput.rangeproof`- `AXFERVarBPPOutput.assetId`- `AXFERVarBPPOutput.assetInputCount`- `AXFERVarBPPOutput.kernelSig`- `AXFERVarBPPOutput.kind`- `AXFERVarBPPOutput.outputs`- `AXFERVarBPPOutput.rangeproof`- `AXFERVarInput.assetId`- `AXFERVarInput.kernelSig`- `AXFERVarInput.outputs`- `AXFERVarInput.rangeproof`- `AXFERVarOutput.assetId`- `AXFERVarOutput.assetInputCount`- `AXFERVarOutput.kernelSig`- `AXFERVarOutput.kind`- ... and 1073 more## Opcode Encode/Decode Parity
-| Family | Reference | Our src |
-| --- | --- | --- |
-| Encoders | 52 | 42 |
-| Decoders | 48 | 37 |
-## Complexity Hotspots (cyclomatic >= 12)
+
+| Metric | Value |
+| --- | --- |
+| Total nodes | 1457 |
+| Functions + methods | 1248 |
+| Call edges | 4041 |
+| Files parsed | 70 |
+
+## Node Kind Breakdown
+
+| Kind | Count |
+| --- | --- |
+| method | 947 |
+| function | 301 |
+| interface | 134 |
+| module | 70 |
+| class | 5 |
+
+## Source Files
+
+- `src/constants/domains.ts`
+- `src/constants/generators.ts`
+- `src/constants/index.ts`
+- `src/constants/limits.ts`
+- `src/constants/opcodes.ts`
+- `src/crypto/bulletproofs-plus.ts`
+- `src/crypto/bulletproofs.ts`
+- `src/crypto/ecdh.ts`
+- `src/crypto/groth16.ts`
+- `src/crypto/index.ts`
+- `src/crypto/kernel.ts`
+- `src/crypto/msm.ts`
+- `src/crypto/pedersen.ts`
+- `src/crypto/poseidon.ts`
+- `src/crypto/primitives.ts`
+- `src/crypto/schnorr.ts`
+- `src/crypto/silent-payments.ts`
+- `src/crypto/stealth.ts`
+- `src/env.d.ts`
+- `src/envelope/index.ts`
+- `src/envelope/payload.ts`
+- `src/envelope/script.ts`
+- `src/index.ts`
+- `src/indexer/ancestry.ts`
+- `src/indexer/esplora-client.ts`
+- `src/indexer/index.ts`
+- `src/indexer/ipfs.ts`
+- `src/interfaces/chain-client.ts`
+- `src/interfaces/index.ts`
+- `src/opcodes/amm-drafts.ts`
+- `src/opcodes/amm-swap.ts`
+- `src/opcodes/axfer-bpp.ts`
+- `src/opcodes/axfer-var-bpp.ts`
+- `src/opcodes/axfer-var.ts`
+- `src/opcodes/axfer.ts`
+- `src/opcodes/burn.ts`
+- `src/opcodes/cbtc-tac.ts`
+- `src/opcodes/cxfer-bpp.ts`
+- `src/opcodes/dclaim.ts`
+- `src/opcodes/deposit.ts`
+- `src/opcodes/drop.ts`
+- `src/opcodes/etch.ts`
+- `src/opcodes/farm-drafts.ts`
+- `src/opcodes/gov-drafts.ts`
+- `src/opcodes/index.ts`
+- `src/opcodes/mint.ts`
+- `src/opcodes/petch.ts`
+- `src/opcodes/pmint.ts`
+- `src/opcodes/preauth-bid-var.ts`
+- `src/opcodes/preauth-bid.ts`
+- `src/opcodes/slot.ts`
+- `src/opcodes/transfer.ts`
+- `src/opcodes/withdraw.ts`
+- `src/opcodes/wrapper-attest.ts`
+- `src/recovery/decrypt.ts`
+- `src/recovery/index.ts`
+- `src/recovery/scanner.ts`
+- `src/transaction/address.ts`
+- `src/transaction/builder.ts`
+- `src/transaction/index.ts`
+- `src/transaction/sighash.ts`
+- `src/transaction/utils.ts`
+- `src/validation/index.ts`
+- `src/validation/supply.ts`
+- `src/validation/validator.ts`
+- `src/wallet/encryption.ts`
+- `src/wallet/index.ts`
+- `src/wallet/keypair.ts`
+- `src/wallet/prf.ts`
+- `src/wallet/utxo-manager.ts`
+
+## Complexity Hotspots (cyclomatic >= 10)
+
 | Function | Complexity | File |
 | --- | --- | --- |
 | crypto.bulletproofs-plus:bppRangeVerify | 26 | src/crypto/bulletproofs-plus.ts:434 |
@@ -62,7 +143,27 @@ Generated: trailmark v0.3.1
 | opcodes.cbtc-tac:encodeCBtcTacDeposit | 12 | src/opcodes/cbtc-tac.ts:37 |
 | opcodes.cbtc-tac:decodeCBtcTacDeposit | 12 | src/opcodes/cbtc-tac.ts:65 |
 | opcodes.cbtc-tac:decodeCBtcTacDepositAtomic | 12 | src/opcodes/cbtc-tac.ts:489 |
-| opcodes.slot:decodeSlotRotate | 12 | src/opcodes/slot.ts:306 |## Most-Called Functions
+| opcodes.slot:decodeSlotRotate | 12 | src/opcodes/slot.ts:306 |
+| crypto.silent-payments:senderComputeSilentPaymentOutput | 11 | src/crypto/silent-payments.ts:168 |
+| indexer.esplora-client:EsploraClient.fetch | 11 | src/indexer/esplora-client.ts:83 |
+| opcodes.amm-swap:swapVarCurveDeltaOut | 11 | src/opcodes/amm-swap.ts:390 |
+| opcodes.burn:encodeCBurn | 11 | src/opcodes/burn.ts:37 |
+| opcodes.burn:decodeCBurn | 11 | src/opcodes/burn.ts:75 |
+| opcodes.cbtc-tac:decodeCTacLienSplit | 11 | src/opcodes/cbtc-tac.ts:382 |
+| opcodes.cbtc-tac:encodeCBtcTacDepositAtomic | 11 | src/opcodes/cbtc-tac.ts:456 |
+| opcodes.drop:encodeCDrop | 11 | src/opcodes/drop.ts:68 |
+| opcodes.preauth-bid:decodePreauthBid | 11 | src/opcodes/preauth-bid.ts:89 |
+| crypto.bulletproofs-plus:bppRangeProve | 10 | src/crypto/bulletproofs-plus.ts:190 |
+| opcodes.amm-swap:ammDerivePoolId | 10 | src/opcodes/amm-swap.ts:437 |
+| opcodes.axfer-bpp:decodeAXferBpp | 10 | src/opcodes/axfer-bpp.ts:48 |
+| opcodes.axfer-var-bpp:decodeAXferVarBpp | 10 | src/opcodes/axfer-var-bpp.ts:44 |
+| opcodes.axfer:decodeAXfer | 10 | src/opcodes/axfer.ts:54 |
+| opcodes.slot:decodeSlotMint | 10 | src/opcodes/slot.ts:75 |
+| opcodes.slot:encodeSlotBurn | 10 | src/opcodes/slot.ts:144 |
+| wallet.prf:prfLogin | 10 | src/wallet/prf.ts:112 |
+
+## Most-Called Functions
+
 | Function | Callers |
 | --- | --- |
 | payload.slice | 253 |
@@ -79,9 +180,4 @@ Generated: trailmark v0.3.1
 | w.out | 30 |
 | opcodes.cbtc-tac:BigInt | 30 |
 | opcodes.slot:BigInt | 27 |
-| transaction.utils:bytesToHex | 25 |## Key Observations
-1. **Structural density**: Reference is 7.9× denser (33361 vs 4041 edges) — monolithic vs modular.
-2. **Opcode parity**: All reference opcode encoders/decoders have src/ equivalents.
-3. **Complexity**: BP+ verify (26) and envelope decode (25) highest — cryptographically justified.
-4. **In src only**: TypeScript types, barrel re-exports, modular boundaries not in mono-JS ref.
-5. **In ref only**: Dapp orchestration (buildAndBroadcast*, wallet UX, UI) intentionally omitted.
+| transaction.utils:bytesToHex | 25 |
