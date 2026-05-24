@@ -28,7 +28,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 *.tsbuildinfo
 
 # trailmark audit cache (git add .py to track)
-audit/run-audit.py
+trailmarks/run-audit.py
 .idea
 
 # Finder (MacOS) folder config
