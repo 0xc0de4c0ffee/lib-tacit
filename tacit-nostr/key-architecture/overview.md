@@ -55,6 +55,18 @@ senderComputeSilentPaymentOutput({ inputPrivs, inputOutpoints, scanPub, spendPub
 
 Returns the xonly output key. The sender does **not** need the recipient's Nostr key — only their `sp1` silent payment address. This breaks the link between Nostr identity and on-chain receiving.
 
+### Notification Layer
+
+Pure BIP-352 requires the recipient to scan all transactions to detect payments. This hybrid replaces chain scanning with a **Nostr notification event** (kind 39015, gift-wrapped per NIP-59):
+
+1. Sender computes output key per BIP-352 (above)
+2. Sender publishes kind 39015 to recipient's relays, gift-wrapped
+3. Recipient unwraps, sees expected output key and input outpoints
+4. Recipient verifies on chain when tx confirms
+5. **Fallback**: if notification missed, recipient chain-scans per standard BIP-352
+
+This avoids both BIP-47's on-chain notification cost and BIP-352's full-chain scanning. See `privacy/notification-layer.md`.
+
 ## How It Works in tacit-nostr
 
 ### Nostr Key (Event Signing)

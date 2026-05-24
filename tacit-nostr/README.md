@@ -30,7 +30,8 @@ tacit-nostr/
 │   ├── kinds.md                       # Event kind table (39000-39020), tags, content schemas
 │   └── messaging.md                   # DM and notification layer (kinds 39011-39014)
 ├── privacy/
-│   └── gift-wrapping.md               # NIP-59 gift wrap for take/fulfilment events
+│   ├── gift-wrapping.md               # NIP-59 gift wrap for take/fulfilment events
+│   └── notification-layer.md          # BIP-352 + Nostr notification hybrid (kind 39015)
 ├── validation/
 │   └── client-side.md                 # Client-side validation pipeline, event cache
 ├── relays/
