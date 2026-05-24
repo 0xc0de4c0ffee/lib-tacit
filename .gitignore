@@ -27,10 +27,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .cache
 *.tsbuildinfo
 
-# trailmark audit artifacts (keep only final report)
-audit/*
-!audit/audit-report.md
-!audit/.gitkeep
+# trailmark audit cache (git add .py to track)
+audit/run-audit.py
 .idea
 
 # Finder (MacOS) folder config
