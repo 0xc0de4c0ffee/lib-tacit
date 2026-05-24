@@ -246,6 +246,8 @@ export function encodeSilentPaymentAddress(opts: {
   network: string;
 }): string {
   const { scanPub, spendPub, network } = opts;
+  if (scanPub.length !== 33) throw new Error('scanPub must be 33 bytes');
+  if (spendPub.length !== 33) throw new Error('spendPub must be 33 bytes');
   const hrp = BIP352_HRP_BY_NETWORK[network];
   if (!hrp) throw new Error(`unknown network: ${network}`);
   const payload8 = new Uint8Array(66);
@@ -265,6 +267,8 @@ export function encodeSilentPaymentAddress(opts: {
 export interface ReceiverScanResult {
   voutIndex: number;
   outputKey: Uint8Array;
+  tweak: Uint8Array;
+  tweakScalar: bigint;
 }
 
 // --- Receiver scans a tx for silent payments paying us (BIP-352 §3.3) ---
@@ -277,28 +281,46 @@ export function receiverScanTxForSilentPayments(opts: {
   spendPub: Uint8Array;
 }): ReceiverScanResult[] {
   const { classifiedInputs, allInputOutpoints, outputs, scanPriv, spendPub } = opts;
-  const { aggregatePub } = aggregateStealthEligibleInputPubkeys(classifiedInputs);
-  if (!aggregatePub) return [];
+  const { aggregatePub, eligibleCount } = aggregateStealthEligibleInputPubkeys(classifiedInputs);
+  if (!aggregatePub || eligibleCount === 0) return [];
   const op_L = bip352SmallestOutpoint(allInputOutpoints);
   const inputHash = taggedHash('BIP0352/Inputs', op_L, aggregatePub);
   const ih = modN(bytes32ToBigint(inputHash));
-  if (ih === 0n) throw new Error('input_hash mod N is zero');
+  if (ih === 0n) return [];
   const A_sum = bytesToPoint(aggregatePub);
-  const ecdhPt = A_sum.multiply(ih).multiply(modN(bytes32ToBigint(scanPriv)));
-  const ecdhBytes = ecdhPt.toRawBytes(true).slice(1);
-  const results: ReceiverScanResult[] = [];
+  const tweakedA = A_sum.multiply(ih);
+  if (tweakedA.equals(ZERO)) return [];
+  const scanScalar = modN(bytes32ToBigint(scanPriv));
+  const ecdhPt = tweakedA.multiply(scanScalar);
+  const ecdhBytes = ecdhPt.toRawBytes(true);
+  const B_spend = bytesToPoint(spendPub);
+  const taprootOutputs: { voutIndex: number; xonly: Uint8Array }[] = [];
   for (let v = 0; v < outputs.length; v++) {
     const script = outputs[v]!.script;
-    if (script.length !== 34 || script[0] !== 0x51 || script[1] !== 0x20) continue;
-    const outputKey = script.slice(2, 34);
-    const tweak = taggedHash('BIP0352/SharedSecret', ecdhBytes, u32be(v));
+    if (script && script.length === 34 && script[0] === 0x51 && script[1] === 0x20) {
+      taprootOutputs.push({ voutIndex: v, xonly: script.slice(2, 34) });
+    }
+  }
+  if (taprootOutputs.length === 0) return [];
+  const matched = new Set<number>();
+  const results: ReceiverScanResult[] = [];
+  for (let k = 0; k < taprootOutputs.length; k++) {
+    const tweak = taggedHash('BIP0352/SharedSecret', ecdhBytes, u32be(k));
     const t = modN(bytes32ToBigint(tweak));
     if (t === 0n) continue;
-    const P = bytesToPoint(spendPub).add(G.multiply(t));
-    const expected = P.toRawBytes(true).slice(1);
-    if (expected.length === 32 && expected.every((b, i) => b === outputKey[i]!)) {
-      results.push({ voutIndex: v, outputKey });
+    const P_k = B_spend.add(G.multiply(t));
+    if (P_k.equals(ZERO)) continue;
+    const pkXonly = P_k.toRawBytes(true).slice(1);
+    let found = false;
+    for (const to of taprootOutputs) {
+      if (matched.has(to.voutIndex)) continue;
+      if (!pkXonly.every((b, i) => b === to.xonly[i]!)) continue;
+      matched.add(to.voutIndex);
+      results.push({ voutIndex: to.voutIndex, outputKey: to.xonly, tweak, tweakScalar: t });
+      found = true;
+      break;
     }
+    if (!found) break;
   }
   return results;
 }
