@@ -12,7 +12,31 @@ Both BIP-47 and BIP-352 solve receiver privacy, but each has a notification cost
 |----------|----------------------|------|-------------------|
 | **BIP-47** | On-chain OP_RETURN tx (notification tx) | ~10k sats + 1 block confirm | Watch for notification txs only |
 | **BIP-352** | None (sender derives from own inputs) | 0 on-chain bytes | Scan ALL transactions |
-| **Nostr hybrid** | Off-chain Nostr gift-wrapped event | 0 on-chain cost | Subscribe to Nostr kind 39015 |
+| **Nostr + BIP-352** | Off-chain Nostr gift-wrapped event | 0 on-chain cost | Subscribe to Nostr kind 39015 |
+| **Nostr + BIP-47** | Off-chain Nostr gift-wrapped event | 0 on-chain cost | Subscribe to Nostr kind 39016 |
+
+## Why Support Both?
+
+BIP-352 and BIP-47 serve different privacy models. A wallet can support either or both:
+
+| Aspect | BIP-352 (via Nostr) | BIP-47 (via Nostr) |
+|--------|--------------------|--------------------|
+| **Derivation** | Per-payment (each tx uses different inputs → different output key) | Per-sender (notification establishes shared secret → all future payments from that sender derive from the same chain code) |
+| **State to maintain** | One `sp1` address | One payment code + per-sender receive chain |
+| **Sender anonymity** | High (output key is one-time, no link between payments) | Medium (all payments from same sender are linked via chain code) |
+| **Recipient scanning** | Watch for kind 39015 OR chain scan | Watch for kind 39016 (one-time notification) only |
+| **Proof of payment** | Hard (output key is ephemeral) | Easy (chain code proves sender→recipient relationship) |
+| **Backfill** | Re-send notification or full chain scan | Re-send notification (compact) |
+| **Code complexity** | Moderate (BIP-352 impl exists) | Higher (payment codes + notification protocol) |
+
+### Use Cases
+
+- **BIP-352 path**: Default for tacit-nostr market (one-time trades between strangers). No per-sender state → lower overhead. Best for occasional payments.
+- **BIP-47 path**: Recurring payments (salary, subscription, regular trading partner). Proof-of-payment is useful for disputes. Higher setup cost (one Nostr notification) but no scanning after that.
+
+## Nostr Notification Events
+
+### Kind 39015 — BIP-352 Payment Notification
 
 The Nostr hybrid keeps BIP-352's cryptographic derivation (already in `src/crypto/silent-payments.ts`) but replaces chain scanning with an off-chain notification sent over Nostr.
 
@@ -166,4 +190,97 @@ For the initial research phase, the notification is **optional**. A minimal clie
 2. Use `senderComputeSilentPaymentOutput()` to send
 3. Use `receiverScanTxForSilentPayments()` to detect (chain scan, no Nostr notification)
 
-The notification layer (kind 39015) is added when the chain scan becomes a bottleneck.
+The notification layer (kind 39015, 39016) is added when the chain scan becomes a bottleneck.
+
+---
+
+### Kind 39016 — BIP-47 Payment Notification
+
+BIP-47 uses a reusable **payment code** (pubkey + chain code) instead of BIP-352's static scan+spend address. The Nostr notification replaces BIP-47's on-chain notification tx.
+
+**BIP-47 Payment Code Format** (per BIP-47):
+
+```
+bytes: 0x47 || 0x02/0x03 || pubkey(32) || chain_code(32) || 0x00(12)   // 79 bytes
+```
+
+Encoded as base58check, starts with `pm` prefix.
+
+#### Kind 39016 — BIP-47 Notification
+
+```jsonc
+{
+  "kind": 39016,
+  "content": {
+    "v": 1,
+    "type": "bip47-notify",
+    "sender_payment_code": "pm8...",           // sender's BIP-47 payment code
+    "recipient_payment_code": "pm8...",         // recipient's BIP-47 payment code
+    "notification_pubkey": "33-byte-hex",       // one-time ECDH pubkey per BIP-47 §3.2
+    "outpoint": {"txid": "64-hex", "vout": 0},  // funding outpoint for the first payment
+    "memo": "subscription payment #1"
+  },
+  "tags": [
+    ["p", "<recipient_nostr_pubkey>"],
+    ["expiration", "1767225600"],
+    ["t", "bip47-notify"]
+  ]
+}
+```
+
+**Wrapping**: Must be gift-wrapped (NIP-59) to recipient's Nostr pubkey.
+
+#### Derivation (BIP-47 §3.3)
+
+After receiving kind 39016, the recipient derives per-payment addresses:
+
+```
+secret = ECDH(my_privkey, notification_pubkey)
+bitcoin_key = HMAC-SHA256(chain_code, secret || 0)  // per BIP-47
+```
+
+The sender and recipient now share a secret that derives all future payments between them. No further notifications needed.
+
+#### BIP-47 Nostr Flow
+
+```
+Sender                                   Recipient
+  │                                          │
+  │  1. Generate notification_pubkey         │
+  │     per BIP-47 §3.1                      │
+  │                                          │
+  │  2. Create kind 39016, gift-wrap, send   │
+  │─────────────────────────────────────────>│
+  │                                          │  3. Unwrap, derive shared secret
+  │                                          │     Store chain_code for this sender
+  │                                          │
+  │  4. Send first payment using              │
+  │     derived per-payment key               │
+  │     (on-chain Bitcoin tx)                 │
+  │─────────────────────────────────────────>│  5. Derive same key, detect payment
+  │                                          │
+  │  6. Send second payment (same derive)     │
+  │─────────────────────────────────────────>│  7. Same derivation, detects again
+```
+
+#### Comparison: BIP-47 via Nostr vs On-Chain
+
+| Aspect | BIP-47 on-chain | BIP-47 via Nostr |
+|--------|----------------|-------------------|
+| Notification cost | ~10k sats | 0 (Nostr event) |
+| Notification privacy | Public OP_RETURN | Gift-wrapped (relay sees `p` tag) |
+| Proof of payment | On-chain | On-chain (same) |
+| Sender rotation | New notify tx per rotation | New kind 39016 per rotation |
+| Compatibility | Every BIP-47 wallet | Requires tacit-nostr client |
+
+## Wallet Implementation Notes
+
+A wallet supporting both paths SHOULD:
+
+1. **Derive both** a BIP-352 address (`sp1...`) and a BIP-47 payment code (`pm8...`) from the same seed
+2. **Publish both** in the listing event (kind 39000) — `sp_address` and optional `payment_code`
+3. **Listen to both** kind 39015 and kind 39016
+4. **Let the sender choose**: if the recipient publishes a `payment_code`, the sender can use BIP-47 for recurring payments; otherwise use BIP-352
+5. **Graceful fallback**: if neither notification arrives, chain-scan per BIP-352
+
+This is the **unified privacy model**: one seed, multiple receive paths, Nostr as the notification substrate.

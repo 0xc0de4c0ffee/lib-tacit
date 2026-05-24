@@ -13,6 +13,9 @@ bun add lib-tacit @noble/secp256k1 @noble/hashes @scure/base poseidon-lite @heli
 > - `tacit-nostr/` — Decentralized market coordination via Nostr
 > - `review/` — Security and design review findings against tacit-specs
 > - `trailmarks/` — Trail of Bits trailmark graph analysis
+> - `proposals/` — Opcode proposals (e.g., `40-name-system/` for name registration)
+> - `tacit-name-system/` — Name system design: `.tacit`/`.tic`/`.tac` TLDs, ENS bridge, BIP-47/352 integration
+> - `tacit-nostr/` — Nostr market coordination, BIP-47/352 notification layer, NIP-46 bunker
 >
 > For the production library, see the `main` branch.
 
