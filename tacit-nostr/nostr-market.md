@@ -18,7 +18,7 @@ This document specifies a decentralized market protocol for tacit confidential a
 
 | Kind | Name | Replaceable | Wrapped | Description | Ref lib-tacit |
 |------|------|-------------|---------|-------------|---------------|
-| `39000` | `tacit-asset-listing` | Addressable (`d` = asset pair) | No | Advertise an asset for sale at a price | `src/opcodes/etch.ts` |
+| `39000` | `tacit-asset-listing` | Addressable (`d` = asset pair ID) | No | Advertise a trading pair (e.g., TAC/BTCSTABLE) with a price | `src/opcodes/etch.ts` |
 | `39001` | `tacit-atomic-intent` | Regular | No | Atomic buy intent with ECDH-encrypted blinding | `src/opcodes/axfer.ts`, `domains.ts:19-25` |
 | `39002` | `tacit-preauth-bid` | Regular | No | Pre-signed BTC input + Pedersen commitment | `src/opcodes/preauth-bid.ts`, `domains.ts:32-36` |
 | `39003` | `tacit-preauth-bid-take` | Regular | Yes | Seller fills a preauth-bid (gift-wrapped to buyer) | `src/opcodes/preauth-bid.ts` |
@@ -94,6 +94,8 @@ Every event's `content` field is a JSON object. Fields are regular JSON types; `
 ```
 
 Matches `PreauthBidInput` from `src/opcodes/preauth-bid.ts:13-23`. The `outputs` array mirrors the reference dapp wire format (recipient commitment + optional change).
+
+> **Note:** `kernel_sig` and `rangeproof` are already embedded inside the pre-signed Bitcoin transaction's envelope payload. Including them as separate content fields is redundant and increases event size. The validator extracts these from the tx envelope at Layer 3 validation. Redundant fields are preserved as a convenience for Layer 2 structural validation (quick schema check before crypto work), but clients MUST NOT trust them independently of the tx envelope.
 
 ### Kind 39003 — Preauth Bid Take (inner event, BEFORE gift wrap)
 

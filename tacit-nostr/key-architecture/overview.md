@@ -45,3 +45,16 @@ tags: [["bitcoin-sig", <64-byte Schnorr sig over "tacit-nostr-bind-v1:<nostr_pub
 ```
 
 The binding sig is validated by the client: `verifySchnorr(binding_sig, SHA256("tacit-nostr-bind-v1:<nostr_pubkey_hex>"), bitcoin_xonly)`. If it passes, the Nostr pubkey is authorized to act for the Bitcoin key. This is only needed for off-chain reputation or dispute resolution.
+
+## ECDH with X-Only Pubkeys
+
+Nostr event `pubkey` is always 32-byte xonly (BIP-340), but tacit's ECDH functions (`src/crypto/ecdh.ts`) expect a 33-byte compressed key. Parity recovery is needed:
+
+1. The `recipient_pubkey` field in kind 39002 content is specified as 33-byte (with prefix byte `0x02` or `0x03`). The event's own `pubkey` is 32-byte xonly. These are the same point, just different encodings.
+2. For ECDH with a Nostr `pubkey` (32-byte xonly), the client MUST try both even (`0x02`) and odd (`0x03`) prefix bytes. The `bytesToPoint` call in `src/crypto/ecdh.ts:deriveBlinding` handles this correctly — it reconstructs the full point from the 33-byte encoding and returns null for invalid points.
+3. **Convention**: tacit-nostr events SHOULD include a `pubkey_parity` tag (`["pubkey_parity", "0"]` or `["pubkey_parity", "1"]`) to avoid trial decryption. If absent, clients MUST try both parities.
+
+This applies to:
+- NIP-44 gift-wrap encryption (ECDH conversation key)
+- tacit ECDH blinding derivation (`deriveBlinding`)
+- All `p` tag references

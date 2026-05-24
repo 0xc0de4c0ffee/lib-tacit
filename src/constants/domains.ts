@@ -41,6 +41,7 @@ export const DEPOSIT_DOMAIN           = 'tacit-deposit-v1';
 export const DROP_DOMAIN              = 'tacit-drop-v1';
 export const DROP_RECLAIM_DOMAIN      = 'tacit-drop-reclaim-v1';
 export const WRAPPER_ATTEST_DOMAIN    = 'tacit-wrapper-attest-v1';
+export const NOSTR_BIND_DOMAIN        = 'tacit-nostr-bind-v1';
 
 // --- Off-chain signing domains ---
 export const OPENING_MSG_DOMAIN      = 'tacit-opening-v1';

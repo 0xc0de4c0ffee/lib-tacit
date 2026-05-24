@@ -109,3 +109,13 @@ type OrderbookEntry = {
 ```
 
 Entries are sorted by `priceSats` ascending (for asks) or descending (for bids). Unfillable entries are hidden but not deleted — they may become fillable again (e.g., if the spend tx is replaced).
+
+## Client-Side Event Cache
+
+A client restart after a week of market activity means re-downloading and re-validating potentially thousands of events across N relays. To avoid this:
+
+1. **Local cache**: Clients SHOULD persist validated events in IndexedDB (browser) or SQLite (desktop/mobile), indexed by event ID.
+2. **Cache freshness**: On restart, the client loads cached events, then subscribes to new events since the last `created_at` watermark.
+3. **Staleness check**: Cached events with an `expiration` tag in the past are dropped on load. Events referencing UTXOs that may have been spent require a chain re-check (Layer 4 re-validation).
+4. **Cache invalidation**: If a cached event's referenced UTXO is confirmed spent, the event is marked `unfillable` (not deleted — the bid may have been replaced, not filled).
+5. **Storage limit**: Clients SHOULD cap the cache at a configurable limit (default: 10,000 events) and evict the oldest by `created_at`.

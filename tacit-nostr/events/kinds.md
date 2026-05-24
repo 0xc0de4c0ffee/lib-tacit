@@ -9,7 +9,7 @@ Tacit-nostr uses the **39xxx** range (application-specific, unregistered in NIPs
 
 | Kind | Name | NIP-01 type | Wrapped? | Notes |
 |------|------|-------------|----------|-------|
-| 39000 | asset-listing | Addressable (`d` = axis/asset pair) | No | Updated when price/quantity changes |
+| 39000 | asset-listing | Addressable (`d` = asset pair ID) | No | Updated when price/quantity changes |
 | 39001 | atomic-intent | Regular | No | Expires after 5 min (client-filtered) |
 | 39002 | preauth-bid | Regular | No | Expires at `expiration` tag |
 | 39003 | preauth-bid-take | Regular | Yes (NIP-59) | Inner content before wrap |
@@ -41,7 +41,7 @@ Tacit-nostr uses the **39xxx** range (application-specific, unregistered in NIPs
 
 ### Tag value formats
 
-- `d` tag: `"<asset_id_hex>"` for asset listings, `"<drop_id_hex>"` for drops
+- `d` tag: `"<asset_id_hex>"` for single-asset listings, `"<asset_a_id>~<asset_b_id>"` for trading pair listings, `"<drop_id_hex>"` for drops
 - `a` tag: `"39000:<pubkey_hex>:<asset_pair_id>"` — standard NIP-01 addressable event reference
 - `e` tag: `"<event_id_hex>"` — standard NIP-01 event reference
 - `p` tag: `"<32-byte hex pubkey>"` — standard NIP-01 pubkey reference

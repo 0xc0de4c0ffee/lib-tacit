@@ -18,6 +18,8 @@ Standard Nostr relay. Stores and forwards events. No tacit-specific validation.
 
 **Usage in tacit-nostr:** Sufficient for public events (listings, bids, DROP announces). Insufficient for wrapped events (relay needs AUTH to serve them privately).
 
+> **⚠️ Metadata leakage on Tier 1:** Even for wrapped events, a Tier 1 relay with no AUTH will serve kind 1059 events to any subscriber. While the `p` tag routes the event to the correct recipient, the relay (and any subscriber) observes "Alice received a wrapped event at time T, then a settlement tx appeared at T+1" — de-anonymizing the taker. Tier 1 is sufficient only when the user accepts this metadata leakage (e.g., for low-value trades or with per-session keys). For privacy-sensitive trading, use Tier 2 or Tier 3 relays that require AUTH to serve kind 1059 events.
+
 ## Tier 2 — Tacit-Validating Relay
 
 A Nostr relay that additionally validates embedded tacit data before accepting events.
