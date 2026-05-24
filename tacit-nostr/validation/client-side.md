@@ -34,9 +34,10 @@ Implementation: `verifySchnorr(sig, id, pubkey)` from `src/crypto/schnorr.ts`.
 
 - [ ] Embedded Bitcoin tx: `payload[0]` matches expected opcode (0x5B for bid, 0x26 for sale) ✓
 - [ ] Embedded tx: SIGHASH flag on pre-signed input is `0x83` (SINGLE|ACP) ✓
-- [ ] Kernel sig verifies: `verifyKernel(kernel_sig, asset_id, inputs, output_commitments, burned?)` ✓
+- [ ] **Key binding**: If kind 39010 exists for the event author, verify both `tacit-sig` and `bitcoin-sig`. The kernel sig and bulletproof MUST be verified against the **tacit key** from the binding, NOT the event `pubkey` ✓
+- [ ] Kernel sig verifies: `verifyKernel(kernel_sig, asset_id, inputs, output_commitments, burned?)` against the **tacit key** ✓
 - [ ] Bulletproof verifies: `bppRangeVerify(output_commitments, rangeproof)` or `bpRangeAggVerify(commitments, proof)` ✓
-- [ ] Event `pubkey` (xonly) matches the xonly pubkey in the embedded Bitcoin tx ✓
+- [ ] Event `pubkey` (Nostr identity) matches the binding's `nostr_pubkey` (if binding present) ✓
 
 Implementation: `src/crypto/kernel.ts`, `src/crypto/bulletproofs-plus.ts`, `src/crypto/pedersen.ts`.
 
