@@ -435,7 +435,7 @@ The hardware wallet displays: "This policy is a tacit confidential token wallet.
 ### Byte cost per operation
 
 | Operation | v1 on-chain (B) | v2 script-path (vB) | v2 key-path (vB) | Notes |
-|---|---|---|---|---|---|
+|---|---|---|---|---|
 | CXFER (N=1, classic BP) | 879 | ~258 | N/A | Rangeproof dominates both |
 | CXFER (N=1, BP+) | 782 | ~215 | N/A | BP+ saves ~43 vB in v2 too |
 | T_PETCH (metadata only) | 76 | ~50 | ~16 | Metadata-only; key-path possible via OP_RETURN |

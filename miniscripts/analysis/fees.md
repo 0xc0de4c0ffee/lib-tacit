@@ -16,7 +16,7 @@ Bitcoin transaction fees = (virtual bytes) × (fee rate in sat/vB). The fee rate
 ## Current Tacit Envelope Sizes
 
 | Opcode | Description | vB | Notes |
-|---|---|---|---|---|
+|---|---|---|---|
 | PETCH (0x27) | Permissionless etch | ~76 | Minimal payload: ticker, supply, keys |
 | CETCH (0x21) | Conf. etch | ~120 | Adds commitment to block |
 | **CXFER (0x23)** | **Conf. transfer** | **~368** | **2 outputs: asset + change; BP range proof. 879 B script = 879 WU. Non-witness: 139 B × 4 = 556 WU. Total: 556 + 879 + 34 (ctrl) = 1469 WU → 368 vB** |
@@ -89,9 +89,9 @@ Sizes for a taproot miniscript spend of a CXFER-like UTXO.
 
 | Fee Rate | CXFER (env.) | Key Path | Script Path | PETCH (env.) |
 |---|---|---|---|---|
-| 10 sat/vB | 3,050 sats ($2.67) | 1,050 sats ($0.92) | 1,230 sats ($1.08) | 760 sats ($0.66) |
-| 50 sat/vB | 15,250 sats ($13.34) | 5,250 sats ($4.59) | 6,150 sats ($5.38) | 3,800 sats ($3.32) |
-| 250 sat/vB | 76,250 sats ($66.72) | 26,250 sats ($22.97) | 30,750 sats ($26.91) | 19,000 sats ($16.62) |
+| 10 sat/vB | 3,680 sats ($3.22) | 1,050 sats ($0.92) | 1,230 sats ($1.08) | 760 sats ($0.66) |
+| 50 sat/vB | 18,400 sats ($16.10) | 5,250 sats ($4.59) | 6,150 sats ($5.38) | 3,800 sats ($3.32) |
+| 250 sat/vB | 92,000 sats ($80.50) | 26,250 sats ($22.97) | 30,750 sats ($26.91) | 19,000 sats ($16.62) |
 
 *Assumes $87,000/BTC (market price ~May 2026).*
 
@@ -119,10 +119,27 @@ Sizes for a taproot miniscript spend of a CXFER-like UTXO.
 ### 100,000 CXFER Transactions
 
 | Scenario | Total sats | Total BTC | Total USD |
+|---|---|---|---|---|
+| Current envelope | 3,680,000 | 0.0368 | $3,202 |
+| Key path | 1,050,000 | 0.0105 | $914 |
+| Script path | 1,230,000 | 0.0123 | $1,070 |
+| **Savings (key vs env)** | **2,630,000** | **0.0263** | **$2,288** |
+
+### 10,000 CXFER Transactions
+
+| Scenario | Total sats | Total BTC | Total USD |
 |---|---|---|---|
-| Current envelope | 305,000,000 | 3.05 | $265,350 |
+| Current envelope | 36,800,000 | 0.368 | $32,016 |
+| Key path | 10,500,000 | 0.105 | $9,135 |
+| **Savings** | **26,300,000** | **0.263** | **$22,881** |
+
+### 100,000 CXFER Transactions
+
+| Scenario | Total sats | Total BTC | Total USD |
+|---|---|---|---|
+| Current envelope | 368,000,000 | 3.68 | $320,160 |
 | Key path | 105,000,000 | 1.05 | $91,350 |
-| **Savings** | **200,000,000** | **2.00** | **$174,000** |
+| **Savings** | **263,000,000** | **2.63** | **$228,810** |
 
 At scale, the fee savings from key-path spends alone could offset the development cost of miniscript integration within the first ~10,000 transactions.
 
@@ -149,9 +166,9 @@ The anchor is a fixed overhead that applies equally to all approaches. It's opti
 |---|---|---|---|
 | **Base output** | 43 vB | 32 vB | 43 vB (P2TR) |
 | **Witness overhead** | ~262 vB | ~83 vB | ~62 vB (key) / ~80 vB (script) |
-| **Total CXFER** | ~305 vB | ~115 vB | ~105 vB (key) |
-| **% of envelope** | 100% | ~38% | ~34% |
-| **Annual savings (10k txs, 50 sat/vB)** | — | 1.0 BTC | 1.04 BTC |
+| **Total CXFER** | ~368 vB | ~115 vB | ~105 vB (key) |
+| **% of envelope** | 100% | ~31% | ~29% |
+| **Annual savings (10k txs, 50 sat/vB)** | — | 1.265 BTC | 1.315 BTC |
 
 ---
 

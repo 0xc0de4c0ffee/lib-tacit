@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Trailmark — standalone + cross-comparison reports for tacit-specs and src."""
 
-import pathlib, sys
+import pathlib
 from trailmark.parse import parse_directory
 from trailmark.query.api import QueryEngine
 from trailmark.models import NodeKind
@@ -168,7 +168,7 @@ def main():
            "4. **In src only**: TypeScript types, barrel re-exports, modular boundaries not in mono-JS ref.\n",
            "5. **In ref only**: Dapp orchestration (buildAndBroadcast*, wallet UX, UI) intentionally omitted.\n"]
 
-    (OUT / "audit-report.md").write_text("".join(xs))
+    (OUT / "audit-report.md").write_text("\n".join(xs))
     print("  wrote audit-report.md")
 
 if __name__ == "__main__":
