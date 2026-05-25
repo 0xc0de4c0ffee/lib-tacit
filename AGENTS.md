@@ -157,7 +157,7 @@ Decoders never substitute for layer 3.
 
 ## Reference Submodule
 
-The `tacit-specs/` directory is a git submodule at `4264fa3` pointing at `https://github.com/z0r0z/tacit`. Key reference files:
+The `tacit-specs/` directory is a git submodule at `c2ee202` pointing at `https://github.com/z0r0z/tacit`. Key reference files:
 
 | File | Purpose |
 |------|---------|
