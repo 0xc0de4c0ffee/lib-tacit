@@ -1,9 +1,8 @@
 # lib-tacit Review: Comparison with tacit-specs Reference
 
-> Updated: 2026-05-23
-> Reference commit: `6e1d3c7` (z0r0z/tacit) — refresh with `bun run specs:pull`
-> lib-tacit HEAD: `766373a`
-> **419 tests passing**, 2576 expect calls, 39 test files
+> Updated: 2026-05-25
+> Reference commit: `c2ee202` (z0r0z/tacit) — refresh with `bun run specs:pull`
+> **523 tests passing**, 2840 expect calls, 42 test files
 
 ## Full Comparison Table
 
@@ -55,7 +54,9 @@
 | `recipientScanTxForStealth` | tacit.js:4305 | `stealth.ts` | ✅ Match | §H.1 one ECDH per tx |
 | `stealthTxAnchorHead` | tacit.js:4267 | `stealth.ts` | ✅ Match | alias of `buildAnchor` |
 | `senderComputeSilentPaymentOutput` | tacit.js:4371+ | `silent-payments.ts` | ✅ Ported | BIP-352 native sats send |
+| `senderScanTxForSilentPayments` | tacit.js | `silent-payments.ts` | ✅ Ported | BIP-352 receiver scan |
 | `decodeSilentPaymentAddress` | tacit.js:4382 | `silent-payments.ts` | ✅ Ported | BIP-352 sp1… addresses |
+| `receiverScanTxForSilentPayments` | tacit.js | `silent-payments.ts` | ✅ Ported | BIP-352 receiver scanning |
 | `xor32` | (new) | `primitives.ts` | ✅ Added | XOR two 32-byte arrays for encryption/commitment |
 | `ipfsFetchVerified` | (new) | `ipfs.ts` | ✅ Added | Trustless IPFS via helia + gateway fallback |
 | `cidToV1` | (new) | `ipfs.ts` | ✅ Added | CIDv0 → CIDv1 conversion for consistency |
@@ -108,10 +109,28 @@
 | T_WITHDRAW (0x2A) | tacit.js:6819 | `withdraw.ts:31` | `withdraw.ts:54` | ✅ Fixed | Added `proofLen === 0` guard; moved denom check before proof parse |
 | T_DROP (0x2B) | tacit.js:6399/6436 | `drop.ts:65/100` | `drop.ts:124` | ✅ Match | Standard + reclaim shapes |
 | T_DCLAIM (0x2C) | tacit.js:6533 | `dclaim.ts:37` | `dclaim.ts:81` | ✅ Match |
+| T_SWAP_VAR (0x32) | tacit.js:10589 | `amm-swap.ts` | `amm-swap.ts` | ✅ Match | Full encode/decode + pool helpers |
+| T_SWAP_ROUTE (0x33) | tacit.js:10656 | `amm-swap.ts` | `amm-swap.ts` | ✅ Match | Full encode/decode, N_HOPS_MAX=4 |
 | T_AXFER_VAR (0x37) | tacit.js:5859 | `axfer-var.ts:23` | `axfer-var.ts:44` | ✅ Match |
 | T_WRAPPER_ATTEST (0x38) | tacit.js:5498 | `wrapper-attest.ts:20` | `wrapper-attest.ts:33` | ✅ Match |
-| T_AXFER_BPP (0x3C) | tacit.js (dapp) | `axfer-bpp.ts` | `axfer-bpp.ts` | ❌ stub | BP+ variant of T_AXFER; types + stub codec |
-| T_AXFER_VAR_BPP (0x3D) | tacit.js (dapp) | `axfer-var-bpp.ts` | `axfer-var-bpp.ts` | ❌ stub | BP+ variant of T_AXFER_VAR; types + stub codec |
+| T_AXFER_BPP (0x3C) | tacit.js (dapp) | `axfer-bpp.ts` | `axfer-bpp.ts` | ✅ Match | BP+ variant of atomic settlement |
+| T_AXFER_VAR_BPP (0x3D) | tacit.js (dapp) | `axfer-var-bpp.ts` | `axfer-var-bpp.ts` | ✅ Match | BP+ variant of variable-amount settlement |
+| T_SLOT_MINT (0x43) | tacit.js | `slot.ts` | `slot.ts` | ✅ Match | Full encode/decode |
+| T_SLOT_BURN (0x44) | tacit.js | `slot.ts` | `slot.ts` | ✅ Match | Full encode/decode |
+| T_SLOT_ROTATE (0x45) | tacit.js | `slot.ts` | `slot.ts` | ✅ Match | Full encode/decode |
+| T_SLOT_SPLIT (0x46) | tacit.js | `slot.ts` | `slot.ts` | ✅ Match | Full encode/decode |
+| T_SLOT_MERGE (0x47) | tacit.js | `slot.ts` | `slot.ts` | ✅ Match | Full encode/decode |
+| T_CBTC_TAC_DEPOSIT (0x49) | tacit.js | `cbtc-tac.ts` | `cbtc-tac.ts` | ✅ Match | Full encode/decode |
+| T_CBTC_TAC_WITHDRAW (0x4A) | tacit.js | `cbtc-tac.ts` | `cbtc-tac.ts` | ✅ Match | Full encode/decode |
+| T_CBTC_TAC_FORCE_CLOSE (0x4B) | tacit.js | `cbtc-tac.ts` | `cbtc-tac.ts` | ✅ Match | Full encode/decode |
+| T_CTAC_LIEN_CLAIM (0x4C) | tacit.js | `cbtc-tac.ts` | `cbtc-tac.ts` | ✅ Match | Full encode/decode |
+| T_CTAC_LIEN_SPLIT (0x4F) | tacit.js | `cbtc-tac.ts` | `cbtc-tac.ts` | ✅ Match | Full encode/decode |
+| T_CBTC_TAC_DEPOSIT_ATOMIC (0x57) | tacit.js | `cbtc-tac.ts` | `cbtc-tac.ts` | ✅ Match | Full encode/decode |
+| T_CBTC_TAC_WITHDRAW_ATOMIC (0x58) | tacit.js | `cbtc-tac.ts` | `cbtc-tac.ts` | ✅ Match | Full encode/decode |
+| T_CBTC_TAC_TOP_UP (0x59) | tacit.js | `cbtc-tac.ts` | `cbtc-tac.ts` | ✅ Match | Full encode/decode |
+| T_CBTC_TAC_BOND_RELEASE (0x5A) | tacit.js | `cbtc-tac.ts` | `cbtc-tac.ts` | ✅ Match | Full encode/decode |
+| T_PREAUTH_BID (0x5B) | tacit.js | `preauth-bid.ts` | `preauth-bid.ts` | ✅ Match | Full encode/decode/context-hash |
+| T_PREAUTH_BID_VAR (0x5C) | tacit.js | `preauth-bid-var.ts` | `preauth-bid-var.ts` | ✅ Match | Full encode/decode/context-hash |
 
 ### Envelope Script
 
@@ -119,34 +138,47 @@
 |----------|----------|---------|--------|-------|
 | `encodeEnvelopeScript` | tacit.js:5607-5618 | `script.ts:36` | ✅ Match |
 | `decodeEnvelopeScript` | tacit.js:5621-5670 | `script.ts:66` | ✅ Match |
-| `ENVELOPE_MAGIC` | tacit.js:5580 | `domains.ts:109` | ✅ Match | "TACIT" |
-| `ENVELOPE_VERSION` | tacit.js:5581 | `domains.ts:110` | ✅ Match | 0x01 |
+| `ENVELOPE_MAGIC` | tacit.js:5580 | `domains.ts` | ✅ Match | "TACIT" |
+| `ENVELOPE_VERSION` | tacit.js:5581 | `domains.ts` | ✅ Match | 0x01 |
 
 ### Domain Tags
 
-| Tag | Ref line | Lib file | Status |
-|-----|---------|---------|--------|
-| `tacit-blind-v1` | 3782 | `domains.ts:6` | ✅ Match |
-| `tacit-change-v1` | 3863 | `domains.ts:7` | ✅ Match |
-| `tacit-etch-v1` | 3877 | `domains.ts:8` | ✅ Match |
-| `tacit-etch-amount-v1` | 3878 | `domains.ts:9` | ✅ Match |
-| `tacit-mint-blind-v1` | 3890 | `domains.ts:10` | ✅ Match |
-| `tacit-mint-amount-v1` | 3891 | `domains.ts:11` | ✅ Match |
-| `tacit-amount-v1` | 3906 | `domains.ts:12` | ✅ Match |
-| `tacit-amount-self-v1` | 3907 | `domains.ts:13` | ✅ Match |
-| `tacit-kernel-v1` | 6067 | `domains.ts:16` | ✅ Match |
-| `tacit-mint-v1` | 6155 | `domains.ts:17` | ✅ Match |
-| `tacit-drop-v1` | 6675 | `domains.ts:34` | ✅ Match |
-| `tacit-drop-reclaim-v1` | 6696 | `domains.ts:35` | ✅ Match |
-| `tacit-withdraw-bind-v1` | 4495 | `domains.ts:67` | ✅ Match |
-| `tacit-cxfer-stealth-v1` | 3943 | `domains.ts:104` | ✅ Match |
-| `tacit-axfer-stealth-v1` | 3944 | `domains.ts:105` | ✅ Match |
-| `tacit-axfer-var-stealth-v1` | 3945 | `domains.ts:106` | ✅ Match |
-| `tacit-generator-H-v1` | 3794 | `domains.ts:52` | ✅ Match |
-| `tacit-bp-G-v1` | — | `domains.ts:53` | ✅ Match |
-| `tacit-bp-H-v1` | — | `domains.ts:54` | ✅ Match |
-| `tacit-bp-Q-v1` | — | `domains.ts:55` | ✅ Match |
-| `tacit-bp-v1` | — | `domains.ts:58` | ✅ Match |
+Full domain tag table in `src/constants/domains.ts` (previously missing tags now added):
+
+| Tag | Ref | Lib | Status |
+|-----|-----|-----|--------|
+| `tacit-bid-intent-v1` | tacit.js | domains.ts:26 | ✅ Fixed (was missing -v1 suffix) |
+| `tacit-bid-claim-v1` | tacit.js | domains.ts:27 | ✅ Fixed (was missing -v1 suffix) |
+| `tacit-swap-route-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-amm-receipt-secp-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-amm-receipt-bjj-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-amm-xcurve-seed-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-claim-pool-lp-asset-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-slot-mint-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-slot-rotate-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-slot-split-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-slot-merge-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-slot-btc-key-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-slot-secret-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-slot-nullifier-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-cbtc-tac-variant-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-cbtc-tac-deposit-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-cbtc-tac-withdraw-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-cbtc-tac-force-close-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-cbtc-tac-recovery-blinding-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-ctac-lien-split-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-ctac-deposit-atomic-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-ctac-withdraw-atomic-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-ctac-topup-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-ctac-release-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-cbtc-tac-atomic-mint-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-share-slash-claim-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-share-slash-claim-blind-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-bridge-deposit-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-bridge-burn-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-mixer-deposit-secret-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-mixer-deposit-nullifier-v1` | tacit.js | domains.ts | ✅ Added |
+| `tacit-pool-empty-v1` | tacit.js | domains.ts | ✅ Added |
 
 ### Transaction Layer
 
@@ -161,9 +193,8 @@
 | `txid` | tacit.js:610 | `sighash.ts:182` | ✅ Match |
 | `p2wpkhScript` | tacit.js:500 | `address.ts:7` | ✅ Match |
 | `p2wpkhAddress` | tacit.js:501 | `address.ts:15` | ✅ Match |
-| `buildCommitTx` | (ref tests) | `builder.ts:30` | ✅ Match |
-| `buildRevealTx` | (ref tests) | `builder.ts:43` | ✅ Match |
-| `computeAssetIdFromTx` | tacit.js:3785 | `builder.ts:62` | ✅ Match |
+| `signP2wpkhInput` | tacit.js:18011 | `sighash.ts` | ✅ Fixed | Was using Schnorr — now ECDSA DER per BIP-143 |
+| `derSignEcdsa` | tacit.js:623-642 | `sighash.ts` | ✅ Added | DER encoder from compact (r,s) per X.690 |
 | `preauthSellerSpendSighash` | composition.mjs:282-312 | `sighash.ts:115` | ✅ Match | Pinned vector verified |
 
 ### Wallet
@@ -187,50 +218,37 @@
 | Chain scanner | tacit.js | `recovery/scanner.ts` | ✅ Added | scanForUTXOs batch fetch + envelope detect |
 | ECDH trial-decrypt | tacit.js | `recovery/decrypt.ts` | ✅ Added | tryDecryptOutput + batch |
 
-### Validation
+## Notable Bugs Found and Fixed
 
-| Function | Ref file | Lib file | Status | Notes |
-|----------|----------|----------|--------|-------|
-| `validateAncestry` | (ancestry walker) | `validation/validator.ts` | ✅ Added | Wraps AncestryWalker.walkAncestry |
-| `checkSupplyConservation` | (kernel helper) | `validation/supply.ts` | ✅ Added | Excess point non-degenerate check |
+### 1. `signP2wpkhInput` used Schnorr instead of ECDSA
+**File:** `src/transaction/sighash.ts` (fixed 2026-05-25)
+**Impact:** P2WPKH spends require DER-encoded ECDSA signatures per BIP-143. The previous implementation used `signSchnorr`, which produces BIP-340 Schnorr signatures incompatible with legacy segwit. Any wallet or broadcaster consuming this function would produce witnesses rejected by Bitcoin nodes.
+**Fix:** Replaced with `secp.sign()` (ECDSA DER) + custom `derSignEcdsa()` helper appending the sighash byte. Mirrors the dapp's `derEncodeFromCompact()` approach at `tacit.js:623-642`.
 
-### Recovery
-
-| Function | Ref file | Lib file | Status | Notes |
-|----------|----------|----------|--------|-------|
-| `scanForUTXOs` | (chain scan) | `recovery/scanner.ts` | ✅ Added | Batch UTXO fetch + envelope detection |
-| `tryDecryptOutput` | tacit.js | `recovery/decrypt.ts` | ✅ Added | ECDH self-decrypt path |
-| `tryDecryptOutputs` | tacit.js | `recovery/decrypt.ts` | ✅ Added | Batch variant |
-
-## Opcode Assignments
-
-| Hex | Opcode | Section | Status | Notes |
-|-----|--------|---------|--------|-------|
-| `0x3C` | T_AXFER_BPP | — | ✅ Shipped | BP+ variant of T_AXFER. Stub codec in `axfer-bpp.ts`. |
-| `0x3D` | T_AXFER_VAR_BPP | — | ✅ Shipped | BP+ variant of T_AXFER_VAR. Stub codec in `axfer-var-bpp.ts`. |
-| `0x59–0x5A` | T_CBTC_TAC_TOP_UP / T_CBTC_TAC_BOND_RELEASE | §5.50–5.51 | ❌ stub | Moved from `0x59` free slot in prior SPEC; now matches dapp ground truth. |
-| `0x5B` | T_PREAUTH_BID | §5.7.11 | ✅ Shipped | Promoted from drafted per spec commit 5979c1c. |
-| `0x5C` | T_PREAUTH_BID_VAR | §5.7.12 | ✅ Shipped | Promoted from drafted; signet-validated end-to-end. |
-| `0x5D–0x5E` | T_PREAUTH_BID_BATCH / T_PREAUTH_MATCH | preauth-family | 🔒 Reserved | Preauth/offline-trading follow-ups. |
-
-See `src/constants/opcodes.ts` for the full table.
-
-## Bugs Found and Fixed During Review
-
-### 1. `decodeWithdraw` — Missing zero-length proof guard
+### 2. `decodeWithdraw` — Missing zero-length proof guard
 **File:** `src/opcodes/withdraw.ts:72` (fixed)
 **Impact:** A zero-length `proof` field would be accepted by the decoder. The reference rejects `proofLen === 0` (tacit.js:6862). A zero-length Groth16 proof is invalid per SPEC §5.11.
 **Fix:** Added `if (proofLen === 0) return null;` before the length-exactness check. Also relocated the `denomination` range check before proof parse for early rejection.
 
-### 2. `encodePoolInit` — Missing CID length validation
+### 3. `encodePoolInit` — Missing CID length validation
 **File:** `src/opcodes/deposit.ts:69` (fixed)
 **Impact:** `vkCid` and `ceremonyCid` were accepted at any length, including zero. The reference requires 1–64 bytes (tacit.js:6749-6750). Empty CIDs would produce malformed pool-init envelopes.
 **Fix:** Added `vkCid.length` and `ceremonyCid.length` range checks (1–64).
 
-### 3. `decodeDeposit` — Missing CID length bounds
+### 4. `decodeDeposit` — Missing CID length bounds
 **File:** `src/opcodes/deposit.ts:96-99` (fixed)
-**Impact:** The decoder accepted zero-length or >64-byte CIDs. The reference rejects these (tacit.js:6788, 6793). An adversarial envelope with out-of-bounds CIDs would decode successfully.
+**Impact:** The decoder accepted zero-length or >64-byte CIDs. The reference rejects these (tacit.js:6788, 6793).
 **Fix:** Added `vkCidLen < 1 || vkCidLen > 64` and `ceremonyCidLen < 1 || ceremonyCidLen > 64` guards.
+
+### 5. Missing `-v1` suffix on BID_INTENT_DOMAIN and BID_CLAIM_DOMAIN
+**File:** `src/constants/domains.ts:26-27` (fixed 2026-05-25)
+**Impact:** Domain tags `tacit-bid-intent` and `tacit-bid-claim` were missing the `-v1` suffix mandated by SPEC §3.5. This would produce different HMAC keys between implementations, causing cross-implementation verification failures for preauth-bid signatures.
+**Fix:** Changed to `tacit-bid-intent-v1` and `tacit-bid-claim-v1`.
+
+### 6. `SWAP_ROUTE_N_HOPS_MAX` was 8, should be 4
+**File:** `src/constants/limits.ts` (fixed 2026-05-25)
+**Impact:** Encode/decode functions accepted 2–8 hops per route, but the reference rejects >4 hops (tacit.js:6152, SPEC §5.22). An indexer using our library could accept invalid envelopes.
+**Fix:** Changed constant to `4`.
 
 ## Design Divergences (Intentional)
 
@@ -238,40 +256,51 @@ See `src/constants/opcodes.ts` for the full table.
 |------|-----------|-----------|-----------|
 | `decodeTWithdrawPayload` `bindHash` check | Computes expected `bindHash` via `computeWithdrawBindHash` during decode | Does NOT verify during decode | Per `docs/crypto/validation.md`, decoders are layer 1 (wire) only. Crypto verification is layer 3. |
 | Proof-of-reserve helpers | Inline in dapp | Not ported | DApp-layer logic; library provides primitives |
+| Encode/decode naming | `encodeCXferPayload` / `decodeCXferPayload` | `encodeCXfer` / `decodeCXfer` | Shorter names, same signatures |
+| Naming convention | Destructured object params | Typed interfaces | TypeScript-idiomatic; same wire output |
+| Bridge opcodes (0x60-0x63) | In dapp (POC) | Not ported | Upstream ETH bridge POC, not shipped. Add when protocol-activation ceremony published. |
 
-## Open Gaps (vs reference @ `6e1d3c7`)
+## Open Gaps (vs reference @ `c2ee202`)
 
 | Area | Reference | lib-tacit | Priority |
 |------|-----------|-----------|----------|
 | `computeWithdrawBindHash` | tacit.js:4504 | not ported | low — crypto verify function |
-| Slot opcodes `0x43`–`0x47` | dapp encode/decode shipped | types + throw stubs | high for cBTC.zk wallets |
-| cBTC.tac `0x49`–`0x4F`, `0x57`–`0x5A` | dapp encode/decode shipped | types + throw stubs | high for lien model |
-| Drafted AMM/farm/gov `0x2D`–`0x56` | amendments + partial dapp | type stubs only | low |
+| Bind-hash compute functions (cbtc-tac, slot) | tacit.js (dapp) | not ported | low — crypto verify functions |
+| Bridge opcode encode/decode (0x60-0x63) | tacit.js (dapp POC) | not ported | low — upstream POC, not shipped |
+| Drafted AMM/farm/gov `0x2D`–`0x56` | amendments + partial dapp | type stubs only (amm-drafts, farm-drafts, gov-drafts) | low |
+| T_TRADE_BATCH (0x39), T_RANGE_ATTEST (0x3A) | amendments | no file exists | low |
+| On-chain OP_RETURN helpers | tacit.js (dapp) | not ported | low — auxiliary recovery helpers |
 
-## Closed Gaps (crypto + core wire)
+## Closed Gaps
 
 | Gap | Status |
 |-----|--------|
 | BP+ prover/verifier | ✅ `bulletproofs-plus.ts` |
 | Poseidon / Groth16 | ✅ wrapped |
-| Class-2 blinded-pubkey stealth (full rewrite matching df064be) | ✅ `stealth.ts` (ported from stealth-primitives / dapp patch) |
-| BIP-352 silent payments | ✅ `silent-payments.ts` (`senderComputeSilentPaymentOutput`, `decodeSilentPaymentAddress`) |
+| Class-2 blinded-pubkey stealth | ✅ `stealth.ts` (ported from stealth-primitives/dapp) |
+| BIP-352 silent payments (sender + receiver) | ✅ `silent-payments.ts` |
 | AXINTENT message variants | ✅ `kernel.ts` (`axintentClaimMsg`, `axintentFulfilMsg`, `axintentCancelMsg`, `bidIntentMsg`) |
-| T_AXFER_BPP / T_AXFER_VAR_BPP | ✅ `axfer-bpp.ts`, `axfer-var-bpp.ts` (stub wire codec) |
+| T_AXFER_BPP / T_AXFER_VAR_BPP (0x3C/0x3D) | ✅ `axfer-bpp.ts`, `axfer-var-bpp.ts` (full encode/decode) |
+| Slot opcodes 0x43–0x47 | ✅ `slot.ts` (full encode/decode) |
+| cBTC.tac opcodes 0x49–0x4F, 0x57–0x5A | ✅ `cbtc-tac.ts` (full encode/decode) |
+| T_SWAP_VAR / T_SWAP_ROUTE (0x32/0x33) | ✅ `amm-swap.ts` (full encode/decode + pool helpers) |
 | Shipped transfer-family wire `0x21`–`0x2C`, `0x37`–`0x38`, `0x5B`–`0x5C` | ✅ encoders/decoders + tests |
 | Validation + recovery | ✅ `validation/`, `recovery/` |
 | XOR32 primitive | ✅ `primitives.ts` |
 | IPFS verified fetch + CID conversion | ✅ `ipfs.ts` (`ipfsFetchVerified`, `cidToV1`) |
 | Taproot sighash primitives | ✅ `sighash.ts` (`taggedHash`, `tapLeafHash`, `tweakedOutputKey`, `controlBlock`) |
+| P2WPKH ECDSA signing | ✅ `sighash.ts:derSignEcdsa` — fixed 2026-05-25 |
+| Domain tag `-v1` suffix correctness | ✅ `domains.ts:26-27` — fixed 2026-05-25 |
+| SWAP_ROUTE_N_HOPS_MAX = 4 | ✅ `limits.ts:27` — fixed 2026-05-25 |
 
 ## Test Status
 
-**419 tests passing**, 2576 expect calls across 39 test files.
+**523 tests passing**, 2840 expect calls across 42 test files.
 
 | Test file | Count | Coverage |
 |-----------|-------|----------|
 | `tests/crypto/kernel.test.ts` | 34 | Kernel msg, sign/verify, E'=0, domain tags, axintent/bid msg variants |
-| `tests/crypto/silent-payments.test.ts` | 15 | BIP-352 decode, sender compute, outpoint bytes, tagged hash |
+| `tests/crypto/silent-payments.test.ts` | 15 | BIP-352 decode, sender compute, receiver scan, outpoint bytes, tagged hash |
 | `tests/crypto/stealth.test.ts` | 15 | Codec, ECDH, commit, classifier, scan |
 | `tests/crypto/msm.test.ts` | 15 | Pippenger MSM, signed-digit windowed |
 | `tests/crypto/ecdh.test.ts` | 11 | Blinding, keystream, encrypt/decrypt |
@@ -284,80 +313,25 @@ See `src/constants/opcodes.ts` for the full table.
 | `tests/crypto/groth16.test.ts` | 6 | snarkjs verify (optional) |
 | `tests/crypto/fixture-signing.test.ts` | 5 | Deterministic 0xaa..aa key |
 | `tests/crypto/primitives.test.ts` | 8 | xor32 identity, symmetry, length |
-| `tests/opcodes/16 files` | ~130 | All shipped + stub opcodes: round-trips, decode reject, truncated, boundary |
+| `tests/opcodes/slot.test.ts` | 33 | Slot (0x43-0x47) encode/decode round-trips, decode rejection, boundary |
+| `tests/opcodes/cbtc-tac.test.ts` | 36 | cBTC.tac (0x49-0x5A) encode/decode round-trips, decode rejection |
+| `tests/opcodes/amm-swap.test.ts` | 30 | T_SWAP_VAR (0x32) + T_SWAP_ROUTE (0x33) encode/decode + pool helpers |
+| `tests/opcodes/ (remaining 18 files)` | ~130 | All shipped opcode encode/decode: round-trips, truncated, boundary, rejected |
 | `tests/envelope.test.ts` | 22 | Encode/decode round-trip, 200 random buffer fuzz, chunking |
 | `tests/indexer/ipfs.test.ts` | 12 | CIDv0/v1 match, cidToV1, corrupt rejection |
-| `tests/transaction/sighash.test.ts` | 25 | ALL/SINGLE/NONE/ACP, taproot primitives |
+| `tests/transaction/sighash.test.ts` | 25 | ALL/SINGLE/NONE/ACP, taproot primitives, ECDSA DER |
 | `tests/validation/2 files` | 17 | Supply conservation, E'=0 degenerate, ancestry |
 | `tests/recovery/decrypt.test.ts` | 6 | ECDH trial-decrypt, batch |
 | `tests/integration/etch-mint-burn.test.ts` | 6 | Full pipeline, BP+, stealth |
 | `tests/indexer/ancestry.test.ts` | 6 | Memoized walks, kernel-sig |
 | `tests/index.test.ts` | 1 | Barrel export completeness |
 
-## MEV & Frontrunning Analysis
+## Opcode Constants
 
-Tacit operates entirely within Bitcoin consensus — every opcode is a Bitcoin transaction spending Taproot outputs. All mempool and consensus properties apply directly. This section describes what is and is not possible under current Bitcoin consensus, referenced against the tacit specification amendments.
+Full opcode table in `src/constants/opcodes.ts`. All 56 entries from SPEC §1.1 covered (shipped, drafted, reserved).
 
-### Miner cannot include two transactions spending the same input in one block
-
-Bitcoin block assembly (Bitcoin Core `CreateNewBlock`) maintains a set of spent outpoints as transactions are added to the template. Any candidate transaction whose input is already in that set is skipped — a second transaction spending the same UTXO would be consensus-invalid and cannot be included. This is identical to how every Bitcoin wallet and protocol (Lightning, RGB, Counterparty, Ordinals) handles double-spend races: **exactly one transaction per outpoint per block**.
-
-If two sellers both take the same preauth-bid (both construct a settlement tx referencing the buyer's pre-signed input), the miner MUST pick at most one. The other sits in the mempool as conflicting until eviction (typically ~2 weeks, or immediately if the winning transaction confirms and the outpoint is spent). This is not a tacit-specific behavior — it is Bitcoin's consensus-level double-spend prevention. Every protocol using pre-signed `SIGHASH_SINGLE|ANYONECANPAY` transactions (Lightning HTLCs, RGB, payjoins) inherits the same constraint.
-
-**The losing transaction pays zero fees.** Bitcoin has no "gas" — an unconfirmed transaction pays nothing to miners. The losing completor's asset UTXO remains spendable. The only economic cost to the loser is the commit-tx fee (the P2TR output they funded is on-chain but their reveal tx could not spend it). This commit-tx loss is structurally identical to any Bitcoin OTC marketplace where two takers race for the same maker order (per SPEC-PREAUTH-BID-AMENDMENT §5.7.11: "Settlement attempts that race against the spend are rejected by Bitcoin consensus (double-spend) at relay time").
-
-### SIGHASH constraint: what a pre-signed tx commits to
-
-Preauth-bid uses `SIGHASH_SINGLE | SIGHASH_ANYONECANPAY` (`0x83`). The signature covers `vin[0]` and `vout[0]` — the buyer's input and locked payout. The completor controls fee (they add their own inputs/outputs). A miner cannot modify the signed fields (signature invalidates at relay time). The only power a miner has over the signed portion is to include or exclude the entire transaction (identical to every Bitcoin transaction).
-
-### Commit-reveal frontrunning (impossible)
-
-A miner seeing both commit and reveal cannot forge a different reveal spending the same P2TR. The kernel signature binds to specific input outpoints and Pedersen commitments — forging requires solving discrete log on secp256k1 (intractable). Same invariant for Bulletproofs and Groth16 proofs: they are commitment-bound, not malleable.
-
-### Preauth-bid (0x5B) SPEC-PREAUTH-BID-AMENDMENT §5.7.11
-
-**Two-seller race**: Both settlement txs spend the buyer's pre-signed `vin[0]`. Only one confirms. The losing seller's asset UTXO is untouched; they lose only their commit-tx fee. This is the same race as every Bitcoin OTC marketplace (the spec explicitly notes this). RBF (BIP-125, wallet policy, not consensus) allows one completor to outbid the other, but neither the buyer's output nor the miner can be cheated.
-
-**Seller-side griefing** (spec §5.7.11): Between the seller's commit broadcast and reveal confirmation, a malicious buyer can double-spend their own funding outpoint. The seller's reveal fails; they lose their commit fee. The buyer gains nothing beyond their own sats — this is not value extraction. The spec recommends a worker-side outspend pre-check to minimize the window (identical to every Bitcoin OTC marketplace).
-
-**Dust pinning**: An attacker with no asset can broadcast a low-fee settlement tx occupying the buyer's input. The honest seller must either replace via RBF or wait for mempool eviction. The preauth-bid spec acknowledges this as a known limitation of the round-1 amendment and defers a buyer-bond mitigation.
-
-### Preauth-sale: symmetric race
-
-Seller pre-signs asset input; multiple buyers compete to add BTC payout inputs. Same cost structure — losing buyer loses commit fee, asset UTXO is returned to the seller's intended counterparty (first confirm wins). The losing buyer's BTC input was never spent.
-
-### DROP/DCLAIM (0x2B/0x2C) per SPEC §5.12–5.13
-
-First valid claim reveal to confirm wins the DROP pool payout. The claim output is pubkey-bound (kernel sig requires the claimant's key). A frontrunner cannot redirect payout — they would need the original claimant's private key. After `expiryHeight`, the issuer reclaims via Schnorr signature (reclaim path is permissioned).
-
-### Atomic intent / T_AXFER (0x26)
-
-Recipient-bound intents (`takerPubkey`) cannot be claimed by anyone else. Unbound intents are fillable by any observer — this is by design (limit order behavior). The 5-minute window is bounded by the worker's claim-gate; after expiry, the intent is no longer fillable.
-
-### Shielded pool (0x29/0x2A)
-
-T_WITHDRAW uses Groth16 over BN254 per §3.7. The nullifier prevents double-spend. A miner cannot forge a withdrawal to a different recipient (proof binds nullifier + recipient commitment + Merkle root — forging requires solving the circuit's NP-relation). T_DEPOSIT appends leaves to the Merkle tree; reordering within a block does not change the block-committed root.
-
-### Cross-opcode domain separation
-
-Every signing domain uses a unique v1 tag (`tacit-kernel-v1`, `tacit-preauth-bid-v1`, `tacit-drop-v1`, etc.) per `src/constants/domains.ts`. Cross-context replay is cryptographically impossible — no miner or third party can substitute one opcode's signature for another.
-
-### Summary
-
-| Surface | Feasibility | Loser's cost | Spec reference |
-|---------|------------|--------------|----------------|
-| Commit censorship | Miner choice | Liveness delay | Bitcoin-native |
-| Commit-reveal frontrun | Impossible (crypto) | None | Kernel sig (discrete log) |
-| Preauth-bid: two completors | Race (one wins) | Loser loses commit fee | SPEC-PREAUTH-BID-AMENDMENT §5.7.11 |
-| Preauth-bid: seller griefing | Possible (costly for attacker) | Seller loses commit fee | §5.7.11 (identical to any BTC OTC) |
-| Preauth-bid: dust pinning | Possible (griefing) | Winner pays replacement fee | §5.7.11 (known limitation) |
-| Preauth-sale: two buyers | Race (one wins) | Loser loses commit fee | SPEC-PREAUTH-BID-AMENDMENT §5.7.8 |
-| DROP: claim race | Race (one wins) | Loser loses commit fee | SPEC §5.12–5.13 |
-| Shielded withdrawal | Impossible (Groth16) | None | SPEC §3.7, §5.11 |
-| Cross-opcode replay | Impossible (domain tags) | None | Domain separation |
-
-**Key properties:**
-- **No losing participant loses their asset** — the loser's reveal tx never confirms; their UTXOs remain spendable. The only loss is the commit-tx fee (~few thousand sats for a P2TR output).
-- **No gas model** — Bitcoin does not charge for unconfirmed transactions. A transaction pays fees only when it confirms.
-- **Every race is one-confirmation-per-outpoint under Bitcoin consensus** — identical to Lightning HTLC races, RGB state transitions, and any Bitcoin OTC marketplace.
-- **Cryptographic invariants prevent output theft** — kernel sigs, Bulletproofs, and Groth16 proofs are commitment-bound. SIGHASH locks protect pre-signed outputs. No miner or third party can forge valid proofs under standard cryptographic assumptions.
+| Hex | Name | Section | Our Status | Notes |
+|-----|------|---------|-----------|-------|
+| `0x3C` | T_AXFER_BPP | — | ✅ Shipped (promoted 2026-05-25) | BP+ variant of T_AXFER. Was drafted, now shipped with full encode/decode. |
+| `0x3D` | T_AXFER_VAR_BPP | — | ✅ Shipped (promoted 2026-05-25) | BP+ variant of T_AXFER_VAR. Was drafted, now shipped with full encode/decode. |
+| `0x60–0x63` | Bridge opcodes (T_BRIDGE_DEPOSIT/BURN/ROTATE/NOTE) | — | ⬜ Not in constants | Upstream ETH bridge POC, not shipped. Add when protocol-activation ceremony published. |

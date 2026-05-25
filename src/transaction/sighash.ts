@@ -8,7 +8,7 @@ import { reverseBytes, reverseBytesHex } from './utils.js';
 import { ByteWriter } from '../envelope/payload.js';
 import * as secp from '@noble/secp256k1';
 import { SECP_N } from '../constants/limits.js';
-import { G, bytes32ToBigint } from '../crypto/pedersen.js';
+import { G, bytes32ToBigint, bigintToBytes32 } from '../crypto/pedersen.js';
 import { signSchnorr } from '../crypto/schnorr.js';
 import { p2wpkhScript } from './address.js';
 
@@ -256,7 +256,25 @@ export function controlBlock(
 
 // ============== SIGNING HELPERS ==============
 
-// Sign a P2WPKH input per BIP-143.
+// DER-encode an ECDSA signature (r, s) per X.690.
+function derSignEcdsa(r: bigint, s: bigint): Uint8Array {
+  const rBytes = bigintToBytes32(r);
+  const sBytes = bigintToBytes32(s);
+  let ri = 0; while (ri < 31 && rBytes[ri] === 0) ri++;
+  let si = 0; while (si < 31 && sBytes[si] === 0) si++;
+  const rEnc = rBytes[ri]! >= 0x80 ? concatBytes(new Uint8Array([0]), rBytes.slice(ri)) : rBytes.slice(ri);
+  const sEnc = sBytes[si]! >= 0x80 ? concatBytes(new Uint8Array([0]), sBytes.slice(si)) : sBytes.slice(si);
+  const totalLen = 2 + rEnc.length + 2 + sEnc.length;
+  const der = new Uint8Array(2 + totalLen);
+  der[0] = 0x30; der[1] = totalLen;
+  der[2] = 0x02; der[3] = rEnc.length;
+  der.set(rEnc, 4);
+  der[4 + rEnc.length] = 0x02; der[4 + rEnc.length + 1] = sEnc.length;
+  der.set(sEnc, 4 + rEnc.length + 2);
+  return der;
+}
+
+// Sign a P2WPKH input per BIP-143. Returns DER-encoded ECDSA signature + sighash byte.
 export function signP2wpkhInput(
   tx: TxTemplate,
   inputIndex: number,
@@ -267,7 +285,9 @@ export function signP2wpkhInput(
   const pub = secp.getPublicKey(privKey, true);
   const scriptCode = p2wpkhScript(pub);
   const sighash = sighashV0WithType(tx, inputIndex, scriptCode, Number(amount), hashType);
-  return signSchnorr(sighash, privKey);
+  const sig = secp.sign(sighash, privKey);
+  const derSig = derSignEcdsa(sig.r, sig.s);
+  return concatBytes(derSig, new Uint8Array([hashType]));
 }
 
 // BIP-341 key-path sighash (taproot) — stub awaiting full implementation.

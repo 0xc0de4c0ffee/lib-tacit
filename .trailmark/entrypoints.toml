@@ -1,0 +1,157 @@
+# lib-tacit entrypoint declarations.
+# Tacit is a pure library (no network I/O, no DOM), so entrypoints are
+# the cryptographic function exports that wallet/dapp/indexer consumers
+# call. Entrypoints are classified by trust level and asset value.
+# See trailofbits/trailmark docs/entrypoint-patterns.md for the full ref.
+
+# === Crypto primitives — exposed to untrusted data via wire decode ===
+[[entrypoint]]
+node = "crypto.pedersen:tryBytesToPoint"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Parses untrusted 33-byte secp256k1 points from envelope decode"
+
+[[entrypoint]]
+node = "envelope.script:decodeEnvelopeScript"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Deserializes taproot script witness; top-level wire parser"
+
+[[entrypoint]]
+node = "indexer.ipfs:ipfsFetchVerified"
+kind = "third_party"
+trust = "untrusted_external"
+asset_value = "medium"
+description = "Fetches untrusted IPFS data via gateway; CID-verified"
+
+[[entrypoint]]
+node = "indexer.ipfs:verifyCidV1"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "medium"
+description = "Validates CID format from external input"
+
+# === Kernel & range-proof verification — asset-integrity critical ===
+[[entrypoint]]
+node = "crypto.kernel:verifyKernel"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Verifies kernel signature against excess point; supply-conservation gate"
+
+[[entrypoint]]
+node = "crypto.schnorr:verifySchnorr"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "BIP-340 Schnorr verification from untrusted signers"
+
+[[entrypoint]]
+node = "crypto.bulletproofs:bpRangeAggVerify"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Verifies aggregated Bulletproofs range proof from untrusted transactions"
+
+[[entrypoint]]
+node = "crypto.bulletproofs-plus:bppRangeVerify"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Verifies BP+ aggregated range proof from untrusted transactions"
+
+[[entrypoint]]
+node = "crypto.groth16:groth16Verify"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Verifies Groth16 zk-proof from shielded-pool withdraw"
+
+[[entrypoint]]
+node = "indexer.ancestry:AncestryWalker.validateInner"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Walks and validates ancestry chain from untrusted envelope data"
+
+# === Opcode decoders — parse untrusted wire bytes ===
+[[entrypoint]]
+node = "opcodes.etch:decodeCEtch"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Decodes CETCH payload from untrusted envelope"
+
+[[entrypoint]]
+node = "opcodes.transfer:decodeCXfer"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Decodes CXFER payload from untrusted envelope"
+
+[[entrypoint]]
+node = "opcodes.burn:decodeCBurn"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Decodes T_BURN payload from untrusted envelope"
+
+[[entrypoint]]
+node = "opcodes.drop:decodeCDrop"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Decodes T_DROP payload from untrusted envelope"
+
+[[entrypoint]]
+node = "opcodes.amm-swap:decodeSwapVar"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Decodes T_SWAP_VAR payload from untrusted envelope"
+
+[[entrypoint]]
+node = "opcodes.amm-swap:decodeSwapRoute"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Decodes T_SWAP_ROUTE payload from untrusted envelope"
+
+[[entrypoint]]
+node = "opcodes.slot:decodeSlotMint"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Decodes T_SLOT_MINT payload from untrusted envelope"
+
+[[entrypoint]]
+node = "opcodes.cbtc-tac:decodeCBtcTacDeposit"
+kind = "user_input"
+trust = "untrusted_external"
+asset_value = "high"
+description = "Decodes T_CBTC_TAC_DEPOSIT from untrusted envelope"
+
+# === Wallet key derivation — secret material ===
+[[entrypoint]]
+node = "wallet.keypair:generateKeypair"
+kind = "database"
+trust = "trusted_internal"
+asset_value = "high"
+description = "Generates secp256k1 keypair; internal call"
+
+[[entrypoint]]
+node = "crypto.stealth:deriveStealthEcdhBlinding"
+kind = "database"
+trust = "trusted_internal"
+asset_value = "high"
+description = "Derives stealth ECDH blinding scalar from shared secret"
+
+# === Recovery — decrypt own UTXOs ===
+[[entrypoint]]
+node = "recovery.decrypt:tryDecryptOutput"
+kind = "file_system"
+trust = "trusted_internal"
+asset_value = "medium"
+description = "ECDH trial-decrypts an output for recovery"

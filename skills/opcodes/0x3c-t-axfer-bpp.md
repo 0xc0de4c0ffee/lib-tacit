@@ -6,7 +6,7 @@ Bulletproofs+ variant of T_AXFER (0x26). ~14% smaller rangeproof at the same sec
 
 ## Implementation Status
 
-📝 Drafted — `src/opcodes/axfer-bpp.ts` has type definitions and stub wire codec.
+✅ Shipped — full wire encode/decode in `src/opcodes/axfer-bpp.ts`. Exports `encodeAXferBpp`, `decodeAXferBpp`, `AXFERBPPInput`, `AXFERBPPOutput`.
 
 ## Wire Format
 

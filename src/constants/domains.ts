@@ -19,13 +19,12 @@ export const DISCLOSURE_MSG_DOMAIN    = 'tacit-disclosure-v1';
 export const AXINTENT_MSG_DOMAIN      = 'tacit-axintent-v1';
 export const AXINTENT_CLAIM_DOMAIN    = 'tacit-axintent-claim-v2';
 export const AXINTENT_FULFIL_DOMAIN   = 'tacit-axintent-fulfilment-v1';
-export const AXINTENT_FULFILMENT_DOMAIN = 'tacit-axintent-fulfilment-v1';
 export const AXINTENT_CANCEL_DOMAIN   = 'tacit-axintent-cancel-v1';
 export const AXINTENT_PUBLISH_DOMAIN  = 'tacit-axintent-publish-v1';
 export const AXINTENT_CLAIM_V3_DOMAIN = 'tacit-axintent-claim-v3';
 export const AXINTENT_FULFILMENT_V2_DOMAIN = 'tacit-axintent-fulfilment-v2';
-export const BID_INTENT_DOMAIN        = 'tacit-bid-intent';
-export const BID_CLAIM_DOMAIN         = 'tacit-bid-claim';
+export const BID_INTENT_DOMAIN        = 'tacit-bid-intent-v1';
+export const BID_CLAIM_DOMAIN         = 'tacit-bid-claim-v1';
 export const BID_CANCEL_DOMAIN        = 'tacit-bid-cancel-v1';
 export const PREAUTH_SALE_DOMAIN      = 'tacit-preauth-sale-v1';
 export const PREAUTH_SALE_ID_DOMAIN   = 'tacit-preauth-sale-id-v1';
@@ -91,6 +90,11 @@ export const AMM_SWAP_VAR_RECEIPT_DOMAIN = 'tacit-amm-swap-var-receipt-v1';
 export const AMM_SWAP_VAR_RECV_DOMAIN = 'tacit-amm-swap-var-recv-v1';
 export const AMM_SWAP_VAR_CHANGE_DOMAIN = 'tacit-amm-swap-var-change-v1';
 export const AMM_SWAP_VAR_TIP_DOMAIN = 'tacit-amm-swap-var-tip-v1';
+export const SWAP_ROUTE_DOMAIN = 'tacit-swap-route-v1';
+export const AMM_RECEIPT_SECP_DOMAIN = 'tacit-amm-receipt-secp-v1';
+export const AMM_RECEIPT_BJJ_DOMAIN = 'tacit-amm-receipt-bjj-v1';
+export const AMM_XCURVE_SEED_DOMAIN = 'tacit-amm-xcurve-seed-v1';
+export const AMM_CLAIM_POOL_LP_ASSET_DOMAIN = 'tacit-claim-pool-lp-asset-v1';
 
 // --- AMM protocol message domains ---
 export const AMM_LP_ADD_DOMAIN = 'tacit-amm-lp-add-v1';
@@ -113,6 +117,39 @@ export const CXFER_STEALTH_DOMAIN = 'tacit-cxfer-stealth-v1';
 export const CXFER_BPP_STEALTH_DOMAIN = 'tacit-cxfer-bpp-stealth-v1';
 export const AXFER_STEALTH_DOMAIN = 'tacit-axfer-stealth-v1';
 export const AXFER_VAR_STEALTH_DOMAIN = 'tacit-axfer-var-stealth-v1';
+
+// --- Slot / cBTC.zk domains (SPEC-CBTC-ZK) ---
+export const SLOT_MINT_DOMAIN = 'tacit-slot-mint-v1';
+export const SLOT_ROTATE_DOMAIN = 'tacit-slot-rotate-v1';
+export const SLOT_SPLIT_DOMAIN = 'tacit-slot-split-v1';
+export const SLOT_MERGE_DOMAIN = 'tacit-slot-merge-v1';
+export const SLOT_BTC_KEY_DOMAIN = 'tacit-slot-btc-key-v1';
+export const SLOT_SECRET_DOMAIN = 'tacit-slot-secret-v1';
+export const SLOT_NULLIFIER_DOMAIN = 'tacit-slot-nullifier-v1';
+
+// --- cBTC.tac domains (SPEC-CBTC-TAC) ---
+export const CBTC_TAC_VARIANT_DOMAIN = 'tacit-cbtc-tac-variant-v1';
+export const CBTC_TAC_DEPOSIT_BIND_DOMAIN = 'tacit-cbtc-tac-deposit-v1';
+export const CBTC_TAC_WITHDRAW_BIND_DOMAIN = 'tacit-cbtc-tac-withdraw-v1';
+export const CBTC_TAC_FORCE_CLOSE_BIND_DOMAIN = 'tacit-cbtc-tac-force-close-v1';
+export const CBTC_TAC_RECOVERY_BLINDING_DOMAIN = 'tacit-cbtc-tac-recovery-blinding-v1';
+export const CTAC_LIEN_SPLIT_DOMAIN = 'tacit-ctac-lien-split-v1';
+export const CTAC_DEPOSIT_ATOMIC_DOMAIN = 'tacit-ctac-deposit-atomic-v1';
+export const CTAC_WITHDRAW_ATOMIC_DOMAIN = 'tacit-ctac-withdraw-atomic-v1';
+export const CTAC_TOPUP_DOMAIN = 'tacit-ctac-topup-v1';
+export const CTAC_RELEASE_DOMAIN = 'tacit-ctac-release-v1';
+export const CBTC_TAC_ATOMIC_MINT_DOMAIN = 'tacit-cbtc-tac-atomic-mint-v1';
+export const SHARE_SLASH_CLAIM_DOMAIN = 'tacit-share-slash-claim-v1';
+export const SHARE_SLASH_CLAIM_BLIND_DOMAIN = 'tacit-share-slash-claim-blind-v1';
+
+// --- Bridge domains (T_BRIDGE_DEPOSIT / T_BRIDGE_BURN, upstream POC) ---
+export const BRIDGE_DEPOSIT_DOMAIN = 'tacit-bridge-deposit-v1';
+export const BRIDGE_BURN_DOMAIN = 'tacit-bridge-burn-v1';
+
+// --- Mixer deposit domains ---
+export const MIXER_DEPOSIT_SECRET_DOMAIN = 'tacit-mixer-deposit-secret-v1';
+export const MIXER_DEPOSIT_NULLIFIER_DOMAIN = 'tacit-mixer-deposit-nullifier-v1';
+export const MIXER_POOL_EMPTY_DOMAIN = 'tacit-pool-empty-v1';
 
 // --- Envelope constants ---
 export const ENVELOPE_MAGIC = 'TACIT';

@@ -29,8 +29,11 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # trailmark audit cache (git add .py to track)
 # trailmark analysis cache (uv lock, virtualenv)
-.trailmark
+.trailmark/*
+!.trailmark/entrypoints.toml
 .idea
+.venv
+trailmarks/snapshots/
 
 # Finder (MacOS) folder config
 .DS_Store

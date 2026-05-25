@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is a pure TypeScript library implementing the **tacit confidential token meta-protocol on Bitcoin**. It provides cryptographic primitives (Pedersen, classic Bulletproofs, Schnorr, ECDH, kernel signatures), opcode **wire** encode/decode for 32 shipped opcodes, and transaction utilities — all platform-agnostic with zero UI dependencies.
+This is a pure TypeScript library implementing the **tacit confidential token meta-protocol on Bitcoin**. It provides cryptographic primitives (Pedersen, classic Bulletproofs, Schnorr, ECDH, kernel signatures), opcode **wire** encode/decode for 34 shipped opcodes, and transaction utilities — all platform-agnostic with zero UI dependencies.
 
 **Do not edit `tacit-specs/`** — read-only reference submodule. Port behavior into `src/` and `tests/` only.
 
@@ -127,7 +127,7 @@ bun run specs:pull
 5. Compare against `tacit-specs/dapp/bulletproofs-plus.js` for BP+ crypto (src/crypto/bulletproofs-plus.ts)
 6. Typecheck: `bun run typecheck`
 7. Build: `bun run build`
-8. Test: `bun test` (421+ tests; pinned vectors in `tests/crypto/vectors.test.ts`, no tacit-specs test root)
+8. Test: `bun test` (523+ tests; pinned vectors in `tests/crypto/vectors.test.ts`, no tacit-specs test root)
 9. Read `docs/crypto/validation.md` before adding indexer-facing verify helpers
 
 ## Validation layers
@@ -170,9 +170,20 @@ The `tacit-specs/` directory is a git submodule at `c2ee202` pointing at `https:
 | `tacit-specs/tests/stealth-primitives.mjs` | Stealth address EC math + DH shared-secret derivation |
 | `tacit-specs/tests/cxfer-stealth.test.mjs` | CXFER-to-stealth-address integration tests |
 | `tacit-specs/tests/swap-residual.test.mjs` | AMM swap residual (inventory-aware) verification |
+| `tacit-specs/tests/swap-var.mjs` / `swap-var.test.mjs` | T_SWAP_VAR reference (44 tests) |
+| `tacit-specs/tests/swap-route.mjs` / `swap-route.test.mjs` | T_SWAP_ROUTE reference (24 tests) |
+| `tacit-specs/tests/cxfer-bpp-wire.test.mjs` | T_CXFER_BPP wire-format round-trip (136 tests) |
+| `tacit-specs/tests/bulletproofs-plus-*.test.mjs` | BP+ prover/verifier cross-check (11 files) |
+| `tacit-specs/tests/amm-validator.mjs` | Canonical AMM validator (all AMM opcodes) |
+| `tacit-specs/tests/amm-spec-conformance.test.mjs` | Pinned opcode constants, domain tags, sizes |
 | `tacit-specs/tests/bip352-sender-vectors.test.mjs` | BIP-352 sender-side silent payment test vectors (23/23 passing) |
-| `tacit-specs/tests/bip352-receiver-vectors.test.mjs` | BIP-352 receiver-side silent payment test vectors (new in b313809) |
+| `tacit-specs/tests/bip352-receiver-vectors.test.mjs` | BIP-352 receiver-side silent payment test vectors (new in c2ee202) |
 | `tacit-specs/tests/stealth-credit-persistence.test.mjs` | Stealth credit schema persistence + migration |
+| `tacit-specs/tests/stealth-math.test.mjs` | Blinded-pubkey commit EC math (40 tests) |
+| `tacit-specs/tests/cxfer-stealth.test.mjs` | CXFER-to-stealth-address integration tests (30 tests) |
+| `tacit-specs/tests/preauth-bid-onchain-e2e-signet.mjs` | Preauth bid lifecycle on signet |
+| `tacit-specs/tests/preauth-bid-var-onchain-e2e-signet.mjs` | Preauth bid var lifecycle on signet |
+| `tacit-specs/tests/t-preauth-bid-bip143.test.mjs` | BIP-143 sighash preimage for preauth bid |
 | `tacit-specs/dapp/tacit.js` | Monolithic dapp — source of truth for all shipped opcode encode/decode |
 | `tacit-specs/dapp/bulletproofs-plus.js` | BP+ prover/verifier reference (T_CXFER_BPP, 907 LOC) |
 | `tacit-specs/spec/CIRCUITS.md` | Circuit composition: mixer + AMM Groth16 families |

@@ -1,6 +1,6 @@
 # T_AXFER_BPP (0x3C) — Atomic Settlement with Bulletproofs+
 
-**Status:** 📝 Drafted (SPEC-AXFER-BPP-AMENDMENT)
+**Status:** ✅ Shipped (SPEC-AXFER-BPP-AMENDMENT)
 
 BP+ variant of T_AXFER (0x26). Same wire format except for the leading opcode byte (0x3C vs 0x26) and the rangeproof bytes (BP+ instead of classic BP).
 
@@ -10,4 +10,4 @@ Same as T_AXFER (0x26): the encoder/decoder interfaces match byte-for-byte. The 
 
 ## Library Implementation
 
-📝 Drafted — `src/opcodes/axfer-bpp.ts` has type definitions and stub wire codec.
+✅ Shipped — full wire encode/decode in `src/opcodes/axfer-bpp.ts`. Exports `encodeAXferBpp`, `decodeAXferBpp`, `AXFERBPPInput`, `AXFERBPPOutput`.

@@ -24,5 +24,5 @@ export const BLINDING_LEN = 32;
 
 export const DUST_SATS = 546;
 
-export const SWAP_ROUTE_N_HOPS_MAX = 8;
+export const SWAP_ROUTE_N_HOPS_MAX = 4;
 export const SWAP_ROUTE_HOP_BYTES = 67;

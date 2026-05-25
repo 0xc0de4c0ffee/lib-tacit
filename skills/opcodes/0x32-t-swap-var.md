@@ -2,8 +2,8 @@
 
 ## Domain Knowledge
 
-Per-trade variable-amount AMM swap. Uses a sigma cross-curve proof. Drafted per §5.20.
+Per-trade variable-amount AMM swap. Uses a sigma cross-curve proof. Shipped per §5.20.
 
 ## Implementation Status
 
-📝 Drafted — type definitions in `src/opcodes/amm-drafts.ts`. Wire codec not yet implemented.
+✅ Shipped — full wire encode/decode + pool helpers in `src/opcodes/amm-swap.ts`. Exports `encodeSwapVar`, `decodeSwapVar`, `swapVarCurveDeltaOut`, `SwapVarInput`, `SwapVarDecoded`.

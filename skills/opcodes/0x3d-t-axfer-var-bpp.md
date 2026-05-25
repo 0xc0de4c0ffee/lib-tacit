@@ -6,7 +6,7 @@ Bulletproofs+ variant of T_AXFER_VAR (0x37). ~14% smaller rangeproof at the same
 
 ## Implementation Status
 
-📝 Drafted — `src/opcodes/axfer-var-bpp.ts` has type definitions and stub wire codec.
+✅ Shipped — full wire encode/decode in `src/opcodes/axfer-var-bpp.ts`. Exports `encodeAXferVarBpp`, `decodeAXferVarBpp`, `AXFERVarBPPInput`, `AXFERVarBPPOutput`.
 
 ## Wire Format
 

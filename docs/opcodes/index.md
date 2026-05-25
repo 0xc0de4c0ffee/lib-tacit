@@ -22,8 +22,8 @@
 | `0x2F` | [T_SWAP_BATCH](./0x2f-t-swap-batch.md) | §5.16 | 📝 Drafted | Settle N confidential swap intents at uniform clearing price. Groth16 proof. |
 | `0x30` | [T_INTENT_ATTEST](./0x30-t-intent-attest.md) | §5.17 | 📝 Drafted | Scope-generic preconfirmation channel attestation. |
 | `0x31` | [T_PROTOCOL_FEE_CLAIM](./0x31-t-protocol-fee-claim.md) | §5.18 | 📝 Drafted | Mint accrued protocol fee shares. |
-| `0x32` | [T_SWAP_VAR](./0x32-t-swap-var.md) | §5.20 | 📝 Drafted | Per-trade variable-amount AMM swap. Sigma cross-curve proof. |
-| `0x33` | [T_SWAP_ROUTE](./0x33-t-swap-route.md) | §5.22 | 📝 Drafted | Atomic multi-hop AMM routing (2–4 hops in one Bitcoin tx). |
+| `0x32` | [T_SWAP_VAR](./0x32-t-swap-var.md) | §5.20 | ✅ Shipped | Per-trade variable-amount AMM swap. Sigma cross-curve proof. |
+| `0x33` | [T_SWAP_ROUTE](./0x33-t-swap-route.md) | §5.22 | ✅ Shipped | Atomic multi-hop AMM routing (2–4 hops in one Bitcoin tx). |
 | `0x34` | [T_FARM_INIT](./0x34-t-farm-init.md) | §5.40 | 📝 Drafted | Launcher-funded LP-staking reward farm creation. |
 | `0x35` | [T_LP_BOND](./0x35-t-lp-bond.md) | §5.41 | 📝 Drafted | Bond LP shares against a farm. |
 | `0x36` | [T_LP_UNBOND](./0x36-t-lp-unbond.md) | §5.42 | 📝 Drafted | Settle bond: mint LP + reward UTXOs, delete bond record. |
@@ -32,8 +32,8 @@
 | `0x39` | [T_TRADE_BATCH](./0x39-t-trade-batch.md) | §5.20 | 📝 Drafted | Atomic cross-surface settlement: AMM intents + orderbook pairs. |
 | `0x3A` | [T_RANGE_ATTEST](./0x3a-t-range-attest.md) | §5.21 | 📝 Drafted | On-chain range-attestation: commitment ≥ K. |
 | `0x3B` | [T_LP_HARVEST](./0x3b-t-lp-harvest.md) | §5.43 | 📝 Drafted | Claim accrued farm reward without unbonding. |
-| `0x3C` | [T_AXFER_BPP](./0x3c-t-axfer-bpp.md) | — | 📝 Drafted | BP+ variant of T_AXFER. ~14% smaller witness. |
-| `0x3D` | [T_AXFER_VAR_BPP](./0x3d-t-axfer-var-bpp.md) | — | 📝 Drafted | BP+ variant of T_AXFER_VAR. |
+| `0x3C` | [T_AXFER_BPP](./0x3c-t-axfer-bpp.md) | — | ✅ Shipped | BP+ variant of T_AXFER. ~14% smaller witness. |
+| `0x3D` | [T_AXFER_VAR_BPP](./0x3d-t-axfer-var-bpp.md) | — | ✅ Shipped | BP+ variant of T_AXFER_VAR. |
 | `0x3E` | [T_FARM_REFUND](./0x3e-t-farm-refund.md) | §5.44 | 📝 Drafted | Launcher reclaims unspent treasury after expiry. |
 | `0x3F`–`0x42` | T_LP_ADD_RANGE / T_LP_REMOVE_RANGE / T_LP_REPOSITION / T_LP_MIGRATE_V | — | 🔒 Reserved | Range-LP follow-up amendment. |
 | `0x43` | [T_SLOT_MINT](./0x43-t-slot-mint.md) | §5.21 | ✅ Shipped | Self-custody-slot wrapper atomic mint. |
@@ -93,9 +93,9 @@
 | T_CBTC_TAC_* (0x49–0x4F, 0x57–0x5A) | `cbtc-tac.ts` | ✅ `encodeCBtcTac*` | ✅ `decodeCBtcTac*` | ✅ |
 | T_SWAP_VAR / T_SWAP_ROUTE (0x32–0x33) | `amm-swap.ts` | ✅ `encodeSwapVar` / `encodeSwapRoute` | ✅ `decodeSwapVar` / `decodeSwapRoute` | ✅ |
 | T_PREAUTH_BID / T_PREAUTH_BID_VAR (0x5B–0x5C) | `preauth-bid.ts` / `preauth-bid-var.ts` | ✅ `encodePreauthBid` / `encodePreauthBidVar` | ✅ `decodePreauthBid` / `decodePreauthBidVar` | ⏳ |
-| Drafted AMM (0x2D–0x31) | `amm-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 | T_AXFER_BPP (0x3C) | `axfer-bpp.ts` | ✅ `encodeAXferBpp` | ✅ `decodeAXferBpp` | ❌ |
 | T_AXFER_VAR_BPP (0x3D) | `axfer-var-bpp.ts` | ✅ `encodeAXferVarBpp` | ✅ `decodeAXferVarBpp` | ❌ |
+| Drafted AMM (0x2D–0x31) | `amm-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 | Drafted Farm (0x34–0x3E) | `farm-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 | Drafted Gov (0x50–0x56) | `gov-drafts.ts` | ❌ Drafted | ❌ Drafted | ❌ |
 
@@ -117,10 +117,10 @@ Each shipped opcode has a dedicated document covering wire format, constraints, 
 - [`0x2c-t-dclaim.md`](./0x2c-t-dclaim.md) — Claim event
 - [`0x32-t-swap-var.md`](./0x32-t-swap-var.md) — Variable-amount AMM swap (shipped)
 - [`0x33-t-swap-route.md`](./0x33-t-swap-route.md) — Multi-hop AMM routing (shipped)
-- [`0x37-t-axfer-var.md`](./0x37-t-axfer-var.md) — Variable-amount atomic settlement
-- [`0x38-t-wrapper-attest.md`](./0x38-t-wrapper-attest.md) — Wrapper attestation
-- [`0x3c-t-axfer-bpp.md`](./0x3c-t-axfer-bpp.md) — Atomic settlement with BP+
-- [`0x3d-t-axfer-var-bpp.md`](./0x3d-t-axfer-var-bpp.md) — Variable-amount atomic settlement with BP+
+- [`0x37-t-axfer-var.md`](./0x37-t-axfer-var.md) — Variable-amount atomic settlement (shipped)
+- [`0x38-t-wrapper-attest.md`](./0x38-t-wrapper-attest.md) — Wrapper attestation (shipped)
+- [`0x3c-t-axfer-bpp.md`](./0x3c-t-axfer-bpp.md) — Atomic settlement with BP+ (shipped)
+- [`0x3d-t-axfer-var-bpp.md`](./0x3d-t-axfer-var-bpp.md) — Variable-amount atomic settlement with BP+ (shipped)
 - [`0x43-t-slot-mint.md`](./0x43-t-slot-mint.md) — Slot mint (shipped)
 - [`0x44-t-slot-burn.md`](./0x44-t-slot-burn.md) — Slot burn (shipped)
 - [`0x45-t-slot-rotate.md`](./0x45-t-slot-rotate.md) — Slot rotate (shipped)
@@ -135,11 +135,6 @@ Each shipped opcode has a dedicated document covering wire format, constraints, 
 - [`0x58-t-cbtc-tac-withdraw-atomic.md`](./0x58-t-cbtc-tac-withdraw-atomic.md) — cBTC.tac atomic withdraw (shipped)
 - [`0x59-t-cbtc-tac-top-up.md`](./0x59-t-cbtc-tac-top-up.md) — cBTC.tac top-up (shipped)
 - [`0x5a-t-cbtc-tac-bond-release.md`](./0x5a-t-cbtc-tac-bond-release.md) — cBTC.tac bond release (shipped)
-- [`0x43-t-slot-mint.md`](./0x43-t-slot-mint.md) — Slot mint (shipped)
-- [`0x44-t-slot-burn.md`](./0x44-t-slot-burn.md) — Slot burn (shipped)
-- [`0x45-t-slot-rotate.md`](./0x45-t-slot-rotate.md) — Slot rotate (shipped)
-- [`0x46-t-slot-split.md`](./0x46-t-slot-split.md) — Slot split (shipped)
-- [`0x47-t-slot-merge.md`](./0x47-t-slot-merge.md) — Slot merge (shipped)
 - [`0x5b-t-preauth-bid.md`](./0x5b-t-preauth-bid.md) — Preauth bid (shipped)
 - [`0x5c-t-preauth-bid-var.md`](./0x5c-t-preauth-bid-var.md) — Variable-amount preauth bid (shipped)
 

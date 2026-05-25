@@ -35,6 +35,8 @@ export const Opcode = {
   T_SWAP_ROUTE:               0x33,
   T_PREAUTH_BID:              0x5B,
   T_PREAUTH_BID_VAR:          0x5C,
+  T_AXFER_BPP:                0x3C,
+  T_AXFER_VAR_BPP:            0x3D,
 
   // === Drafted (spec written, implementation in progress) ===
   T_LP_ADD:             0x2D,
@@ -48,8 +50,6 @@ export const Opcode = {
   T_TRADE_BATCH:        0x39,
   T_RANGE_ATTEST:       0x3A,
   T_LP_HARVEST:         0x3B,
-  T_AXFER_BPP:          0x3C,
-  T_AXFER_VAR_BPP:      0x3D,
   T_FARM_REFUND:        0x3E,
   T_GOV_PROPOSAL:       0x50,
   T_GOV_VOTE:           0x51,
@@ -91,4 +91,5 @@ export const ShippedOpcodes: ReadonlySet<number> = new Set([
   Opcode.T_CBTC_TAC_DEPOSIT_ATOMIC, Opcode.T_CBTC_TAC_WITHDRAW_ATOMIC,
   Opcode.T_CBTC_TAC_TOP_UP, Opcode.T_CBTC_TAC_BOND_RELEASE,
   Opcode.T_PREAUTH_BID, Opcode.T_PREAUTH_BID_VAR,
+  Opcode.T_AXFER_BPP, Opcode.T_AXFER_VAR_BPP,
 ]);

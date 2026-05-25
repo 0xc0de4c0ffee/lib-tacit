@@ -1,43 +1,20 @@
-# lib-tacit — Research Branches
+# lib-tacit
 
-Pure TypeScript library for the **tacit confidential token meta-protocol on Bitcoin**. Provides Pedersen commitments, Bulletproofs range proofs, Mimblewimble-style kernel signatures, ECDH blinding, stealth addresses, BIP-352 silent payments, and full opcode encode/decode for 32 shipped opcodes — zero DOM, zero UI, reusable by any wallet, indexer, or dapp.
+Pure TypeScript library for the **tacit confidential token meta-protocol on Bitcoin**. Provides Pedersen commitments, Bulletproofs range proofs, Mimblewimble-style kernel signatures, ECDH blinding, stealth addresses, BIP-352 silent payments, and full opcode encode/decode for 34 shipped opcodes — zero DOM, zero UI, reusable by any wallet, indexer, or dapp.
 
 ```bash
 bun add lib-tacit @noble/secp256k1 @noble/hashes @scure/base poseidon-lite @helia/verified-fetch
 ```
 
----
-
-> **This is the `research` branch.** It contains R&D artifacts beyond the production library at `src/`:
-> - `miniscripts/` — Miniscript-based redesign (tacit-v2 rethink)
-> - `tacit-nostr/` — Decentralized market coordination via Nostr
-> - `review/` — Security and design review findings against tacit-specs
-> - `trailmarks/` — Trail of Bits trailmark graph analysis
-> - `proposals/` — Opcode proposals (e.g., `40-name-system/` for name registration)
-> - `tacit-name-system/` — Name system design: `.tacit`/`.tic`/`.tac` TLDs, ENS bridge, BIP-47/352 integration
-> - `tacit-nostr/` — Nostr market coordination, BIP-47/352 notification layer, NIP-46 bunker
->
-> For the production library, see the `main` branch.
-
-Explores using Nostr (NIP-01, NIP-59) as an orderbook and discovery layer for tacit assets. 9 files across 6 directories.
-
-## Branches
-
 ## Module Map
 
 ```
-
----
-
-## Module Map
-
-```
-lib-tacit
+src/
 ├── constants/     — Opcodes, domain tags, generator vectors, protocol limits
 ├── crypto/        — Pedersen, Schnorr, ECDH, Bulletproofs, MSM, Kernel,
 │                    stealth, silent-payments, primitives
 ├── envelope/      — Taproot script-path encode/decode, ByteWriter
-├── opcodes/       — 32 shipped modules (0x21–0x5C)
+├── opcodes/       — 34 shipped modules (0x21–0x5C)
 ├── transaction/   — BIP-143 sighash, TX serialization, P2WPKH address,
 │                    taproot primitives (taggedHash, controlBlock, etc.)
 ├── wallet/        — Keypair, UTXO manager, PRF passkey, key encryption
@@ -46,8 +23,6 @@ lib-tacit
 ├── recovery/      — Chain scan, ECDH trial-decrypt
 └── interfaces/    — ChainClient, Broadcaster (abstract)
 ```
-
----
 
 ## Cryptographic Invariants
 
@@ -62,8 +37,6 @@ These guarantees are enforced at the protocol level and hold regardless of walle
 4. **Anchor uniqueness** — Each UTXO's anchor is `(txid_BE || vout_LE)`. Bitcoin consensus prevents double-spends, so no two outputs across all valid envelopes can share an anchor. This guarantees blinding uniqueness.
 
 5. **Amount verification** — `amount_ct` is XOR with an HMAC-derived keystream. The Pedersen commitment provides the integrity check: tampering with the ciphertext yields a candidate amount that fails `pedersenCommit(candidate, r) == C`.
-
----
 
 ## Validation Model
 
@@ -80,28 +53,22 @@ This is the three-layer model:
 
 Decoders never substitute for layer 3.
 
----
-
 ## How to Verify Correctness
 
 1. Compare against `tacit-specs/tests/composition.mjs` for Schnorr, ECDH, kernel, and opcode wire formats
 2. Check pinned hex vectors in `tests/crypto/vectors.test.ts` for NUMS generators, asset IDs, blindings
 3. Compare against `tacit-specs/dapp/tacit.js` for wire format encode/decode functions
 4. Compare against `tacit-specs/dapp/bulletproofs-plus.js` for BP+ crypto
-5. Run `bun run typecheck && bun run build && bun test` (421+ tests)
-
----
+5. Run `bun run typecheck && bun run build && bun test` (523+ tests)
 
 ## Test
 
 ```bash
 bun run specs:pull   # fetch latest tacit-specs submodule
-bun test             # 421+ tests, isolated from tacit-specs/
+bun test             # 523+ tests, isolated from tacit-specs/
 bun run typecheck
 bun run build
 ```
-
----
 
 ## Dependencies
 
@@ -114,8 +81,6 @@ bun run build
 | `@helia/verified-fetch` | 7.2.10 | Trustless IPFS content retrieval |
 | `snarkjs` | 0.7.6 | Groth16 zk-proof verification (optional) |
 
----
-
 ## Trust Model
 
 This library implements the cryptographic primitives from [SPEC.md](tacit-specs/SPEC.md). It contains **no network I/O and no DOM access**. Consumers are responsible for:
@@ -125,11 +90,6 @@ This library implements the cryptographic primitives from [SPEC.md](tacit-specs/
 - Key storage (encrypted localStorage, hardware wallet, etc.)
 - UI rendering
 
----
-
 ## License
 
 MIT — same as the [reference implementation](https://github.com/z0r0z/tacit).
-| `tacit-specs/spec/amendments/` | All amendment specs (stealth, preauth-bid, AMM, farm, etc.) |
-
-## Quick Start
