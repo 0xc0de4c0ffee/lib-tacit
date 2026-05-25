@@ -9,7 +9,7 @@ Generated: trailmark v0.3.1  |  path: `src`
 | Total nodes | 1457 |
 | Functions + methods | 1248 |
 | Call edges | 4041 |
-| Files parsed | 70 |
+| Node kinds | 5 |
 
 ## Node Kind Breakdown
 
@@ -21,78 +21,112 @@ Generated: trailmark v0.3.1  |  path: `src`
 | module | 70 |
 | class | 5 |
 
-## Source Files
+## Module Dependency Graph
 
-- `src/constants/domains.ts`
-- `src/constants/generators.ts`
-- `src/constants/index.ts`
-- `src/constants/limits.ts`
-- `src/constants/opcodes.ts`
-- `src/crypto/bulletproofs-plus.ts`
-- `src/crypto/bulletproofs.ts`
-- `src/crypto/ecdh.ts`
-- `src/crypto/groth16.ts`
-- `src/crypto/index.ts`
-- `src/crypto/kernel.ts`
-- `src/crypto/msm.ts`
-- `src/crypto/pedersen.ts`
-- `src/crypto/poseidon.ts`
-- `src/crypto/primitives.ts`
-- `src/crypto/schnorr.ts`
-- `src/crypto/silent-payments.ts`
-- `src/crypto/stealth.ts`
-- `src/env.d.ts`
-- `src/envelope/index.ts`
-- `src/envelope/payload.ts`
-- `src/envelope/script.ts`
-- `src/index.ts`
-- `src/indexer/ancestry.ts`
-- `src/indexer/esplora-client.ts`
-- `src/indexer/index.ts`
-- `src/indexer/ipfs.ts`
-- `src/interfaces/chain-client.ts`
-- `src/interfaces/index.ts`
-- `src/opcodes/amm-drafts.ts`
-- `src/opcodes/amm-swap.ts`
-- `src/opcodes/axfer-bpp.ts`
-- `src/opcodes/axfer-var-bpp.ts`
-- `src/opcodes/axfer-var.ts`
-- `src/opcodes/axfer.ts`
-- `src/opcodes/burn.ts`
-- `src/opcodes/cbtc-tac.ts`
-- `src/opcodes/cxfer-bpp.ts`
-- `src/opcodes/dclaim.ts`
-- `src/opcodes/deposit.ts`
-- `src/opcodes/drop.ts`
-- `src/opcodes/etch.ts`
-- `src/opcodes/farm-drafts.ts`
-- `src/opcodes/gov-drafts.ts`
-- `src/opcodes/index.ts`
-- `src/opcodes/mint.ts`
-- `src/opcodes/petch.ts`
-- `src/opcodes/pmint.ts`
-- `src/opcodes/preauth-bid-var.ts`
-- `src/opcodes/preauth-bid.ts`
-- `src/opcodes/slot.ts`
-- `src/opcodes/transfer.ts`
-- `src/opcodes/withdraw.ts`
-- `src/opcodes/wrapper-attest.ts`
-- `src/recovery/decrypt.ts`
-- `src/recovery/index.ts`
-- `src/recovery/scanner.ts`
-- `src/transaction/address.ts`
-- `src/transaction/builder.ts`
-- `src/transaction/index.ts`
-- `src/transaction/sighash.ts`
-- `src/transaction/utils.ts`
-- `src/validation/index.ts`
-- `src/validation/supply.ts`
-- `src/validation/validator.ts`
-- `src/wallet/encryption.ts`
-- `src/wallet/index.ts`
-- `src/wallet/keypair.ts`
-- `src/wallet/prf.ts`
-- `src/wallet/utxo-manager.ts`
+```mermaid
+flowchart LR
+
+  crypto_bulletproofs[crypto.bulletproofs]
+
+  crypto_bulletproofs_plus[crypto.bulletproofs-plus]
+
+  crypto_kernel[crypto.kernel]
+
+  crypto_pedersen[crypto.pedersen]
+
+  crypto_silent_payments[crypto.silent-payments]
+
+  crypto_stealth[crypto.stealth]
+
+  envelope_payload[envelope.payload]
+
+  msmPoints_push[msmPoints.push]
+
+  msmScalars_push[msmScalars.push]
+
+  opcodes_amm_swap[opcodes.amm-swap]
+
+  opcodes_cbtc_tac[opcodes.cbtc-tac]
+
+  opcodes_deposit[opcodes.deposit]
+
+  opcodes_drop[opcodes.drop]
+
+  opcodes_preauth_bid_var[opcodes.preauth-bid-var]
+
+  opcodes_slot[opcodes.slot]
+
+  payload_slice[payload.slice]
+
+  proofBytes_slice[proofBytes.slice]
+
+  te_encode[te.encode]
+
+  transaction_sighash[transaction.sighash]
+
+  transaction_utils[transaction.utils]
+
+  transcript_append[transcript.append]
+
+  transcript_challenge[transcript.challenge]
+
+  w_push[w.push]
+
+  w_u32[w.u32]
+
+  w_u8[w.u8]
+
+  crypto_bulletproofs_plus -->|148| crypto_pedersen
+
+  crypto_bulletproofs -->|111| crypto_pedersen
+
+  opcodes_cbtc_tac -->|89| w_push
+
+  opcodes_cbtc_tac -->|66| payload_slice
+
+  opcodes_slot -->|56| payload_slice
+
+  crypto_bulletproofs -->|26| transcript_append
+
+  opcodes_cbtc_tac -->|24| crypto_pedersen
+
+  opcodes_cbtc_tac -->|23| envelope_payload
+
+  opcodes_amm_swap -->|20| payload_slice
+
+  crypto_kernel -->|19| te_encode
+
+  crypto_silent_payments -->|17| crypto_pedersen
+
+  crypto_bulletproofs_plus -->|16| transcript_append
+
+  crypto_stealth -->|15| transaction_utils
+
+  opcodes_cbtc_tac -->|15| w_u8
+
+  transaction_sighash -->|15| w_push
+
+  transaction_sighash -->|14| w_u32
+
+  crypto_kernel -->|12| transaction_utils
+
+  opcodes_drop -->|12| w_push
+
+  crypto_bulletproofs -->|11| proofBytes_slice
+
+  crypto_bulletproofs_plus -->|10| msmScalars_push
+
+  crypto_bulletproofs_plus -->|10| msmPoints_push
+
+  crypto_bulletproofs -->|10| transcript_challenge
+
+  opcodes_deposit -->|10| w_push
+
+  opcodes_preauth_bid_var -->|10| w_push
+
+  opcodes_preauth_bid_var -->|10| payload_slice
+
+```
 
 ## Complexity Hotspots (cyclomatic >= 10)
 

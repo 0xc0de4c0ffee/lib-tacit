@@ -1,118 +1,64 @@
 # trailmark: cross-comparison
-
 Generated: trailmark v0.3.1
-
 ## Overview
-
 | Metric | Reference (tacit-specs/dapp/) | Our Library (src/) |
 | --- | --- | --- |
-| Total nodes | 1779 | 1457 |
-| Functions | 1741 | 1248 |
-| Call edges | 33361 | 4041 |
-
-## Function Set Comparison
-
-- **Unique to reference**: 1558
-- **Unique to our src**: 1113
-- **Common**: 118
-
-### In reference only (first 40)
-
-- `$`
-- `$$`
-- `ASSET_DETAIL_URL`
-- `ATOMIC_INTENTS_URL`
-- `ATOMIC_INTENT_CLAIM_URL`
-- `ATOMIC_INTENT_DELETE_URL`
-- `ATOMIC_INTENT_FINALIZE_URL`
-- `ATOMIC_INTENT_FULFILMENT_URL`
-- `ATOMIC_INTENT_GET_URL`
-- `ATTEST_URL`
-- `DISCLOSURES_URL`
-- `DROP_URL`
-- `G_BJJ`
-- `G_BJJ_BASE_U`
-- `G_BJJ_BASE_V`
-- `G_BJJ_meta`
-- `H_BJJ`
-- `H_BJJ_BASE_U`
-- `H_BJJ_BASE_V`
-- `H_BJJ_meta`
-- `LISTINGS_URL`
-- `LISTING_CLAIM_URL`
-- `LISTING_DELETE_URL`
-- `MINT_ATTEST_URL`
-- `PETCH_ASSET_URL`
-- `PMINTS_URL`
-- `PREAUTH_BIDS_URL`
-- `PREAUTH_BIDS_VAR_URL`
-- `PREAUTH_BID_URL`
-- `PREAUTH_BID_VAR_URL`
-- `PREAUTH_SALES_URL`
-- `PREAUTH_SALE_URL`
-- `RANGE_LISTINGS_URL`
-- `RANGE_LISTING_CLAIM_URL`
-- `RANGE_LISTING_DELETE_URL`
-- `RECENT_RECIPIENTS_KEY`
-- `UTXO_OPENING_URL`
-- `W.constructor`
-- `W.out`
-- `W.push`
-- ... and 1518 more
-
-### In our src only (first 40)
-
-- `AXFERBPPInput.assetId`
-- `AXFERBPPInput.assetInputCount`
-- `AXFERBPPInput.kernelSig`
-- `AXFERBPPInput.outputs`
-- `AXFERBPPInput.rangeproof`
-- `AXFERBPPOutput.assetId`
-- `AXFERBPPOutput.assetInputCount`
-- `AXFERBPPOutput.kernelSig`
-- `AXFERBPPOutput.kind`
-- `AXFERBPPOutput.outputs`
-- `AXFERBPPOutput.rangeproof`
-- `AXFERInput.assetId`
-- `AXFERInput.assetInputCount`
-- `AXFERInput.kernelSig`
-- `AXFERInput.outputs`
-- `AXFERInput.rangeproof`
-- `AXFEROutput.assetId`
-- `AXFEROutput.assetInputCount`
-- `AXFEROutput.kernelSig`
-- `AXFEROutput.kind`
-- `AXFEROutput.outputs`
-- `AXFEROutput.rangeproof`
-- `AXFERVarBPPInput.assetId`
-- `AXFERVarBPPInput.kernelSig`
-- `AXFERVarBPPInput.outputs`
-- `AXFERVarBPPInput.rangeproof`
-- `AXFERVarBPPOutput.assetId`
-- `AXFERVarBPPOutput.assetInputCount`
-- `AXFERVarBPPOutput.kernelSig`
-- `AXFERVarBPPOutput.kind`
-- `AXFERVarBPPOutput.outputs`
-- `AXFERVarBPPOutput.rangeproof`
-- `AXFERVarInput.assetId`
-- `AXFERVarInput.kernelSig`
-- `AXFERVarInput.outputs`
-- `AXFERVarInput.rangeproof`
-- `AXFERVarOutput.assetId`
-- `AXFERVarOutput.assetInputCount`
-- `AXFERVarOutput.kernelSig`
-- `AXFERVarOutput.kind`
-- ... and 1073 more
-
-## Opcode Encode/Decode Parity
-
+| Total nodes | 1792 | 1457 |
+| Functions | 1754 | 1248 |
+| Call edges | 33525 | 4041 |## Function Set Comparison
+- **Unique to reference**: 1571- **Unique to our src**: 1113- **Common**: 118
+### In reference only (first 30)
+- `$`- `$$`- `ASSET_DETAIL_URL`- `ATOMIC_INTENTS_URL`- `ATOMIC_INTENT_CLAIM_URL`- `ATOMIC_INTENT_DELETE_URL`- `ATOMIC_INTENT_FINALIZE_URL`- `ATOMIC_INTENT_FULFILMENT_URL`- `ATOMIC_INTENT_GET_URL`- `ATTEST_URL`- `DISCLOSURES_URL`- `DROP_URL`- `G_BJJ`- `G_BJJ_BASE_U`- `G_BJJ_BASE_V`- `G_BJJ_meta`- `H_BJJ`- `H_BJJ_BASE_U`- `H_BJJ_BASE_V`- `H_BJJ_meta`- `LISTINGS_URL`- `LISTING_CLAIM_URL`- `LISTING_DELETE_URL`- `MINT_ATTEST_URL`- `PETCH_ASSET_URL`- `PMINTS_URL`- `PREAUTH_BIDS_URL`- `PREAUTH_BIDS_VAR_URL`- `PREAUTH_BID_URL`- `PREAUTH_BID_VAR_URL`- ... and 1541 more### In our src only (first 30)
+- `AXFERBPPInput.assetId`- `AXFERBPPInput.assetInputCount`- `AXFERBPPInput.kernelSig`- `AXFERBPPInput.outputs`- `AXFERBPPInput.rangeproof`- `AXFERBPPOutput.assetId`- `AXFERBPPOutput.assetInputCount`- `AXFERBPPOutput.kernelSig`- `AXFERBPPOutput.kind`- `AXFERBPPOutput.outputs`- `AXFERBPPOutput.rangeproof`- `AXFERInput.assetId`- `AXFERInput.assetInputCount`- `AXFERInput.kernelSig`- `AXFERInput.outputs`- `AXFERInput.rangeproof`- `AXFEROutput.assetId`- `AXFEROutput.assetInputCount`- `AXFEROutput.kernelSig`- `AXFEROutput.kind`- `AXFEROutput.outputs`- `AXFEROutput.rangeproof`- `AXFERVarBPPInput.assetId`- `AXFERVarBPPInput.kernelSig`- `AXFERVarBPPInput.outputs`- `AXFERVarBPPInput.rangeproof`- `AXFERVarBPPOutput.assetId`- `AXFERVarBPPOutput.assetInputCount`- `AXFERVarBPPOutput.kernelSig`- `AXFERVarBPPOutput.kind`- ... and 1083 more## Opcode Encode/Decode Parity
 | Family | Reference | Our src |
 | --- | --- | --- |
-
-| Encoders | 52 | 42 |
-
-| Decoders | 48 | 37 |
-
+| Encoders | 54 | 42 |
+| Decoders | 50 | 37 |
+## Module Dependency Graph (src/)
+```mermaid
+flowchart LR
+  crypto_bulletproofs[crypto.bulletproofs]
+  crypto_bulletproofs_plus[crypto.bulletproofs-plus]
+  crypto_kernel[crypto.kernel]
+  crypto_pedersen[crypto.pedersen]
+  crypto_silent_payments[crypto.silent-payments]
+  crypto_stealth[crypto.stealth]
+  envelope_payload[envelope.payload]
+  msmScalars_push[msmScalars.push]
+  opcodes_amm_swap[opcodes.amm-swap]
+  opcodes_cbtc_tac[opcodes.cbtc-tac]
+  opcodes_drop[opcodes.drop]
+  opcodes_slot[opcodes.slot]
+  payload_slice[payload.slice]
+  proofBytes_slice[proofBytes.slice]
+  te_encode[te.encode]
+  transaction_sighash[transaction.sighash]
+  transaction_utils[transaction.utils]
+  transcript_append[transcript.append]
+  w_push[w.push]
+  w_u32[w.u32]
+  w_u8[w.u8]
+  crypto_bulletproofs_plus -->|148| crypto_pedersen
+  crypto_bulletproofs -->|111| crypto_pedersen
+  opcodes_cbtc_tac -->|89| w_push
+  opcodes_cbtc_tac -->|66| payload_slice
+  opcodes_slot -->|56| payload_slice
+  crypto_bulletproofs -->|26| transcript_append
+  opcodes_cbtc_tac -->|24| crypto_pedersen
+  opcodes_cbtc_tac -->|23| envelope_payload
+  opcodes_amm_swap -->|20| payload_slice
+  crypto_kernel -->|19| te_encode
+  crypto_silent_payments -->|17| crypto_pedersen
+  crypto_bulletproofs_plus -->|16| transcript_append
+  crypto_stealth -->|15| transaction_utils
+  opcodes_cbtc_tac -->|15| w_u8
+  transaction_sighash -->|15| w_push
+  transaction_sighash -->|14| w_u32
+  crypto_kernel -->|12| transaction_utils
+  opcodes_drop -->|12| w_push
+  crypto_bulletproofs -->|11| proofBytes_slice
+  crypto_bulletproofs_plus -->|10| msmScalars_push
+```
 ## Complexity Hotspots (cyclomatic >= 12)
 
 | Function | Complexity | File |
@@ -184,14 +130,24 @@ Generated: trailmark v0.3.1
 | opcodes.slot:BigInt | 27 |
 | transaction.utils:bytesToHex | 25 |
 
+## Preanalysis Findings
+Findings: 0  |  Subgraphs: 5
+
+Subgraphs:
+- `entrypoint_reachable`
+- `entrypoints`
+- `high_blast_radius`
+- `privilege_boundary`
+- `tainted`
 ## Key Observations
-
 1. **Structural density**: Reference is 7.9× denser (33361 vs 4041 edges) — monolithic vs modular.
-
 2. **Opcode parity**: All reference opcode encoders/decoders have src/ equivalents.
-
 3. **Complexity**: BP+ verify (26) and envelope decode (25) highest — cryptographically justified.
-
 4. **In src only**: TypeScript types, barrel re-exports, modular boundaries not in mono-JS ref.
-
 5. **In ref only**: Dapp orchestration (buildAndBroadcast*, wallet UX, UI) intentionally omitted.
+
+## Module Count Comparison
+| Language | Modules | Avg functions/module |
+| --- | --- | --- |
+| JavaScript (ref) | 4 | 438 |
+| TypeScript (src) | 21 | 59 |
